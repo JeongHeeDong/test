@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.PhoneDAO">
+	
+	<sql id="sqlSelectPhone">
+		FROM
+			TB_CO_PHONE_INFO T1
+		WHERE
+			1 = 1
+			<if test="searchOpt != ''">
+				AND ${searchOpt} LIKE '%${searchWord}%'
+			</if>
+	</sql>
+	
+	<select id="selectPhoneTotalCount" parameterType="java.util.HashMap" resultType="int">
+		SELECT
+			COUNT(*) AS TOTAL_COUNT
+		<include refid="sqlSelectPhone" />
+	</select>
+	
+	<select id="selectPhoneList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			PHONE_NO
+			,PHONE_TYPE
+			,PHONE_USE_CODE
+			,(
+				SELECT
+					USE_CODE_NAME
+				FROM
+					TB_CO_PHONE_USE_CODE
+				WHERE
+					USE_CODE = T1.PHONE_USE_CODE
+			) AS PHONE_USE_CODE_NAME
+			,IFNULL(PHONE_USE_NAME, '')	AS PHONE_USE_NAME
+			,IFNULL(MSISDN, '')			AS MSISDN
+		<include refid="sqlSelectPhone" />
+		ORDER BY
+			PHONE_NO ASC
+		<if test="pageNo != null">
+			LIMIT ${pageNo}, ${pageSize}
+		</if>
+	</select>
+	
+	<insert id="insertPhone" parameterType="java.util.HashMap">
+		INSERT INTO
+		TB_CO_PHONE_INFO
+		(
+			PHONE_NO
+			,PHONE_TYPE
+			,PHONE_USE_CODE
+			,PHONE_USE_NAME
+			,OPR_STATUS
+			,MSISDN
+		)
+		VALUES
+		(
+			#{PHONE_NO}
+			,#{PHONE_TYPE}
+			,#{PHONE_USE_CODE}
+			,#{PHONE_USE_NAME}
+			,'1'
+			,#{MSISDN}
+		)
+	</insert>
+	
+	<update id="updatePhone" parameterType="java.util.HashMap">
+		UPDATE
+			TB_CO_PHONE_INFO
+		SET 
+			PHONE_TYPE		= #{PHONE_TYPE}
+			,PHONE_USE_CODE	= #{PHONE_USE_CODE}
+			,PHONE_USE_NAME	= #{PHONE_USE_NAME}
+			,MSISDN			= #{MSISDN}
+		WHERE
+			PHONE_NO = #{PHONE_NO}
+	</update>
+
+	<delete id="deletePhone" parameterType="java.util.HashMap">
+		DELETE
+		FROM
+			TB_CO_PHONE_INFO
+		WHERE
+			PHONE_NO = #{PHONE_NO}
+	</delete>
+	
+	<select id="selectPhoneUseCodeList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			USE_CODE
+			,USE_CODE_NAME
+		FROM
+			TB_CO_PHONE_USE_CODE
+		ORDER BY
+			USE_CODE ASC
+	</select>
+</mapper>

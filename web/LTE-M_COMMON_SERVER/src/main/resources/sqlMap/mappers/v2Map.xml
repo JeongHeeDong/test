@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.V2DAO">
+
+    <resultMap type="com.ltem.v2.dto.TbSeMenuDTO" id="tbSeMenu">
+		<id property="menuId" column="MENU_ID"/>
+		<id property="parentId" column="PARENT_ID"/>
+		<id property="level" column="LEVEL"/>
+		<id property="menuSeq" column="MENU_SEQ"/>
+		<id property="menuName" column="MENU_NAME"/>
+		<id property="menuUri" column="MENU_URI"/>
+		<id property="menuAuth" column="MENU_AUTH"/>
+		<id property="menuDesc" column="MENU_DESC"/>
+		<id property="showYn" column="SHOW_YN"/>
+		<id property="logYn" column="LOG_YN"/>
+		<id property="childYn" column="CHILD_YN"/>
+		<id property="menuIcon" column="MENU_ICON"/>   
+    </resultMap>
+    
+    <resultMap type="com.ltem.v2.dto.TbSeUserDTO" id="tbSeUser">
+        <id property="userId" column="USER_ID"/>
+        <id property="userPassword" column="USER_PASSWORD" />
+        <id property="loginTime" column="LOGIN_TIME" />
+        <id property="logoutTime" column="LOGOUT_TIME" />
+        <id property="teamId" column="TEAM_ID" />
+        <id property="userName" column="USER_NAME" />
+        <id property="userMobile" column="USER_MOBILE" />
+        <id property="userPhone" column="USER_PHONE" />
+        <id property="email" column="EMAIL" />
+        <id property="auth" column="AUTH" />
+        <id property="useFlag" column="USE_FLAG" />
+        <id property="passwordInitYn" column="PASSWORD_INIT_YN" />
+        <id property="passwordUpdateTIme" column="PASSWORD_UPDATE_TIME" />
+        <id property="passwordErrCnt" column="PASSWORD_ERR_CNT" />
+        
+        <id property="registDate" column="REGIST_DATE"/>   
+        <id property="usePeriod" column="USE_PERIOD"/>   
+        <id property="usePeriodYn" column="USE_PERIOD_YN"/>
+    </resultMap>
+    
+    <resultMap type="com.ltem.v2.dto.TbSeWebLogDTO" id="tbSeWeblog">
+        <id property="id" column="ID"/>
+        <id property="eventTime" column="EVENT_TIME"/>
+        <id property="userId" column="USER_ID"/>
+        <id property="temaId" column="TEAM_ID"/>
+        <id property="menuId" column="MENU_ID"/>
+        <id property="menuName" column="MENU_NAME"/>
+        <id property="ip" column="IP"/>
+    </resultMap>
+    
+    <resultMap type="com.ltem.v2.dto.TbSmNoticeBoardDTO" id="tbSmNotice">
+        <id property="eventTime" column="EVENT_TIME"/>
+        <id property="userId" column="USER_ID"/>
+        <id property="noticeTitle" column="NOTICE_TITLE"/>
+        <id property="noticeDesc" column="NOTICE_DESC"/>
+        <id property="fileName" column="FILE_NAME"/>
+        <id property="filePath" column="FILE_PATH"/>
+        <id property="fromDate" column="FROM_DATE"/>
+        <id property="toDate" column="TO_DATE"/>
+        <id property="mainNotiYn" column="MAIN_NOTI_YN"/>
+    </resultMap>    
+    
+    <resultMap type="com.ltem.v2.dto.TbCoAccessInfoDTO" id="tbCoAccessInfo">
+        <id property="equipType" column="EQUIP_TYPE"/>
+        <id property="equipTypeName" column="EQUIP_TYPE_NAME"/>
+        <id property="equipId" column="EQUIP_ID"/>
+        <id property="equipName" column="EQUIP_NAME"/>
+        <id property="loginId" column="LOGIN_ID"/>
+        <id property="updateUserId" column="UPDATE_USER_ID"/>
+        <id property="updateDate" column="UPDATE_DATE"/>
+    </resultMap>      
+    
+
+	<select id="getMenuV2" parameterType="String" resultMap="tbSeMenu">
+        /* v2Map.getMenuV2 */
+		SELECT 
+			MENU_ID
+			, PARENT_ID
+			, LEVEL
+			, MENU_SEQ
+			, MENU_NAME
+			, MENU_URI
+			, MENU_AUTH
+			, MENU_DESC
+			, SHOW_YN
+			, LOG_YN
+			, CHILD_YN
+			, MENU_ICON
+		FROM
+		  TB_SE_MENU
+		WHERE
+		  MENU_URI = #{menuUri}
+	</select>
+	
+    <select id="getUserByLoginV2" parameterType="com.ltem.v2.dto.TbSeUserDTO" resultMap="tbSeUser">
+        /* v2Map.getUserByLoginV2 */
+        SELECT 
+            USER_ID
+            , NVL(LOGIN_TIME, now()) AS LOGIN_TIME
+			, LOGOUT_TIME
+			, TEAM_ID
+			, USER_NAME
+			, USER_MOBILE
+			, USER_PHONE
+			, EMAIL
+			, AUTH
+			, USE_FLAG
+			, PASSWORD_INIT_YN
+			, PASSWORD_UPDATE_TIME
+			, PASSWORD_ERR_CNT
+			, REGIST_DATE
+			, USE_PERIOD
+            , CASE WHEN
+                USE_PERIOD != 0 || USE_PERIOD != NULL 
+                THEN
+                    CASE WHEN
+                        date_add(REGIST_DATE , interval USE_PERIOD month) <![CDATA[<]]> now()
+                    THEN
+                        'N'
+                    ELSE    
+                        'Y'
+                    END
+                ELSE    
+                    'Y'
+            END AS USE_PERIOD_YN      			
+        FROM
+          TB_SE_USER
+        WHERE
+            USER_ID = #{userId}
+            AND USER_PASSWORD = #{userPassword}
+    </select>
+	
+    <select id="getUserByIdV2" parameterType="com.ltem.v2.dto.TbSeUserDTO" resultMap="tbSeUser">
+        /* v2Map.getUserByIdV2 */
+        SELECT 
+            USER_ID
+            , USER_PASSWORD
+            , NVL(LOGIN_TIME, now()) AS LOGIN_TIME
+            , LOGOUT_TIME
+            , TEAM_ID
+            , USER_NAME
+            , USER_MOBILE
+            , USER_PHONE
+            , EMAIL
+            , AUTH
+            , USE_FLAG
+            , PASSWORD_INIT_YN
+            , PASSWORD_UPDATE_TIME            
+            , PASSWORD_ERR_CNT
+            , REGIST_DATE
+            , USE_PERIOD
+            , CASE WHEN
+                USE_PERIOD != 0 || USE_PERIOD != NULL 
+                THEN
+                    CASE WHEN
+                        date_add(REGIST_DATE , interval USE_PERIOD month) <![CDATA[<]]> now()
+                    THEN
+                        'N'
+                    ELSE    
+                        'Y'
+                    END
+                ELSE    
+                    'Y'
+            END AS USE_PERIOD_YN                    
+        FROM
+          TB_SE_USER
+        WHERE
+            USER_ID = #{userId}
+    </select>
+    
+    
+    <select id="getUserPasswordUpdateHistoryCount" parameterType="com.ltem.v2.dto.TbSeUserDTO" resultType="int">
+        /* v2Map.getUserPasswordUpdateHistoryCount */
+		SELECT 
+		  COUNT(1) AS CNT
+		FROM TB_SE_USER_HIST TSUH 
+		WHERE
+		  USER_ID = #{userId}
+		  AND USER_PASSWORD = #{userPassword}
+		  AND TSUH.UPDATE_TIME >= date_add(now(), interval -1 year)
+    </select>    
+    
+    <insert id="insertUserPasswordHistory" parameterType="com.ltem.v2.dto.TbSeUserDTO">
+        /* v2Map.insertUserPasswordHistory */
+	    INSERT INTO TB_SE_USER_HIST
+	        (USER_ID, USER_PASSWORD, UPDATE_USER_ID, UPDATE_TIME)
+	    VALUES
+	        (#{userId}
+	        , #{userPassword}
+	        , #{userId}
+	        , #{passwordUpdateTIme});
+    </insert>
+    
+    <update id="updateUserPassword" parameterType="com.ltem.v2.dto.TbSeUserDTO">
+        /* v2Map.updateUserPassword */
+        UPDATE TB_SE_USER 
+            SET USER_PASSWORD = #{userPassword}, PASSWORD_UPDATE_TIME = now(), PASSWORD_ERR_CNT = 0
+                <!-- <if test="passwordPageDiv eq 'init'" > -->
+                    , PASSWORD_INIT_YN = 'N'
+                <!-- </if> -->
+        WHERE USER_ID = #{userId}
+    </update>
+    
+    <update id="updatePasswordErrCnt" parameterType="com.ltem.v2.dto.TbSeUserDTO">
+        /* v2Map.updatePasswordErrCnt */
+        UPDATE TB_SE_USER 
+            SET PASSWORD_ERR_CNT = PASSWORD_ERR_CNT + 1
+        WHERE USER_ID = #{userId}
+    </update>
+    
+    <update id="updateInitPasswordErrCnt" parameterType="com.ltem.v2.dto.TbSeUserDTO">
+        /* v2Map.updateInitPasswordErrCnt */
+        UPDATE TB_SE_USER 
+            SET PASSWORD_ERR_CNT = 0
+        WHERE USER_ID = #{userId}
+    </update>
+    	
+    <select id="getLastLoginInfo" parameterType="com.ltem.v2.dto.TbSeWebLogDTO" resultMap="tbSeWeblog">
+        /* v2Map.getLastLoginInfo */
+		SELECT 
+		   ID
+		   , EVENT_TIME 
+		   , USER_ID 
+		   , TEAM_ID 
+		   , MENU_ID 
+		   , MENU_NAME 
+		   , IP 
+		FROM (
+			SELECT 
+			    ID
+			    , EVENT_TIME 
+			    , USER_ID 
+			    , TEAM_ID 
+			    , MENU_ID 
+			    , MENU_NAME 
+			    , IP 
+			FROM TB_SE_WEB_LOG 
+			    WHERE USER_ID = #{userId}
+			        AND MENU_ID = 'LOGIN'
+			ORDER BY EVENT_TIME DESC 
+			LIMIT 2
+		) A
+		ORDER BY EVENT_TIME 
+		LIMIT 1
+    </select>
+    
+        	
+    <select id="getMainNotice" parameterType="com.ltem.v2.dto.TbSmNoticeBoardDTO" resultMap="tbSmNotice">
+        /* v2Map.getMainNotice */
+	    SELECT 
+	        EVENT_TIME 
+	        , USER_ID 
+	        , NOTICE_TITLE 
+	        , NOTICE_DESC 
+	        , FROM_DATE 
+	        , TO_DATE 
+	        , MAIN_NOTI_YN 
+	    FROM TB_SM_NOTICE_BOARD TSNB 
+	    WHERE now() BETWEEN FROM_DATE AND TO_DATE 
+	    AND MAIN_NOTI_YN = 'Y'
+	    ORDER BY FROM_DATE 
+	    LIMIT 1
+    </select>
+    
+    <select id="getAccessInfo" resultMap="tbCoAccessInfo">
+        /* v2Map.getAccessInfo */
+		SELECT TCAI.EQUIP_TYPE 
+		        , NVL(TCE.EQUIP_NAME, TCAI.EQUIP_TYPE) AS EQUIP_TYPE_NAME 
+		        , TCAI.EQUIP_ID 
+		        , TCAI.EQUIP_NAME 
+		        , TCAI.LOGIN_ID 
+		        , TCAI.UPDATE_USER_ID 
+		        , TCAI.UPDATE_DATE 
+		FROM TB_CO_ACCESS_INFO TCAI 
+		    INNER JOIN TB_CO_EQUIP TCE 
+		        ON TCAI.EQUIP_TYPE = TCE.EQUIP_TYPE        
+    </select>        	
+    
+    <update id="updateAccessInfo" parameterType="com.ltem.v2.dto.TbCoAccessInfoDTO">
+        /* v2Map.updateAccessInfo */
+        UPDATE TB_CO_ACCESS_INFO 
+            SET UPDATE_USER_ID = #{updateUserId}, UPDATE_DATE = now() 
+        WHERE 
+            EQUIP_TYPE = #{equipType} 
+            AND EQUIP_ID = #{equipId}
+    </update>
+    	
+    	
+</mapper>

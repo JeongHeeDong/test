@@ -1,0 +1,55 @@
+@charset "utf-8";
+
+@font-face{
+	font-family:"Nanum Gothic";
+	src:url('../fonts/NanumGothic.eot');
+	src:url('../fonts/NanumGothic.eot?#iefix') format('embedded-opentype'), url('../fonts/NanumGothic.woff') format('woff'), url('../fonts/NanumGothic.ttf') format('truetype');
+	src:local(※), url('../fonts/NanumGothic.woff') format('woff');
+	font-style:normal;
+	font-weight:normal;
+}
+
+/* Layout */
+html, body{margin:0;width:100%;height:100%;min-height:100%;}
+body{min-width:1280px;min-height:768px;background:#f0f0f0;}
+body:after{content:'';display:block;clear:both;}
+body,h1,h2,h3,h4,h5,h6,input,button,textarea,select{line-height:1.5;font:12px "돋움",Dotum,Verdana,Arial,AppleGothic,sans-serif;}
+
+header{position:relative;float:left;width:170px;height:100%;background:#fff;border-right:1px solid #ccc;box-shadow:1px 0 0 0 #e4e4e4;}
+header:after{content:'';display:block;clear:both;}
+h1{width:100%;height:90px;background:#f9f9f9;font-size:14px;font-family:Arial;font-weight:bold;color:#515050;text-align:center;}
+h1 > *:after{content:'';display:inline-block;height:100%;vertical-align:middle;}
+nav{width:100%;}
+.mu-container{margin:0 0 0 170px;height:100%;}
+.mu-container:after{content:"";display:block;clear:both;}
+section{width:100%;height:calc(100% - 26px);}
+footer{float:left;width:100%;height:26px;border-top:1px solid #d8d8d8;font-size:10px;font-family:verdana;color:#7a818b;text-align:center;}
+footer:after{content:'';display:inline-block;height:100%;vertical-align:middle;}
+footer .copyright{font-size:10px}
+
+/* Navigation - topmenu */
+.mu-topCont{width:100%;height:48px;background:#fff;border-bottom:1px solid #c3c3c3;box-shadow:0 1px 0 0 #e1e1e1;}
+.mu-topCont:after{content:'';display:block;clear:both;}
+.mu-topCont h2{height:100%;vertical-align:middle;font-size:16px;font-family:"Nanum Gothic";font-weight:bold;text-indent:15px;}
+.mu-topCont h2:after{content:'';display:inline-block;height:100%;vertical-align:middle}
+.mu-topCont > .mu-topMenu{height:100%;font-size:11px;letter-spacing:0;}
+.mu-topCont > .mu-topMenu:after{content:'';display:block;clear:both;}
+.mu-topMenu > *{display:inline-block;vertical-align:middle;height:48px;}
+.mu-topMenu > * *{vertical-align:middle;height:100%;line-height:48px;}
+.mu-topMenu > .mu-btn{padding:0 15px;margin-left:15px;}
+.mu-topMenu .userName{display:inline-block;margin-left:5px;margin-right:3px;color:#465d7f;font-weight:bold;font-size:11px;}
+.mu-topMenu .iconUser,.mu-topMenu .btnSetting i:before,.mu-topMenu .btnLogout i:before{font-size:18px}
+.mu-topMenu .iconUser{color:#515151}
+.mu-topMenu .btnSetting i:before,.mu-topMenu .btnLogout i:before{color:#75a3e4}
+.mu-topMenu .btnSetting:hover > i:before,.mu-topMenu .btnLogout:hover > i:before{color:#2c67b9}
+.mu-topMenu .btnSetting:active > i:before,.mu-topMenu .btnLogout:active > i:before{color:#2f5994}
+.mu-topMenu .btnSetting[disabled],.mu-topMenu .btnSetting[disabled]:hover > i:before,
+.mu-topMenu .btnLogout[disabled],.mu-topMenu .btnLogout[disabled]:hover > i:before{color:#ebedef}
+
+.mu-content{float:left;width:100%;padding:20px;}
+.mu-container .mu-row .mu-col{background:transparent;border:none;padding:0;}
+
+.gridWrap{background-color:#fff;border-radius:4px;box-shadow:0 1px 2px 0 #c3c3c3}
+.gridWrap .mu-page-title{height:36px;line-height:36px;background-color:#fcfcfc;border-bottom-color:#e8e8e8;border-top-left-radius:4px;border-top-right-radius:4px;text-indent:15px;text-align:left}
+.gridWrap .mu-page-title .mu-title{display:inline;font-size:12px;font-family:dotum;color:#878787}
+.gridWrap .mu-grid{border:0}

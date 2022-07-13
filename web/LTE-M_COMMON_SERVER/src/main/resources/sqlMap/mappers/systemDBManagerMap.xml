@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.SystemDBManagerDAO">
+	<select id="getHostName" resultType="string">
+		SELECT SYSTEM_NAME 
+		FROM TB_CO_SYSTEM_ETC 
+		WHERE EQUIP_TYPE = 0
+	</select>
+	
+	<select id="getTableInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT	TABLE_NAME,
+				TABLE_DESC AS TABLE_COMMENT
+		FROM TB_CO_TABLE_INFO AS INFO
+   		 WHERE 1 = 1
+		<if test="searchOpt != ''">
+			AND ${searchOpt} LIKE '%${searchWord}%'
+		</if>
+		ORDER BY TABLE_NAME ASC
+	</select>
+	
+	<insert id="insertBakData" parameterType="java.util.HashMap">
+		INSERT INTO TB_SM_BACKUP
+		(TABLE_NAME, BACKUP_TYPE, BACKUP_DAY, DATA_EXPIRE, EVENT_TIME, BACKUP_DESC)
+		VALUES
+		(#{NAME}, #{TYPE}, #{DAY}, #{EXPIRE}, NOW(), #{DESC})
+	</insert>
+	
+	<insert id="updateBakData" parameterType="java.util.HashMap">
+		UPDATE TB_SM_BACKUP
+		SET 
+			BACKUP_DAY = #{DAY},
+			DATA_EXPIRE = #{EXPIRE},
+			EVENT_TIME = NOW(),
+			BACKUP_DESC = #{DESC} 
+		WHERE 
+			TABLE_NAME = #{NAME} AND
+			BACKUP_TYPE = #{TYPE} 
+	</insert>
+	
+	<select id="getBakData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT BACKUP.TABLE_NAME,
+			   BACKUP_TYPE,
+		       BACKUP.BACKUP_DESC,  
+			   BACKUP_DAY, 
+			   DATA_EXPIRE, 
+			   LAST_DATE 
+		FROM   TB_SM_BACKUP AS BACKUP
+		<if test="searchOpt != ''">
+		WHERE BACKUP.${searchOpt} LIKE '%${searchWord}%'
+		</if>
+		ORDER BY LAST_DATE DESC
+		<if test="pageNo != null">
+			LIMIT ${pageNo}, ${pageSize}
+		</if>
+	</select>
+	
+	<select id="getOneBakData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT *
+		FROM TB_SM_BACKUP
+		WHERE TABLE_NAME = #{NAME} 
+		AND   BACKUP_TYPE = #{TYPE}
+	</select>
+	
+	<select id="getTotalCnt" parameterType="java.util.HashMap" resultType="int">
+		SELECT COUNT(*) AS TOTAL_COUNT
+		FROM TB_SM_BACKUP
+		<if test="searchOpt != ''">
+			WHERE ${searchOpt} LIKE '%${searchWord}%'
+		</if>		
+	</select>
+	
+	<delete id="delBakData" parameterType="java.util.HashMap">
+		DELETE FROM TB_SM_BACKUP 
+		WHERE BACKUP_TYPE = #{TYPE} 
+		AND   TABLE_NAME = #{NAME}
+	</delete>
+</mapper>
+

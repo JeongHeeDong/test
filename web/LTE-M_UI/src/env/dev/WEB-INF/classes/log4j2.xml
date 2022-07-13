@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+	<Appenders>
+		<Console name="console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d %5p [%c] %m%n" />
+		</Console>
+		<RollingFile name="dailyRollingFile"
+				fileName="/home/ltenms/usr/local/tomcat-ltenms/ltenms_log/ltenms_web.log"
+				filePattern="/home/ltenms/usr/local/tomcat-ltenms/ltenms_log/ltenms_web.log.%d{yyyy-MM-dd}">
+			<PatternLayout pattern="[%d] %-5p [%t] (%c:%L) - %m%n" />
+			<Policies>
+				<TimeBasedTriggeringPolicy />
+			</Policies>
+		</RollingFile>
+	</Appenders>
+	
+	<Loggers>
+		<logger name="jdbc.connection" level="warn" additivity="false">
+			<appender-ref ref="dailyRollingFile" />
+		</logger>
+
+		<logger name="jdbc.resultsettable" level="info" additivity="false">
+			<appender-ref ref="dailyRollingFile" />
+		</logger>
+
+		<logger name="jdbc.audit" level="warn" additivity="false">
+			<appender-ref ref="dailyRollingFile" />
+		</logger>
+
+		<logger name="jdbc.resultset" level="warn" additivity="false">
+			<appender-ref ref="dailyRollingFile" />
+		</logger>
+
+		<logger name="jdbc.sqltiming" level="warn" additivity="false">
+			<appender-ref ref="dailyRollingFile" />
+		</logger>
+
+		<logger name="jdbc.sqlonly" level="info" additivity="false">
+			<appender-ref ref="dailyRollingFile" />
+		</logger>
+
+		<Logger name="egovframework" level="info" additivity="false">
+			<AppenderRef ref="dailyRollingFile" />
+		</Logger>
+
+		<Logger name="org.springframework" level="info" additivity="false">
+			<AppenderRef ref="dailyRollingFile" />
+		</Logger>
+		<Root level="DEBUG">
+			<AppenderRef ref="dailyRollingFile" />
+		</Root>
+	</Loggers>
+</Configuration>

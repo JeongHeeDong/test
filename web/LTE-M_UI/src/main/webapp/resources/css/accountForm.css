@@ -1,0 +1,14 @@
+@charset "utf-8";
+
+.mu-dialog-body .mu-hgroup label {
+    display: inline-block;
+    width: 90px;
+}
+.mu-dialog-body .mu-hgroup input {
+    display: inline-block;
+    width: 120px;
+}
+.mu-dialog-body .mu-hgroup select {
+    display: inline-block;
+    width: 120px;
+}

@@ -1,0 +1,14 @@
+@charset "utf-8";
+
+/* ---------------------------------------
+    Filename: qunee-tooltip.css
+    Description : LTE-M QUNEE Q-Tooltip 기본 세팅
+    Author  : hongsungnam
+    date    : 2016-03-14
+   --------------------------------------- */
+.Q-Tooltip{
+    border-color:rgba( 255, 255, 255, 0 );
+    background-color: rgba( 255, 255, 255, 0 );
+    color: rgba( 255, 255, 255, 0 );
+    box-shadow : 0 5px 10px rgba(136, 136, 136, 0);
+}

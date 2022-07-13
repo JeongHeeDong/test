@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.PcrfDAO">
+	<select id="getPcrfDetail" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			TB_CO_PCRF.PCRF_ID AS PCRF_ID,
+			TB_CO_PCRF.EMS_ID,
+			IFNULL(EMS_INFO.EMS_NAME,'-') AS EMS_NAME,
+			TB_CO_PCRF.VENDOR_ID,
+			IFNULL(TB_CO_VENDOR.VENDOR_NAME,'-') AS VENDOR_NAME,
+			TB_CO_PCRF.PCRF_NAME AS PCRF_NAME,
+			DATE_FORMAT(TB_CO_PCRF.INSTALL_DATE,'%Y-%m-%d') AS INSTALL_DATE,
+			DATE_FORMAT(TB_CO_PCRF.UPDATE_DATE,'%Y-%m-%d %H:%i:%s') AS UPDATE_DATE,
+			IFNULL(PCRF_IP,'-') AS IP,
+			IFNULL(TB_CO_PCRF.OPR_STATUS,'0') AS OPR_STATUS
+		FROM
+			TB_CO_PCRF
+			LEFT OUTER JOIN
+			( 
+				SELECT DISTINCT EMS_ID, 
+				(
+					SELECT GROUP_CONCAT(EMS_NAME  separator ', ')  
+				 	FROM TB_CO_EMS AS EMSA
+				 	WHERE EMSA.EMS_ID = EMSB.EMS_ID
+				 ) as EMS_NAME
+				FROM TB_CO_EMS AS EMSB
+			) AS EMS_INFO
+			ON TB_CO_PCRF.EMS_ID = EMS_INFO.EMS_ID
+			LEFT OUTER JOIN
+			TB_CO_VENDOR
+			ON TB_CO_PCRF.VENDOR_ID = TB_CO_VENDOR.VENDOR_ID
+		WHERE
+			TB_CO_PCRF.PCRF_ID = #{pcrf_id}
+		GROUP BY
+			TB_CO_PCRF.PCRF_ID
+	</select>
+	
+	<select id="getPcrfDetail_Node" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			NODE,
+			PREFER_TYPE,
+			NODE_TYPE,
+			REDUN_TYPE,
+			GRP_NAME
+		FROM
+			TB_CO_PCRF_NODE
+		WHERE
+			NE_ID = #{pcrf_id}
+	</select>
+	
+	<select id="getPcrfDetail_Ntp" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			SERVER,
+			STATUS,
+			ROLE,
+			CHK_STS
+		FROM
+			TB_CO_PCRF_NTP
+		WHERE
+			NE_ID = #{pcrf_id}
+	</select>
+	
+	<select id="getPcrfDetail_Port" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			NODE,
+			PORT,
+			ACT_STS,
+			OPR_STS,
+			MATE_PORT,
+			DETAIL_STS,
+			DESCRIPTION
+		FROM
+			TB_CO_PCRF_PORT
+		WHERE
+			NE_ID = #{pcrf_id}
+	</select>
+	
+	<update id="pcrfDetailupdate" parameterType="java.util.HashMap">
+		UPDATE 
+			TB_CO_PCRF 
+		SET
+			PCRF_NAME = #{pcrf_name},
+			EMS_ID = #{ems_id},
+			VENDOR_ID = #{vendor_id},
+			<if test=" install_date != null and install_date != ''">
+				INSTALL_DATE = DATE_FORMAT(#{install_date},'%Y%m%d'),
+			</if>
+			PCRF_IP = #{pcrf_ip}, 
+			OPR_STATUS = #{opr_status},
+			UPDATE_DATE = NOW(),
+			UPDATE_USER_ID = #{update_user_id}
+			
+			
+		WHERE
+			PCRF_ID = #{pcrf_id}
+	</update>
+	
+    <delete id="pcrfDetaildelete" parameterType="java.util.HashMap">
+        DELETE FROM  TB_CO_PCRF 
+        WHERE
+            PCRF_ID = #{pcrf_id}
+    </delete>
+    
+	<select id="pcrfIdCheckResult" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT
+			COUNT(1) AS COUNT
+		FROM
+			TB_CO_PCRF
+		WHERE
+			PCRF_ID = #{pcrf_id}
+	</select>
+	
+	<insert id="pcrfAdd" parameterType="java.util.HashMap">
+		INSERT
+		INTO TB_CO_PCRF
+		(PCRF_ID,PCRF_IP,PCRF_NAME,EMS_ID,VENDOR_ID,INSTALL_DATE,UPDATE_USER_ID)
+		VALUES
+		(#{epc_id},#{epc_ip},#{epc_name},#{ems_id},#{vendor_id},DATE_FORMAT(#{install_date},'%Y%m%d%H%i%s'),#{update_user_id})
+	</insert>
+</mapper>

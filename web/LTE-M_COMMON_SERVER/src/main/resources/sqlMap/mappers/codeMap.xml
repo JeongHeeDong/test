@@ -1,0 +1,474 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.CodeDAO">
+	
+	<sql id="sqlSelectVendor">
+		FROM
+			TB_CO_VENDOR T1
+		WHERE
+			1 = 1
+			<if test="searchOpt != ''">
+				AND ${searchOpt} LIKE '%${searchWord}%'
+			</if>
+	</sql>
+	
+	<select id="selectVendorTotalCount" parameterType="java.util.HashMap" resultType="int">
+		SELECT
+			COUNT(*) AS TOTAL_COUNT
+		<include refid="sqlSelectVendor" />
+	</select>
+	
+	<select id="selectVendorList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			VENDOR_ID
+			,VENDOR_NAME
+			,VENDOR_DESC
+		<include refid="sqlSelectVendor" />
+		ORDER BY
+			VENDOR_ID ASC
+		<if test="pageNo != null">
+			LIMIT ${pageNo}, ${pageSize}
+		</if>
+	</select>
+	
+	<insert id="insertVendor" parameterType="java.util.HashMap">
+		INSERT INTO
+		TB_CO_VENDOR
+		(
+			VENDOR_ID
+			,VENDOR_NAME
+			,VENDOR_DESC
+		)
+		VALUES
+		(
+			#{VENDOR_ID}
+			,#{VENDOR_NAME}
+			,#{VENDOR_DESC}
+		)
+	</insert>
+	
+	<update id="updateVendor" parameterType="java.util.HashMap">
+		UPDATE
+			TB_CO_VENDOR
+		SET 
+			VENDOR_NAME		= #{VENDOR_NAME}
+			,VENDOR_DESC	= #{VENDOR_DESC}
+		WHERE
+			VENDOR_ID = #{VENDOR_ID}
+	</update>
+
+	<delete id="deleteVendor" parameterType="java.util.HashMap">
+		DELETE
+		FROM
+			TB_CO_VENDOR
+		WHERE
+			VENDOR_ID = #{VENDOR_ID}
+	</delete>
+	
+	
+	<sql id="sqlSelectTeam">
+		FROM
+			TB_CO_TEAM T1
+		WHERE
+			1 = 1
+			<if test="searchOpt != ''">
+				AND ${searchOpt} LIKE '%${searchWord}%'
+			</if>
+	</sql>
+	
+	<select id="selectTeamTotalCount" parameterType="java.util.HashMap" resultType="int">
+		SELECT
+			COUNT(*) AS TOTAL_COUNT
+		<include refid="sqlSelectTeam" />
+	</select>
+	
+	<select id="selectTeamList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			TEAM_ID
+			,TEAM_NAME
+			,TEAM_DESC
+		<include refid="sqlSelectTeam" />
+		ORDER BY
+			TEAM_ID ASC 
+		<if test="pageNo != null">
+			LIMIT ${pageNo}, ${pageSize}
+		</if>
+	</select>
+	
+	<insert id="insertTeam" parameterType="java.util.HashMap">
+		INSERT INTO
+		TB_CO_TEAM
+		(
+			TEAM_ID
+			,TEAM_NAME
+			,TEAM_DESC
+		)
+		VALUES
+		(
+			#{TEAM_ID}
+			,#{TEAM_NAME}
+			,#{TEAM_DESC}
+		)
+	</insert>
+	
+	<update id="updateTeam" parameterType="java.util.HashMap">
+		UPDATE
+			TB_CO_TEAM
+		SET 
+			TEAM_NAME	= #{TEAM_NAME}
+			,TEAM_DESC	= #{TEAM_DESC}
+		WHERE
+			TEAM_ID = #{TEAM_ID}
+	</update>
+
+	<delete id="deleteTeam" parameterType="java.util.HashMap">
+		DELETE
+		FROM
+			TB_CO_TEAM
+		WHERE
+			TEAM_ID = #{TEAM_ID}
+	</delete>
+	
+	
+	
+	<sql id="sqlSelectStation">
+		<!-- FROM
+		(
+		SELECT
+			STATION_ID 
+			, GROUP_CONCAT(TCL.LINE_NAME ORDER BY TCL.LINE_NAME) LINE_NAME
+			, STATION_NAME
+			, GROUP_CONCAT(STATION.LINE_ID ORDER BY STATION.LINE_ID)  LINE_ID
+	    	, CASE WHEN STATION_TYPE = '0' THEN '-'
+	    		 WHEN STATION_TYPE = '1' THEN '환승역'
+	    		 WHEN STATION_TYPE = '2' THEN '일반역'
+	    		 ELSE STATION_TYPE 
+	    		 END STATION_TYPE 
+		FROM
+	    	(SELECT
+			  STATION_NAME
+			  , STATION_ID 
+			  , SUBSTRING_INDEX (SUBSTRING_INDEX(TB_CO_STATION.LINE_ID,',',NUMBERS.N),',',-1) LINE_ID
+			  , TB_CO_STATION.STATION_TYPE   
+			FROM 
+				
+			   (SELECT  1 N UNION  ALL  SELECT 2  
+			) NUMBERS INNER  JOIN TB_CO_STATION
+			    ON CHAR_LENGTH ( TB_CO_STATION.LINE_ID ) 
+			     - CHAR_LENGTH ( REPLACE ( TB_CO_STATION.LINE_ID ,  ',' ,  '' )) <![CDATA[>=]]> NUMBERS.N-1
+			      ) STATION
+			LEFT OUTER JOIN TB_CO_LINE TCL
+			  ON STATION.LINE_ID = TCL.LINE_ID
+	      	GROUP BY STATION.STATION_NAME ) q1
+		WHERE 
+			1 = 1
+			<if test="searchOpt != ''">
+				AND STATION_NAME LIKE '%${searchWord}%'
+			</if>
+			<if test="line != '' and line != null"> 
+				AND LINE_ID LIKE '%${line}%'
+			</if> -->
+		FROM
+		(
+		SELECT
+			STATION_ID 
+			, TCL.LINE_NAME
+			, STATION_NAME
+			, STATION.LINE_ID
+			, STATION.STATION_TYPE
+	    	, CASE WHEN STATION_TYPE = '0' THEN '-'
+	    		 WHEN STATION_TYPE = '1' THEN '환승역'
+	    		 WHEN STATION_TYPE = '2' THEN '일반역'
+	    		 ELSE STATION_TYPE 
+	    		 END STATION_TYPE_NM  
+	    	, STATION_NUM 
+		FROM
+	    	TB_CO_STATION STATION
+			LEFT OUTER JOIN TB_CO_LINE TCL
+			  ON STATION.LINE_ID = TCL.LINE_ID
+	      	) q1
+		WHERE 
+			1 = 1 
+			<if test="searchOpt != ''">
+				AND STATION_NAME LIKE '%${searchWord}%'
+			</if>
+			<if test="line != '' and line != null"> 
+				AND LINE_ID LIKE '%${line}%'
+			</if>
+			
+	</sql>
+	
+	<select id="selectStationTotalCount" parameterType="java.util.HashMap" resultType="int">
+		SELECT 
+			COUNT(*) AS TOTAL_COUNT
+		<include refid="sqlSelectStation" />
+	</select>
+	
+	<select id="selectStationList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			STATION_ID
+			, LINE_NAME
+			, LINE_ID
+			, STATION_NAME
+			, STATION_TYPE
+			, STATION_TYPE_NM 
+			, STATION_NUM
+		<include refid="sqlSelectStation" /> 
+		ORDER BY 
+			LINE_ID ASC
+			,STATION_NUM ASC
+		<if test="pageNo != null">
+			LIMIT ${pageNo}, ${pageSize}
+		</if> 
+	</select>
+	
+	<select id="selectStationNumCount" parameterType="java.util.HashMap" resultType="int">
+		SELECT
+			COUNT(*) AS TOTAL_COUNT
+		FROM
+	    	TB_CO_STATION 
+		WHERE STATION_NUM = #{STATION_NUM} 
+			AND LINE_ID = #{LINE_ID}
+			
+	</select>
+	
+	<insert id="insertStation" parameterType="java.util.HashMap">
+		INSERT INTO
+		TB_CO_STATION
+		(
+			LINE_ID
+			,STATION_ID
+			,STATION_NAME
+			,STATION_DESC
+			,STATION_TYPE
+			,STATION_NUM
+		)
+		VALUES
+		(
+			#{LINE_ID}
+			,#{STATION_ID}
+			,#{STATION_NAME}
+			,'Y'
+			,#{STATION_TYPE}
+			,#{STATION_NUM}
+		)
+	</insert>
+	
+	<update id="updateStation" parameterType="java.util.HashMap">
+		UPDATE
+			TB_CO_STATION
+		SET
+			LINE_ID				= #{LINE_ID}
+			,STATION_NAME		= #{STATION_NAME}
+			,STATION_TYPE		= #{STATION_TYPE}
+			,STATION_NUM		= #{STATION_NUM}
+		WHERE  
+			STATION_ID = #{STATION_ID}
+			AND LINE_ID	= #{LINE_ID_ORG} 
+	</update>
+
+	<delete id="deleteStation" parameterType="java.util.HashMap">
+		DELETE
+		FROM
+			TB_CO_STATION
+		WHERE
+			STATION_ID = #{STATION_ID}
+			AND LINE_ID	= #{LINE_ID_ORG}
+	</delete>
+	
+	
+	<sql id="sqlSelectPhone">
+		FROM
+			TB_CO_PHONE_USE_CODE T1
+		WHERE
+			1 = 1
+			<if test="searchOpt != ''">
+				AND ${searchOpt} LIKE '%${searchWord}%'
+			</if>
+	</sql>
+	
+	<select id="selectPhoneTotalCount" parameterType="java.util.HashMap" resultType="int">
+		SELECT
+			COUNT(*) AS TOTAL_COUNT
+		<include refid="sqlSelectPhone" />
+	</select>
+	
+	<select id="selectPhoneList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			USE_CODE
+			,USE_CODE_NAME 
+		<include refid="sqlSelectPhone" />
+		ORDER BY
+			USE_CODE ASC
+		<if test="pageNo != null">
+			LIMIT ${pageNo}, ${pageSize}
+		</if>
+	</select>
+	
+	<insert id="insertPhone" parameterType="java.util.HashMap">
+		INSERT INTO
+		TB_CO_PHONE_USE_CODE
+		(
+			USE_CODE
+			,USE_CODE_NAME
+		)
+		VALUES
+		(
+			#{USE_CODE}
+			,#{USE_CODE_NAME}
+		)
+	</insert>
+	
+	<update id="updatePhone" parameterType="java.util.HashMap">
+		UPDATE
+			TB_CO_PHONE_USE_CODE
+		SET 
+			USE_CODE_NAME		= #{USE_CODE_NAME}
+		WHERE 
+			USE_CODE = #{USE_CODE} 
+	</update>
+
+	<delete id="deletePhone" parameterType="java.util.HashMap">
+		DELETE
+		FROM
+			TB_CO_PHONE_USE_CODE
+		WHERE
+			USE_CODE = #{USE_CODE}
+	</delete>
+	
+	
+	<sql id="sqlSelectAlarm">
+		FROM 
+		(
+			SELECT AC.ALARM_CODE AS ALARM_CODE
+			  , EQ.EQUIP_NAME AS EQUIP_NAME
+			  , VD.VENDOR_NAME AS VENDOR_NAME
+			  , CASE
+					WHEN AC.ORG_SEVERITY = 1 THEN 'CRITICAL'
+					WHEN AC.ORG_SEVERITY = 2 THEN 'MAJOR'
+					WHEN AC.ORG_SEVERITY = 3 THEN 'MINOR'
+					WHEN AC.ORG_SEVERITY = 4 THEN 'NORMAL'
+			        ELSE 'ETC'
+					END AS ORG_SEVERITY_NAME
+			  , AC.PROBABLE_CAUSE AS PROBABLE_CAUSE
+			  , AC.UPDATE_TIME AS UPDATE_TIME
+			FROM
+			  TB_FM_ALARM_CODE AC
+			  LEFT JOIN TB_CO_EQUIP EQ
+			    ON AC.EQUIP_TYPE = EQ.EQUIP_TYPE
+			  LEFT JOIN TB_CO_VENDOR VD
+			    ON AC.VENDOR_ID = VD.VENDOR_ID
+			
+		) alc
+	</sql>
+	
+	<select id="selectAlarmTotalCount" parameterType="java.util.HashMap" resultType="int">
+		SELECT
+			COUNT(*) AS TOTAL_COUNT
+		<include refid="sqlSelectAlarm" />
+		WHERE
+				1 = 1
+			<if test="searchOpt != ''">
+				AND ${searchOpt} LIKE '%${searchWord}%'
+			</if>
+	</select>
+	
+	<select id="selectAlarmList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			ALARM_CODE
+			, EQUIP_NAME
+			, VENDOR_NAME
+			, ORG_SEVERITY_NAME
+			, PROBABLE_CAUSE
+			, DATE_FORMAT(UPDATE_TIME,'%Y-%m-%d') AS UPDATE_TIME
+		<include refid="sqlSelectAlarm" />
+		WHERE
+				1 = 1
+			<if test="searchOpt != ''">
+				AND ${searchOpt} LIKE '%${searchWord}%'
+			</if>
+		ORDER BY
+			EQUIP_NAME ASC, ALARM_CODE ASC
+		<if test="pageNo != null">
+			LIMIT ${pageNo}, ${pageSize}
+		</if>
+	</select>
+	
+	<insert id="insertAlarm" parameterType="java.util.HashMap">
+		INSERT INTO
+		TB_FM_ALARM_CODE
+		(
+			ALARM_CODE
+			, EQUIP_TYPE
+			, VENDOR_ID
+			, ORG_SEVERITY
+			, PROBABLE_CAUSE
+			, UPDATE_TIME
+		)
+		VALUES
+		(
+			#{ALARM_CODE}
+			,#{EQUIP_NAME}
+			,#{VENDOR_NAME}
+			,#{ORG_SEVERITY_NAME}
+			,#{PROBABLE_CAUSE}
+			,NOW()
+		)
+	</insert>
+	
+	<update id="updateAlarm" parameterType="java.util.HashMap">
+		UPDATE
+			TB_FM_ALARM_CODE
+		SET 
+			PROBABLE_CAUSE		= #{PROBABLE_CAUSE}
+			<if test="ORG_SEVERITY_NAME != '' and ORG_SEVERITY_NAME != null">
+			, ORG_SEVERITY		= #{ORG_SEVERITY_NAME}
+			</if>
+		WHERE 
+			ALARM_CODE = #{ALARM_CODE} 
+			AND EQUIP_TYPE = (SELECT EQUIP_TYPE FROM TB_CO_EQUIP WHERE EQUIP_NAME = #{EQUIP_NAME} )
+    		AND VENDOR_ID = (SELECT VENDOR_ID FROM TB_CO_VENDOR WHERE VENDOR_NAME = #{VENDOR_NAME} )
+	</update>
+
+	<delete id="deleteAlarm" parameterType="java.util.HashMap">
+		DELETE
+		FROM
+			TB_FM_ALARM_CODE
+		WHERE
+			ALARM_CODE = #{ALARM_CODE} 
+			AND EQUIP_TYPE = (SELECT EQUIP_TYPE FROM TB_CO_EQUIP WHERE EQUIP_NAME = #{EQUIP_NAME} )
+    		AND VENDOR_ID = (SELECT VENDOR_ID FROM TB_CO_VENDOR WHERE VENDOR_NAME = #{VENDOR_NAME} )
+	</delete>
+	
+	<select id="selectSystemInfo" resultType="java.util.HashMap">
+		SELECT
+			EQUIP_TYPE
+			,CASE
+				WHEN EQUIP_NAME = 'PGW' THEN 'GW'
+				WHEN EQUIP_TYPE = 14 THEN 'EMS'
+				ELSE EQUIP_NAME
+			END AS EQUIP_NAME
+		FROM
+			TB_CO_EQUIP
+		WHERE
+			EQUIP_FM = 'Y'
+		ORDER BY EQUIP_NAME ASC
+	</select>
+	
+	<select id="selectStationLine" resultType="java.util.HashMap">
+		SELECT
+			LINE_ID
+			,LINE_NAME
+		FROM
+			TB_CO_LINE
+		ORDER BY LINE_ID ASC
+	</select>
+	
+	
+	
+	
+	
+</mapper>

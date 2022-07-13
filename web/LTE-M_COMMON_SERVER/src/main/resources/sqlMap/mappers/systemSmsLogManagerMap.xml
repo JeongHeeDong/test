@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.SystemSmsLogManagerDAO">
+	
+	<select id="getSmsLogData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			TT_L.EVENT_TIME,
+			TT_L.USER_ID,
+			IFNULL(USER.USER_NAME,'') AS USER_NAME,
+			IFNULL(TEAM.TEAM_NAME,'') AS TEAM_NAME,
+			TT_L.ALARM_CODE,
+			TT_L.ALARM_NAME,
+			TT_L.EQUIP_TYPE,
+			TT_L.TEAM_ID,
+			TT_L.SYSTEM_ID,
+			TT_L.TT_NUMBER,
+			TT_L.TT_MSG
+		FROM
+			TB_SM_TT_LOG AS TT_L
+			LEFT OUTER JOIN
+			TB_SE_USER AS USER
+			ON TT_L.USER_ID = USER.USER_ID
+			LEFT OUTER JOIN
+			TB_CO_TEAM AS TEAM
+			ON TT_L.TEAM_ID = TEAM.TEAM_ID
+		WHERE  EVENT_TIME BETWEEN #{fromDate} AND #{toDate}
+		<choose>
+			<when test="searchOpt == 'userName'">
+				AND USER.USER_NAME LIKE '${searchWord}%'
+			</when>
+			<when test="searchOpt == 'teamName'">
+				AND TEAM.TEAM_NAME LIKE '${searchWord}%'
+			</when>
+			<when test="searchOpt == 'equipType'">
+				AND TT_L.EQUIP_TYPE LIKE '${searchWord}%'
+			</when>
+			<when test="searchOpt == 'number'">
+				AND TT_L.TT_NUMBER LIKE '${searchWord}%'
+			</when>
+			<when test="searchOpt == 'msg'">
+				AND TT_L.TT_MSG LIKE '${searchWord}%'
+			</when>
+		</choose>
+		ORDER BY
+			EVENT_TIME DESC
+		<if test="pageNo != null">
+			LIMIT ${pageNo}, ${pageSize}
+		</if>
+	</select>
+	
+	<select id="getTotalCnt" parameterType="java.util.HashMap" resultType="int">
+		SELECT COUNT(*) AS TOTAL_COUNT
+		FROM
+			TB_SM_TT_LOG AS TT_L
+			LEFT OUTER JOIN
+			TB_SE_USER AS USER
+			ON TT_L.USER_ID = USER.USER_ID
+			LEFT OUTER JOIN
+			TB_CO_TEAM AS TEAM
+			ON TT_L.TEAM_ID = TEAM.TEAM_ID
+		WHERE  EVENT_TIME BETWEEN #{fromDate} AND #{toDate}
+		<choose>
+			<when test="searchOpt == 'userName'">
+				AND USER.USER_NAME LIKE '${searchWord}%'
+			</when>
+			<when test="searchOpt == 'teamName'">
+				AND TEAM.TEAM_NAME LIKE '${searchWord}%'
+			</when>
+			<when test="searchOpt == 'equipType'">
+				AND TT_L.EQUIP_TYPE LIKE '${searchWord}%'
+			</when>
+			<when test="searchOpt == 'number'">
+				AND TT_L.TT_NUMBER LIKE '${searchWord}%'
+			</when>
+			<when test="searchOpt == 'msg'">
+				AND TT_L.TT_MSG LIKE '${searchWord}%'
+			</when>
+		</choose>
+	</select>
+</mapper>

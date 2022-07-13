@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.MenuAuthMgmtDAO">
+    <select id="getMenuList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT
+            TSM.MENU_ID AS MENU_ID,
+            TSM.MENU_NAME AS MENU_NAME,
+            TSM.MENU_DESC AS MENU_DESC,
+            PARENT_ID AS PARENT_ID,
+            TSM.LEVEL AS LEVEL,
+            TSM.MENU_SEQ AS MENU_SEQ,
+            TSM.CHILD_YN AS CHILD_YN,
+            TSM.MENU_URI AS MENU_URI,
+            TSM.MENU_AUTH AS MENU_AUTH,
+            (SELECT ROLL_NAME FROM TB_SE_ROLL WHERE TSM.MENU_AUTH = ROLL_ID) AS MENU_AUTH_NM
+        FROM (
+            SELECT funcMenuConnectBy(MENU_ID) AS MENU_ID, @level AS level
+            FROM (SELECT
+                    @start_with := 0,
+                    @id := @start_with,
+                    @level := 0) vars,
+                  TB_SE_MENU
+            WHERE @id IS NOT NULL) ho
+            JOIN TB_SE_MENU AS TSM
+            ON TSM.MENU_ID = ho.MENU_ID 
+        WHERE 1 = 1
+        AND TSM.SHOW_YN = 'Y'  
+        <if test='optionWord != null'>
+            AND MENU_NAME LIKE CONCAT('%',#{optionWord},'%')
+        </if>
+        <if test='authSelected != null and authSelected != "99"'>
+            AND MENU_AUTH = #{authSelected}
+        </if>
+    </select>
+
+    <update id="modifyMenuAuth" parameterType="java.util.HashMap">
+        UPDATE
+            TB_SE_MENU
+        SET
+            MENU_AUTH = #{menuAuth}
+        WHERE
+            MENU_ID = #{menuId}
+    </update>
+</mapper>

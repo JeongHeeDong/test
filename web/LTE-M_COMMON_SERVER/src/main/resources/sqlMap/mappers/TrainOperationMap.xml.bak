@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.TrainOperationDAO">
+	<select id="getMonitorTimeInfo" resultType="java.util.HashMap">
+		(SELECT
+			DATE_FORMAT(UPDATETIME, '%Y-%m-%d %T') AS MONITOR_TIME
+		FROM
+			TB_CO_TRAIN_TRACKING_INFO AS TCTTI
+		ORDER BY UPDATETIME DESC
+		LIMIT 1)
+		UNION
+		(SELECT
+			DATE_FORMAT(EVENT_TIME, '%Y-%m-%d %T') AS PERFORMANCE_TIME
+		FROM
+			TB_PM_PHONE AS TPP
+		WHERE TPP.PHONE_TYPE = 1
+		ORDER BY EVENT_TIME DESC
+		LIMIT 1)
+	</select>
+
+	<select id="getStationInfo" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+			STATION_ID,
+			STATION_NAME,
+			STATION_TYPE,
+			STATION_DESC
+		FROM
+			TB_CO_STATION
+	</select>
+
+	<select id="getStationLocationInfo" resultType="java.util.HashMap">
+		SELECT
+			TCCL.LOCATION,
+			TCCL.POSITION_X,
+			TCCL.POSITION_Y,
+			TCCL.STATION_FLAG,
+			TCS.STATION_NAME,
+			TCS.STATION_TYPE AS TRANSFER_FLAG
+		FROM
+			TB_CO_CELL_LOCATION AS TCCL
+			LEFT JOIN TB_CO_STATION AS TCS
+				ON TCS.STATION_ID = TCCL.LOCATION
+		WHERE STATION_FLAG = 'Y'
+		ORDER BY LOCATION * 1 ASC
+	</select>
+
+	<select id="getTrainTrackingInfo" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+			TCTTI.TRAIN_NO,
+			TCTTI.DIRECTION,
+			TCTTI.STATION_ID,
+			TCTTI.OP_CODE,
+			TCTTI.TRAIN_TYPE,
+			TCTTI.LAST_STATION_ID,
+			TCS.STATION_NAME AS LAST_STATION_NAME,
+			DATE_FORMAT(TCTTI.UPDATETIME, '%Y-%m-%d %T') AS MONITOR_TIME
+		FROM
+			TB_CO_TRAIN_TRACKING_INFO AS TCTTI
+			LEFT JOIN TB_CO_STATION AS TCS
+			ON TCTTI.LAST_STATION_ID = TCS.STATION_ID
+	</select>
+
+	<select id="getTrainQualityInfo" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+			TCPI.PHONE_NO,
+			TCPI.PHONE_USE_NAME,
+			TCTTI.TRAIN_NO,
+			DATE_FORMAT(TPP.EVENT_TIME, '%Y-%m-%d %T') AS MONITOR_TIME,
+			TPP.CALL_DIR,
+			IFNULL(TPP.ATTEMPT, 0) AS RESULT1,
+			IFNULL(TPP.SUCCESS, 0) AS RESULT2,
+			IFNULL(TPP.ATT_RATE, 0) AS RESULT3,
+			IFNULL(TPP.SUCC_RATE, 100) AS RESULT4,
+			<choose>
+				<when test='filterLevel == "0"'>
+					IFNULL(TPP.ATT_RATE_LEVEL, 4) AS RESULT5,
+					IFNULL(TPP.SUCC_RATE_LEVEL, 4) AS RESULT6
+				</when>
+				<otherwise>
+					IF(TPP.ATT_RATE_LEVEL <![CDATA[>]]> #{filterLevel}, 4, TPP.ATT_RATE_LEVEL) AS RESULT5,
+					IF(TPP.SUCC_RATE_LEVEL <![CDATA[>]]> #{filterLevel}, 4, TPP.SUCC_RATE_LEVEL) AS RESULT6
+				</otherwise>
+			</choose>
+		FROM
+			TB_CO_TRAIN_TRACKING_INFO AS TCTTI
+			LEFT JOIN TB_CO_PHONE_INFO AS TCPI
+				ON TCTTI.TRAIN_NO = TCPI.TRAIN_NO
+			LEFT JOIN TB_PM_PHONE AS TPP
+				ON TCPI.PHONE_NO = TPP.PHONE_NO
+				AND TPP.EVENT_TIME =  #{eventTime}
+		WHERE
+			OPR_STATUS = '1'
+			AND TCPI.PHONE_TYPE = '1'
+		GROUP BY TCPI.PHONE_NO, TPP.CALL_DIR
+		ORDER BY TCTTI.TRAIN_NO * 1, TCPI.PHONE_NO, TPP.CALL_DIR ASC
+	</select>
+
+	<select id="getTrainQualityTrendAll" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+			SELECT
+				'' AS TRAIN_NO,
+				'' AS PHONE_NO,
+				SUM(TPP.ATTEMPT) AS ATTEMPT,
+				SUM(TPP.SUCCESS) AS SUCCESS,
+				SUM(TPP.SUCCESS) / SUM(TPP.ATTEMPT) * 100 AS SUCC_RATE,
+				DATE_FORMAT(TPP.EVENT_TIME, '%Y-%m-%d %T') AS MONITOR_TIME
+			FROM TB_PM_PHONE AS TPP
+			WHERE
+				TPP.PHONE_TYPE = 1
+				AND TPP.EVENT_TIME  <![CDATA[>=]]> #{startEventTime}
+				AND TPP.EVENT_TIME  <![CDATA[<=]]> #{endEventTime}
+				AND TPP.CALL_DIR = #{callDir}
+			GROUP BY MONITOR_TIME, CALL_DIR
+	</select>
+
+	<select id="getTrainPhoneInfo" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT TCPI.PHONE_NO
+		FROM TB_CO_PHONE_INFO AS TCPI
+		WHERE
+			TCPI.TRAIN_NO = #{trainNo}
+			AND TCPI.PHONE_TYPE = '1'
+	</select>
+
+	<select id="getTrainQualityTrend" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+			 #{trainNo} AS TRAIN_NO,
+			 #{phoneNo} AS PHONE_NO,
+			 SUM(TPP.ATTEMPT) AS ATTEMPT,
+			 SUM(TPP.SUCCESS) AS SUCCESS,
+			 SUM(TPP.SUCCESS) / SUM(TPP.ATTEMPT) * 100 AS SUCC_RATE,
+			 DATE_FORMAT(TPP.EVENT_TIME, '%Y-%m-%d %T') AS MONITOR_TIME
+		FROM TB_PM_PHONE AS TPP
+		WHERE
+			TPP.PHONE_TYPE = 1
+			AND TPP.EVENT_TIME  <![CDATA[>=]]> #{startEventTime}
+			AND TPP.EVENT_TIME  <![CDATA[<=]]> #{endEventTime}
+			AND TPP.PHONE_NO = #{phoneNo}
+			AND TPP.CALL_DIR = #{callDir}
+		GROUP BY MONITOR_TIME, CALL_DIR
+	</select>
+</mapper>

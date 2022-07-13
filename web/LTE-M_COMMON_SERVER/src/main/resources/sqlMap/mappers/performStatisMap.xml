@@ -1,0 +1,5644 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.PerformStatisDAO">
+
+	<select id="getPackageVer" resultType="java.lang.String"
+		parameterType="java.lang.String">
+		SELECT
+		VERSION_NO
+		FROM
+		TB_CO_PACKAGE_INFO
+		WHERE
+		EQUIP_TYPE = #{equip_type}
+		AND VERSION_NO != ''
+		ORDER BY
+		UPDATE_DATE DESC
+	</select>
+
+	<select id="getPegCount" resultType="java.lang.Integer"
+		parameterType="java.util.HashMap">
+		SELECT
+		count(1) cnt
+		FROM
+		INFORMATION_SCHEMA.COLUMNS
+		WHERE
+		TABLE_NAME = #{table_nm} AND COLUMN_NAME LIKE 'PEG%'
+	</select>
+
+	<select id="getPegList" resultType="java.lang.String"
+		parameterType="java.util.HashMap">
+		SELECT
+		COLUMN_NAME
+		FROM
+		INFORMATION_SCHEMA.COLUMNS
+		WHERE
+		TABLE_NAME = #{table_nm} AND COLUMN_NAME LIKE 'PEG%'
+	</select>
+
+	<select id="getPegComments" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		${Query}
+	</select>
+
+	<select id="getDuList" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+        SELECT
+		  LINE_NAME
+		  , DU_ID
+		  , STATION_NAME
+		  , DU_NAME
+		  , LINE_ID
+		FROM
+		(
+		SELECT GROUP_CONCAT(TCL.LINE_NAME ORDER BY TCL.LINE_NAME) LINE_NAME
+				, DU_ID
+				, STATION_NAME
+				, TCD.DU_NAME DU_NAME
+				, GROUP_CONCAT(STATION.LINE_ID ORDER BY STATION.LINE_ID)  LINE_ID
+				FROM
+				TB_CO_DU TCD
+				
+				LEFT OUTER JOIN (SELECT
+				  STATION_NAME
+				  , STATION_ID 
+				  , SUBSTRING_INDEX (SUBSTRING_INDEX(TB_CO_STATION.LINE_ID,',',NUMBERS.N),',',-1) LINE_ID
+				   
+				FROM 
+					
+				   (SELECT  1 N UNION  ALL  SELECT 2  
+				) NUMBERS INNER  JOIN TB_CO_STATION
+				    ON CHAR_LENGTH ( TB_CO_STATION.LINE_ID ) 
+				     - CHAR_LENGTH ( REPLACE ( TB_CO_STATION.LINE_ID ,  ',' ,  '' ))  <![CDATA[>=]]>  NUMBERS.N-1
+				      ) STATION
+				  ON STATION.STATION_ID = TCD.STATION_ID
+				  
+				LEFT OUTER JOIN TB_CO_LINE TCL
+				  ON STATION.LINE_ID = TCL.LINE_ID
+		                        GROUP BY STATION.STATION_NAME
+		) t1
+		WHERE 1=1 
+		<if test="type == 'NAME' and search_text != '' and search_text != null ">
+			AND UPPER(DU_NAME) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+		</if>
+		<if test="type == 'ADDR' and search_text != '' and search_text != null ">
+			AND (
+			UPPER(TCD.CITY) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+			OR
+			UPPER(TCD.GU) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+			OR
+			UPPER(TCD.DONG) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+			OR
+			UPPER(TCD.BUNGI) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+			)
+		</if>
+		<if test="type == 'IP' and search_text != '' and search_text != null ">
+			AND UPPER(MASTER_IP) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+		</if>
+		<if test="type == 'ID' and search_text != '' and search_text != null ">
+			AND UPPER(DU_ID) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+		</if>
+		<if test="lineId != '' and lineId != null ">
+			AND LINE_ID LIKE  (CONCAT('%', #{lineId}, '%'))
+		</if>
+		GROUP BY STATION_NAME
+		ORDER BY DU_ID
+	</select>
+
+	<select id="getMmeList" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		MME_ID, MME_NAME
+		FROM
+		TB_CO_MME A
+		WHERE 1=1
+		<if test="type == 'NAME' and search_text != '' and search_text != null ">
+			AND UPPER(A.MME_NAME) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+		</if>
+		<if test="type == 'ADDR' and search_text != '' and search_text != null ">
+			AND (
+			UPPER(A.SERVICE_AREA) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+			)
+		</if>
+		<if test="type == 'IP' and search_text != '' and search_text != null ">
+			AND UPPER(A.DFTAPNV4) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+		</if>
+		<if test="type == 'ID' and search_text != '' and search_text != null ">
+			AND UPPER(A.MME_ID) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+		</if>
+		ORDER BY
+		MME_ID
+	</select>
+
+	<select id="getSgwList" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		PGW_ID AS SGW_ID, PGW_NAME AS SGW_NAME
+		FROM
+		TB_CO_PGW A
+		WHERE 1=1
+		<if test="type == 'NAME' and search_text != '' and search_text != null ">
+			AND UPPER(A.PGW_NAME) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+		</if>
+		<if test="type == 'ID' and search_text != '' and search_text != null ">
+			AND UPPER(A.PGW_ID) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+		</if>
+		ORDER BY
+		PGW_ID
+	</select>
+
+	<select id="getPgwList" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		PGW_ID, PGW_NAME
+		FROM
+		TB_CO_PGW A
+		WHERE 1=1
+		<if test="type == 'NAME' and search_text != '' and search_text != null ">
+			AND UPPER(A.PGW_NAME) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+		</if>
+		<if test="type == 'ID' and search_text != '' and search_text != null ">
+			AND UPPER(A.PGW_ID) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+		</if>
+		ORDER BY
+		PGW_ID
+	</select>
+
+	<select id="getPcrfList" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+			PCRF_ID, PCRF_NAME
+		FROM
+			TB_CO_PCRF A
+		WHERE 1=1
+		<if test="type == 'NAME' and search_text != '' and search_text != null ">
+			AND UPPER(PCRF_NAME) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+		</if>
+		<if test="type == 'ID' and search_text != '' and search_text != null ">
+			AND UPPER(PCRF_ID) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+		</if>
+		ORDER BY
+			PCRF_ID
+	</select>
+
+	<select id="getSystemList" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+			SYSTEM_ID
+			,SYSTEM_NAME
+		FROM
+			TB_CO_SYSTEM_ETC
+		WHERE
+			OPR_STATUS = 1
+			AND EQUIP_TYPE = 10
+		<if test="type == 'NAME' and search_text != '' and search_text != null ">
+			AND UPPER(SYSTEM_NAME) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+		</if>
+		<if test="type == 'ID' and search_text != '' and search_text != null ">
+			AND UPPER(SYSTEM_ID) LIKE CONCAT('%', UPPER(#{search_text}), '%')
+		</if>
+		ORDER BY
+			SYSTEM_ID
+	</select>
+
+	<select id="getDataInfoList" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+			<if test="(TYPE eq 'sum' and T_DAY neq true and T_DAY neq true ) or T_DU eq true">
+				IFNULL(STINFO.LINE_ID,'-') AS LINE_ID,
+        		IFNULL(STINFO.LINE_NAME,'-') AS LINE_NAME,
+				A.NE_NAME,
+				A.CNUM,
+			</if>
+			<choose>
+				<when test="(TYPE eq 'day' and T_HOUR eq true) or (TYPE eq 'hour' and T_DAY eq true)">
+					CONCAT(A.C_DATE, A.GET_TIME) AS C_DATE,
+					CASE
+						WHEN A.WEEK_ID='0' THEN '평일'
+						WHEN A.WEEK_ID='1' THEN '휴일'
+					END AS WEEK_ID,
+				</when>
+				<when test="TYPE eq 'day' or T_DAY eq true">
+					A.C_DATE,
+					CASE
+						WHEN A.WEEK_ID='0' THEN '평일'
+						WHEN A.WEEK_ID='1' THEN '휴일'
+					END AS WEEK_ID,
+				</when>
+				<when test="TYPE eq 'hour' or T_HOUR eq true">
+					A.GET_TIME AS C_DATE,
+				</when>
+			</choose>
+			T.TEAM_NAME,
+			<if test="ESTABCAUSE eq true">
+				A.ESTABCAUSE,
+			</if>
+			<if test="CALLDROPESTABCAUSE eq true">
+				A.CALLDROPESTABCAUSE,
+			</if>
+			<if test="TCID eq true">
+				A.TCID,
+			</if>
+			<if test="HOCAUSE eq true">
+				A.HOCAUSE,
+			</if>
+			<if test="TYPE eq 'sum'">
+				<foreach collection="PEGLIST" item="value">
+					<choose>
+						<when test="value == 'PEG3'">
+							MAX(${value}) ${value},
+						</when>
+						<when test="value == 'PEG9'">
+							MAX(${value}) ${value},
+						</when>
+						
+						<when test="value == 'PEG15'">
+							MIN(${value}) ${value},
+						</when>
+						<when test="value == 'PEG16'">
+							MIN(${value}) ${value},
+						</when>
+						
+						<otherwise>
+							SUM(${value}) ${value},
+						</otherwise>
+					</choose>
+				</foreach>
+			</if>
+			<if test="TYPE eq 'day' or TYPE eq 'hour'">
+				<foreach collection="PEGLIST" item="value">
+					ROUND(AVG(${value}),1) ${value},
+				</foreach>
+			</if>
+			A.PKG_VER
+		FROM
+			${table_nm} A
+			LEFT JOIN
+			TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+			LEFT OUTER JOIN
+		      (SELECT GROUP_CONCAT(TCL.LINE_NAME ORDER BY TCL.LINE_NAME) LINE_NAME
+				, DU_ID
+				, STATION_NAME
+				, TCD.DU_NAME DU_NAME
+				, GROUP_CONCAT(STATION.LINE_ID ORDER BY STATION.LINE_ID)  LINE_ID
+				FROM
+				TB_CO_DU TCD
+			
+				LEFT OUTER JOIN (SELECT
+				  STATION_NAME
+				  , STATION_ID 
+				  , SUBSTRING_INDEX (SUBSTRING_INDEX(TB_CO_STATION.LINE_ID,',',NUMBERS.N),',',-1) LINE_ID
+				   
+				FROM 
+					
+				   (SELECT  1 N UNION  ALL  SELECT 2  
+				) NUMBERS INNER  JOIN TB_CO_STATION
+				    ON CHAR_LENGTH ( TB_CO_STATION.LINE_ID ) 
+				     - CHAR_LENGTH ( REPLACE ( TB_CO_STATION.LINE_ID ,  ',' ,  '' )) <![CDATA[>=]]> NUMBERS.N-1
+				      ) STATION
+				  ON STATION.STATION_ID = TCD.STATION_ID
+				
+				LEFT OUTER JOIN TB_CO_LINE TCL
+				  ON STATION.LINE_ID = TCL.LINE_ID
+		    GROUP BY STATION.STATION_NAME ) STINFO
+		    ON A.NE_NAME = STINFO.DU_NAME
+		WHERE 1=1
+			<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+				AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+			</if>
+			<if test="DU_ID != null and DU_ID != ''">
+				AND A.NE_ID IN ( ${DU_ID} )
+			</if>
+			<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+				AND A.C_DATE != #{EXCEPT_DAY}
+			</if>
+			<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+				AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+			</if>
+			<if test="LINE_ID != '' and LINE_ID != null ">
+				AND STINFO.LINE_ID LIKE  (CONCAT('%', #{LINEID}, '%'))
+			</if>
+		GROUP BY
+			<if test="(TYPE eq 'sum' and T_DAY eq false and T_HOUR eq false) or T_DU eq true">
+				A.NE_ID,
+				A.NE_NAME,
+				A.CNUM,
+			</if>
+			<choose>
+				<when test="(TYPE eq 'day' and T_HOUR eq true) or (TYPE eq 'hour' and T_DAY eq true)">
+					CONCAT(A.C_DATE, A.GET_TIME),
+					A.WEEK_ID,
+				</when>
+				<when test="TYPE eq 'day' or T_DAY eq true">
+					A.C_DATE,
+					A.WEEK_ID,
+				</when>
+				<when test="TYPE eq 'hour' or T_HOUR eq true">
+					A.GET_TIME,
+				</when>
+			</choose>
+			A.TEAM_ID,
+			T.TEAM_NAME,
+			<if test="ESTABCAUSE eq true">
+				A.ESTABCAUSE,
+			</if>
+			<if test="CALLDROPESTABCAUSE eq true">
+				A.CALLDROPESTABCAUSE,
+			</if>
+			<if test="TCID eq true">
+				A.TCID,
+			</if>
+			<if test="HOCAUSE eq true">
+				A.HOCAUSE,
+			</if>
+			A.PKG_VER
+
+		ORDER BY
+			<trim suffixOverrides=",">
+				<if test='SORTOPTION.size() > 0'>
+					<foreach collection="SORTOPTION" item="option" separator=",">
+						${option.colName} ${option.order}
+					</foreach>
+				</if>
+				<if test='SORTOPTION.size() == 0'>
+					<if test="(TYPE eq 'sum' and T_DAY eq false and T_HOUR eq false) or T_DU eq true">
+						NE_NAME ASC,
+						CNUM ASC,
+					</if>
+					<choose>
+						<when test="(TYPE eq 'day' and T_HOUR eq true) or (TYPE eq 'hour' and T_DAY eq true)">
+							C_DATE ASC,
+							WEEK_ID ASC,
+						</when>
+						<when test="TYPE eq 'day' or T_DAY eq true">
+							C_DATE ASC,
+							WEEK_ID ASC,
+						</when>
+						<when test="TYPE eq 'hour' or T_HOUR eq true">
+							C_DATE ASC,
+						</when>
+					</choose>
+					<if test="ESTABCAUSE eq true">
+						ESTABCAUSE ASC,
+					</if>
+					<if test="CALLDROPESTABCAUSE eq true">
+						CALLDROPESTABCAUSE ASC,
+					</if>
+					<if test="TCID eq true">
+						TCID ASC,
+					</if>
+					<if test="HOCAUSE eq true">
+						HOCAUSE ASC
+					</if>
+				</if>
+			</trim>
+		LIMIT ${pageNo}, ${PAGINGNUM}
+	</select>
+	<select id="getDataInfoListLength" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+		COUNT(1) TOT_CNT
+		FROM
+		( 
+			SELECT
+				<if test="(TYPE eq 'sum' and T_DAY neq true and T_DAY neq true ) or T_DU eq true">
+					A.NE_NAME,
+					A.CNUM,
+				</if>
+				<choose>
+					<when test="(TYPE eq 'day' and T_HOUR eq true) or (TYPE eq 'hour' and T_DAY eq true)">
+						CONCAT(A.C_DATE, A.GET_TIME) AS C_DATE,
+						CASE
+							WHEN A.WEEK_ID='0' THEN '평일'
+							WHEN A.WEEK_ID='1' THEN '휴일'
+						END AS WEEK_ID,
+					</when>
+					<when test="TYPE eq 'day' or T_DAY eq true">
+						A.C_DATE,
+						CASE
+							WHEN A.WEEK_ID='0' THEN '평일'
+							WHEN A.WEEK_ID='1' THEN '휴일'
+						END AS WEEK_ID,
+					</when>
+					<when test="TYPE eq 'hour' or T_HOUR eq true">
+						A.GET_TIME AS C_DATE,
+					</when>
+				</choose>
+				T.TEAM_NAME,
+				<if test="ESTABCAUSE eq true">
+					A.ESTABCAUSE,
+				</if>
+				<if test="CALLDROPESTABCAUSE eq true">
+					A.CALLDROPESTABCAUSE,
+				</if>
+				<if test="TCID eq true">
+					A.TCID,
+				</if>
+				<if test="HOCAUSE eq true">
+					A.HOCAUSE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					<foreach collection="PEGLIST" item="value">
+						<choose>
+							<when test="value == 'PEG3'">
+								MAX(${value}) ${value},
+							</when>
+							<when test="value == 'PEG9'">
+								MAX(${value}) ${value},
+							</when>
+							
+							<when test="value == 'PEG15'">
+								MIN(${value}) ${value},
+							</when>
+							<when test="value == 'PEG16'">
+								MIN(${value}) ${value},
+							</when>
+							
+							<otherwise>
+								SUM(${value}) ${value},
+							</otherwise>
+						</choose>
+					</foreach>
+				</if>
+				<if test="TYPE eq 'day' or TYPE eq 'hour'">
+					<foreach collection="PEGLIST" item="value">
+						ROUND(AVG(${value}),1) ${value},
+					</foreach>
+				</if>
+				A.PKG_VER
+			FROM
+				${table_nm} A
+				LEFT JOIN
+				TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+			WHERE 1=1
+				<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+					AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+					AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+					AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+				</if>
+				<if test="DU_ID != null and DU_ID != ''">
+					AND A.NE_ID IN ( ${DU_ID} )
+				</if>
+				<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+					AND A.C_DATE != #{EXCEPT_DAY}
+				</if>
+				<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+					AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+				</if>
+			GROUP BY
+				<if test="(TYPE eq 'sum' and T_DAY eq false and T_HOUR eq false) or T_DU eq true">
+					A.NE_ID,
+					A.NE_NAME,
+					A.CNUM,
+				</if>
+				<choose>
+					<when test="(TYPE eq 'day' and T_HOUR eq true) or (TYPE eq 'hour' and T_DAY eq true)">
+						CONCAT(A.C_DATE, A.GET_TIME),
+						A.WEEK_ID,
+					</when>
+					<when test="TYPE eq 'day' or T_DAY eq true">
+						A.C_DATE,
+						A.WEEK_ID,
+					</when>
+					<when test="TYPE eq 'hour' or T_HOUR eq true">
+						A.GET_TIME,
+					</when>
+				</choose>
+				A.TEAM_ID,
+				T.TEAM_NAME,
+				<if test="ESTABCAUSE eq true">
+					A.ESTABCAUSE,
+				</if>
+				<if test="CALLDROPESTABCAUSE eq true">
+					A.CALLDROPESTABCAUSE,
+				</if>
+				<if test="TCID eq true">
+					A.TCID,
+				</if>
+				<if test="HOCAUSE eq true">
+					A.HOCAUSE,
+				</if>
+				A.PKG_VER
+		) A
+
+	</select>
+
+	<select id="getDataExcel" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+			<if test="(TYPE eq 'sum' and T_DAY neq 'true' and T_DAY neq 'true' ) or T_DU eq 'true'">
+				IFNULL(STINFO.LINE_ID,'-') AS LINE_ID,
+        		IFNULL(STINFO.LINE_NAME,'-') AS LINE_NAME,
+				A.NE_NAME,
+				A.CNUM,
+			</if>
+			<choose>
+				<when test="(TYPE eq 'day' and T_HOUR eq 'true') or (TYPE eq 'hour' and T_DAY eq 'true')">
+					CONCAT(A.C_DATE, A.GET_TIME) AS C_DATE,
+					CASE
+						WHEN A.WEEK_ID='0' THEN '평일'
+						WHEN A.WEEK_ID='1' THEN '휴일'
+					END AS WEEK_ID,
+				</when>
+				<when test="TYPE eq 'day' or T_DAY eq 'true'">
+					A.C_DATE,
+					CASE
+						WHEN A.WEEK_ID='0' THEN '평일'
+						WHEN A.WEEK_ID='1' THEN '휴일'
+					END AS WEEK_ID,
+				</when>
+				<when test="TYPE eq 'hour' or T_HOUR eq 'true'">
+					A.GET_TIME AS C_DATE,
+				</when>
+			</choose>
+			T.TEAM_NAME,
+			<if test="ESTABCAUSE eq 'true'">
+				A.ESTABCAUSE,
+			</if>
+			<if test="CALLDROPESTABCAUSE eq 'true'">
+				A.CALLDROPESTABCAUSE,
+			</if>
+			<if test="TCID eq 'true'">
+				A.TCID,
+			</if>
+			<if test="HOCAUSE eq 'true'">
+				A.HOCAUSE,
+			</if>
+			<if test="TYPE eq 'sum'">
+				<foreach collection="PEGLIST" item="value">
+					SUM(${value}) ${value},
+				</foreach>
+			</if>
+			<if test="TYPE eq 'day' or TYPE eq 'hour'">
+				<foreach collection="PEGLIST" item="value">
+					ROUND(AVG(${value}),1) ${value},
+				</foreach>
+			</if>
+			A.PKG_VER
+		FROM
+			${table_nm} A
+			LEFT JOIN
+			TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+			LEFT OUTER JOIN
+		      (SELECT GROUP_CONCAT(TCL.LINE_NAME ORDER BY TCL.LINE_NAME) LINE_NAME
+				, DU_ID
+				, STATION_NAME
+				, TCD.DU_NAME DU_NAME
+				, GROUP_CONCAT(STATION.LINE_ID ORDER BY STATION.LINE_ID)  LINE_ID
+				FROM
+				TB_CO_DU TCD
+			
+				LEFT OUTER JOIN (SELECT 
+				  STATION_NAME
+				  , STATION_ID 
+				  , SUBSTRING_INDEX (SUBSTRING_INDEX(TB_CO_STATION.LINE_ID,',',NUMBERS.N),',',-1) LINE_ID
+				   
+				FROM 
+					
+				   (SELECT  1 N UNION  ALL  SELECT 2  
+				) NUMBERS INNER  JOIN TB_CO_STATION
+				    ON CHAR_LENGTH ( TB_CO_STATION.LINE_ID ) 
+				     - CHAR_LENGTH ( REPLACE ( TB_CO_STATION.LINE_ID ,  ',' ,  '' )) <![CDATA[>=]]> NUMBERS.N-1
+				      ) STATION
+				  ON STATION.STATION_ID = TCD.STATION_ID
+				
+				LEFT OUTER JOIN TB_CO_LINE TCL
+				  ON STATION.LINE_ID = TCL.LINE_ID
+		    GROUP BY STATION.STATION_NAME ) STINFO
+		    ON A.NE_NAME = STINFO.DU_NAME
+		WHERE 1=1
+			<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+				AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+			</if>
+			<if test="DU_ID != null and DU_ID != ''">
+				AND A.NE_ID IN ( ${DU_ID} )
+			</if>
+			<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+				AND A.C_DATE != #{EXCEPT_DAY}
+			</if>
+			<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+				AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+			</if>
+		GROUP BY
+			<if test="(TYPE eq 'sum' and T_DAY eq 'false' and T_HOUR eq 'false') or T_DU eq 'true'">
+				A.NE_ID,
+				A.NE_NAME,
+				A.CNUM,
+			</if>
+			<choose>
+				<when test="(TYPE eq 'day' and T_HOUR eq 'true') or (TYPE eq 'hour' and T_DAY eq 'true')">
+					CONCAT(A.C_DATE, A.GET_TIME),
+					A.WEEK_ID,
+				</when>
+				<when test="TYPE eq 'day' or T_DAY eq 'true'">
+					A.C_DATE,
+					A.WEEK_ID,
+				</when>
+				<when test="TYPE eq 'hour' or T_HOUR eq 'true'">
+					A.GET_TIME,
+				</when>
+			</choose>
+			A.TEAM_ID,
+			T.TEAM_NAME,
+			<if test="ESTABCAUSE eq 'true'">
+				A.ESTABCAUSE,
+			</if>
+			<if test="CALLDROPESTABCAUSE eq 'true'">
+				A.CALLDROPESTABCAUSE,
+			</if>
+			<if test="TCID eq 'true'">
+				A.TCID,
+			</if>
+			<if test="HOCAUSE eq 'true'">
+				A.HOCAUSE,
+			</if>
+			A.PKG_VER
+
+		ORDER BY
+			<trim suffixOverrides=",">
+				<if test="(TYPE eq 'sum' and T_DAY eq 'false' and T_HOUR eq 'false') or T_DU eq 'true'">
+					NE_NAME ASC,
+					CNUM ASC,
+				</if>
+				<choose>
+					<when test="(TYPE eq 'day' and T_HOUR eq 'true') or (TYPE eq 'hour' and T_DAY eq 'true')">
+						C_DATE ASC,
+						WEEK_ID ASC,
+					</when>
+					<when test="TYPE eq 'day' or T_DAY eq 'true'">
+						C_DATE ASC,
+						WEEK_ID ASC,
+					</when>
+					<when test="TYPE eq 'hour' or T_HOUR eq 'true'">
+						C_DATE ASC,
+					</when>
+				</choose>
+				<if test="ESTABCAUSE eq 'true'">
+					ESTABCAUSE ASC,
+				</if>
+				<if test="CALLDROPESTABCAUSE eq 'true'">
+					CALLDROPESTABCAUSE ASC,
+				</if>
+				<if test="TCID eq 'true'">
+					TCID ASC,
+				</if>
+				<if test="HOCAUSE eq 'true'">
+					HOCAUSE ASC
+				</if>
+			</trim>
+	</select>
+	
+	<select id="getAttachInfoList" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="DU eq true">
+			A.DU_ID,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="MME_ID != null and MME_ID != ''">
+			AND A.NE_ID IN (${MME_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="DU  eq true">
+			A.DU_ID,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+		ORDER BY
+		<if test='SORTOPTION.size() > 0'>
+			<foreach collection="SORTOPTION" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test='SORTOPTION.size() == 0'>
+			<choose>
+				<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+					A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+				</when>
+				<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.C_DATE, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.NE_NAME, A.C_DATE, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+					A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+				</when>
+			</choose>
+		</if>
+		LIMIT ${pageNo}, ${PAGINGNUM}
+	</select>
+
+	<select id="getAttachInfoListLength" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		COUNT(1) TOT_CNT
+		FROM ( SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="DU eq true">
+			A.DU_ID,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="MME_ID != null and MME_ID != ''">
+			AND A.NE_ID IN ( ${MME_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="DU  eq true">
+			A.DU_ID,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+
+
+		) A
+	</select>
+	<select id="getAttachExcel" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="DU eq 'true'">
+			A.DU_ID,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="MME_ID != null and MME_ID != ''">
+			AND A.NE_ID IN (${MME_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="DU  eq 'true'">
+			A.DU_ID,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+		ORDER BY
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_NAME, A.C_DATE, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+			</when>
+		</choose>
+	</select>
+
+	<select id="getSrInfoList" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="DU eq true">
+			A.DU_ID,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="MME_ID != null and MME_ID != ''">
+			AND A.NE_ID IN (${MME_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="DU  eq true">
+			A.DU_ID,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+
+		ORDER BY
+		<if test='SORTOPTION.size() > 0'>
+			<foreach collection="SORTOPTION" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test='SORTOPTION.size() == 0'>
+			<choose>
+				<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+					A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+				</when>
+				<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.C_DATE, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.NE_NAME, A.C_DATE, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+					A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+				</when>
+			</choose>
+		</if>
+		LIMIT ${pageNo}, ${PAGINGNUM}
+	</select>
+
+	<select id="getSrInfoListLength" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		COUNT(1) TOT_CNT
+		FROM ( SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="DU eq true">
+			A.DU_ID,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="MME_ID != null and MME_ID != ''">
+			AND A.NE_ID IN ( ${MME_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="DU  eq true">
+			A.DU_ID,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+
+
+		) A
+	</select>
+	<select id="getSrExcel" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="DU eq 'true'">
+			A.DU_ID,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="MME_ID != null and MME_ID != ''">
+			AND A.NE_ID IN (${MME_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="DU  eq 'true'">
+			A.DU_ID,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+		ORDER BY
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_NAME, A.C_DATE, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+			</when>
+		</choose>
+	</select>
+
+	<select id="getSgsapInfoList" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="MSC eq true">
+			A.MSC,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="MME_ID != null and MME_ID != ''">
+			AND A.NE_ID IN (${MME_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="MSC  eq true">
+			A.MSC,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+		ORDER BY
+		<if test='SORTOPTION.size() > 0'>
+			<foreach collection="SORTOPTION" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test='SORTOPTION.size() == 0'>
+			<choose>
+				<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+					A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+				</when>
+				<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.C_DATE, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.NE_NAME, A.C_DATE, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+					A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+				</when>
+			</choose>
+		</if>
+		LIMIT ${pageNo}, ${PAGINGNUM}
+	</select>
+
+	<select id="getSgsapInfoListLength" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		COUNT(1) TOT_CNT
+		FROM ( SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="MSC eq true">
+			A.MSC,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="MME_ID != null and MME_ID != ''">
+			AND A.NE_ID IN ( ${MME_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="MSC  eq true">
+			A.MSC,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+
+
+		) A
+	</select>
+	<select id="getSgsapExcel" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="MSC eq 'true'">
+			A.MSC,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="MME_ID != null and MME_ID != ''">
+			AND A.NE_ID IN (${MME_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="MSC  eq 'true'">
+			A.MSC,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+		ORDER BY
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_NAME, A.C_DATE, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+			</when>
+		</choose>
+	</select>
+
+	<select id="getPgwInfoList" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="PGW eq true">
+			A.PGW,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="PGW_ID != null and PGW_ID != ''">
+			AND A.NE_ID IN (${PGW_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="PGW  eq true">
+			A.PGW,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+		ORDER BY
+		<if test='SORTOPTION.size() > 0'>
+			<foreach collection="SORTOPTION" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test='SORTOPTION.size() == 0'>
+			<choose>
+				<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+					A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+				</when>
+				<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.C_DATE, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.NE_NAME, A.C_DATE, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+					A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+				</when>
+			</choose>
+		</if>
+		LIMIT ${pageNo}, ${PAGINGNUM}
+	</select>
+
+	<select id="getPgwInfoListLength" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		COUNT(1) TOT_CNT
+		FROM ( SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="PGW eq true">
+			A.PGW,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="PGW_ID != null and PGW_ID != ''">
+			AND A.NE_ID IN ( ${PGW_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="PGW  eq true">
+			A.PGW,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+
+
+		) A
+	</select>
+	<select id="getPgwExcel" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="PGW eq 'true'">
+			A.PGW,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="PGW_ID != null and PGW_ID != ''">
+			AND A.NE_ID IN (${PGW_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="PGW  eq 'true'">
+			A.PGW,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+		ORDER BY
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_NAME, A.C_DATE, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+			</when>
+		</choose>
+	</select>
+
+	<select id="getSgwInfoList" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="SGW eq true">
+			A.SGW,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="SGW_ID != null and SGW_ID != ''">
+			AND A.NE_ID IN (${SGW_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="SGW  eq true">
+			A.SGW,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+		ORDER BY
+		<if test='SORTOPTION.size() > 0'>
+			<foreach collection="SORTOPTION" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test='SORTOPTION.size() == 0'>
+			<choose>
+				<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+					A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+				</when>
+				<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.C_DATE, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.NE_NAME, A.C_DATE, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+					A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+				</when>
+			</choose>
+		</if>
+		LIMIT ${pageNo}, ${PAGINGNUM}
+	</select>
+
+	<select id="getSgwInfoListLength" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		COUNT(1) TOT_CNT
+		FROM ( SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="SGW eq true">
+			A.SGW,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="SGW_ID != null and SGW_ID != ''">
+			AND A.NE_ID IN ( ${SGW_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="SGW  eq true">
+			A.SGW,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+
+
+		) A
+	</select>
+	<select id="getSgwExcel" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="SGW eq 'true'">
+			A.SGW,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="SGW_ID != null and SGW_ID != ''">
+			AND A.NE_ID IN (${SGW_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="SGW  eq 'true'">
+			A.SGW,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+		ORDER BY
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_NAME, A.C_DATE, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+			</when>
+		</choose>
+	</select>
+
+
+	<select id="getDiameterInfoList" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		<!--T_DU를 그룹별 체크 플래그로 사용 -->
+		SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				G.GROUP_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					G.GROUP_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		T.TEAM_NAME,
+		A.PKG_VER,
+		<if test="TYPE eq 'sum'">
+			ROUND(SUM(ATTEMPT),1) ATTEMPT,
+			ROUND(SUM(SUCCESS),1) SUCCESS,
+			ROUND(SUM(FAIL),1) FAIL,
+			ROUND(SUM(IPCFAIL),1) IPCFAIL,
+			ROUND(SUM(SENDFAIL),1) SENDFAIL,
+			ROUND(SUM(PROC_ERR),1) PROC_ERR,
+			ROUND(SUM(CONN_ERR),1) CONN_ERR,
+			ROUND(SUM(TOOBUSY),1) TOOBUSY,
+			ROUND(SUM(MSG_ERR),1) MSG_ERR,
+			ROUND(SUM(ETC),1) ETC
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			ROUND(AVG(ATTEMPT),1) ATTEMPT,
+			ROUND(AVG(SUCCESS),1) SUCCESS,
+			ROUND(AVG(FAIL),1) FAIL,
+			ROUND(AVG(IPCFAIL),1) IPCFAIL,
+			ROUND(AVG(SENDFAIL),1) SENDFAIL,
+			ROUND(AVG(PROC_ERR),1) PROC_ERR,
+			ROUND(AVG(CONN_ERR),1) CONN_ERR,
+			ROUND(AVG(TOOBUSY),1) TOOBUSY,
+			ROUND(AVG(MSG_ERR),1) MSG_ERR,
+			ROUND(AVG(ETC),1) ETC
+		</if>
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		LEFT JOIN
+		TB_CO_HSS_GROUP_ID G ON A.GROUP_ID = G.GROUP_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				G.GROUP_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					G.GROUP_NAME,
+				</if>
+			</when>
+		</choose>
+		A.WEEK_ID,
+		A.TEAM_ID,
+		A.PKG_VER
+		ORDER BY
+		<if test='SORTOPTION.size() > 0'>
+			<foreach collection="SORTOPTION" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test='SORTOPTION.size() == 0'>
+			<choose>
+				<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+					A.EVENT_TIME DESC, A.ATTEMPT,G.GROUP_NAME,A.WEEK_ID
+				</when>
+
+				<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.C_DATE DESC, A.ATTEMPT, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						CONCAT(A.C_DATE,A.GET_TIME) DESC,A.ATTEMPT, A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.C_DATE DESC,A.ATTEMPT,G.GROUP_NAME, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						CONCAT(A.C_DATE,A.GET_TIME) DESC,A.ATTEMPT,G.GROUP_NAME, A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+					A.EVENT_TIME DESC,A.ATTEMPT,G.GROUP_NAME, A.WEEK_ID
+				</when>
+			</choose>
+		</if>
+		LIMIT ${pageNo}, ${PAGINGNUM}
+	</select>
+
+	<select id="getDiameterInfoListLength" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		COUNT(1) TOT_CNT
+		FROM
+		( SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				G.GROUP_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					G.GROUP_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		T.TEAM_NAME,
+		A.PKG_VER,
+		<if test="TYPE eq 'sum'">
+			ROUND(SUM(ATTEMPT),1) ATTEMPT,
+			ROUND(SUM(SUCCESS),1) SUCCESS,
+			ROUND(SUM(FAIL),1) FAIL,
+			ROUND(SUM(IPCFAIL),1) IPCFAIL,
+			ROUND(SUM(SENDFAIL),1) SENDFAIL,
+			ROUND(SUM(PROC_ERR),1) PROC_ERR,
+			ROUND(SUM(CONN_ERR),1) CONN_ERR,
+			ROUND(SUM(TOOBUSY),1) TOOBUSY,
+			ROUND(SUM(MSG_ERR),1) MSG_ERR,
+			ROUND(SUM(ETC),1) ETC
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			ROUND(AVG(ATTEMPT),1) ATTEMPT,
+			ROUND(AVG(SUCCESS),1) SUCCESS,
+			ROUND(AVG(FAIL),1) FAIL,
+			ROUND(AVG(IPCFAIL),1) IPCFAIL,
+			ROUND(AVG(SENDFAIL),1) SENDFAIL,
+			ROUND(AVG(PROC_ERR),1) PROC_ERR,
+			ROUND(AVG(CONN_ERR),1) CONN_ERR,
+			ROUND(AVG(TOOBUSY),1) TOOBUSY,
+			ROUND(AVG(MSG_ERR),1) MSG_ERR,
+			ROUND(AVG(ETC),1) ETC
+		</if>
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		LEFT JOIN
+		TB_CO_HSS_GROUP_ID G ON A.GROUP_ID = G.GROUP_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				G.GROUP_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					G.GROUP_NAME,
+				</if>
+			</when>
+		</choose>
+		A.WEEK_ID,
+		A.TEAM_ID,
+		A.PKG_VER
+		) A
+	</select>
+
+	<select id="getDiameterExcel" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				G.GROUP_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					G.GROUP_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		T.TEAM_NAME,
+		A.PKG_VER,
+		<if test="TYPE eq 'sum'">
+			ROUND(SUM(ATTEMPT),1) ATTEMPT,
+			ROUND(SUM(SUCCESS),1) SUCCESS,
+			ROUND(SUM(FAIL),1) FAIL,
+			ROUND(SUM(IPCFAIL),1) IPCFAIL,
+			ROUND(SUM(SENDFAIL),1) SENDFAIL,
+			ROUND(SUM(PROC_ERR),1) PROC_ERR,
+			ROUND(SUM(CONN_ERR),1) CONN_ERR,
+			ROUND(SUM(TOOBUSY),1) TOOBUSY,
+			ROUND(SUM(MSG_ERR),1) MSG_ERR,
+			ROUND(SUM(ETC),1) ETC
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			ROUND(AVG(ATTEMPT),1) ATTEMPT,
+			ROUND(AVG(SUCCESS),1) SUCCESS,
+			ROUND(AVG(FAIL),1) FAIL,
+			ROUND(AVG(IPCFAIL),1) IPCFAIL,
+			ROUND(AVG(SENDFAIL),1) SENDFAIL,
+			ROUND(AVG(PROC_ERR),1) PROC_ERR,
+			ROUND(AVG(CONN_ERR),1) CONN_ERR,
+			ROUND(AVG(TOOBUSY),1) TOOBUSY,
+			ROUND(AVG(MSG_ERR),1) MSG_ERR,
+			ROUND(AVG(ETC),1) ETC
+		</if>
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		LEFT JOIN
+		TB_CO_HSS_GROUP_ID G ON A.GROUP_ID = G.GROUP_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.GROUP_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					G.GROUP_NAME,
+				</if>
+			</when>
+		</choose>
+		A.WEEK_ID,
+		A.TEAM_ID,
+		A.PKG_VER
+
+		ORDER BY
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.EVENT_TIME DESC, A.ATTEMPT,G.GROUP_NAME,A.WEEK_ID
+			</when>
+
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE DESC, A.ATTEMPT, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME) DESC,A.ATTEMPT, A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE DESC,A.ATTEMPT,G.GROUP_NAME, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME) DESC,A.ATTEMPT,G.GROUP_NAME, A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.EVENT_TIME DESC,A.ATTEMPT,G.GROUP_NAME, A.WEEK_ID
+			</when>
+		</choose>
+	</select>
+
+	<select id="getS6AInfoList" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		<!--T_DU를 그룹별 체크 플래그로 사용 -->
+		SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				G.GROUP_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					G.GROUP_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		T.TEAM_NAME,
+		A.PKG_VER,
+		<if test="TYPE eq 'sum'">
+			ROUND(SUM(ATTEMPT),1) ATTEMPT,
+			ROUND(SUM(SUCCESS),1)
+			SUCCESS,
+			ROUND(SUM(FAIL),1) FAIL,
+			ROUND(SUM(UNAB_COM),1) UNAB_COM,
+			ROUND(SUM(UUNKNOWN),1) UUNKNOWN,
+			ROUND(SUM(AUTHFAIL),1) AUTHFAIL,
+			ROUND(SUM(IDMISMAT),1) IDMISMAT,
+			ROUND(SUM(AVPERROR),1) AVPERROR,
+			ROUND(SUM(ROAMPERM),1) ROAMPERM,
+			ROUND(SUM(OPER_NOT),1) OPER_NOT,
+			ROUND(SUM(DATAUNAB),1) DATAUNAB,
+			ROUND(SUM(ETC),1) ETC
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			ROUND(AVG(ATTEMPT),1) ATTEMPT,
+			ROUND(AVG(SUCCESS),1) SUCCESS,
+			ROUND(AVG(FAIL),1) FAIL,
+			ROUND(AVG(UNAB_COM),1) UNAB_COM,
+			ROUND(AVG(UUNKNOWN),1) UUNKNOWN,
+			ROUND(AVG(AUTHFAIL),1) AUTHFAIL,
+			ROUND(AVG(IDMISMAT),1) IDMISMAT,
+			ROUND(AVG(AVPERROR),1) AVPERROR,
+			ROUND(AVG(ROAMPERM),1) ROAMPERM,
+			ROUND(AVG(OPER_NOT),1) OPER_NOT,
+			ROUND(AVG(DATAUNAB),1) DATAUNAB,
+			ROUND(AVG(ETC),1) ETC
+		</if>
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		LEFT JOIN
+		TB_CO_HSS_GROUP_ID G ON A.GROUP_ID = G.GROUP_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				G.GROUP_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					G.GROUP_NAME,
+				</if>
+			</when>
+		</choose>
+		A.WEEK_ID,
+		A.TEAM_ID,
+		A.PKG_VER
+		ORDER BY
+		<if test='SORTOPTION.size() > 0'>
+			<foreach collection="SORTOPTION" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test='SORTOPTION.size() == 0'>
+			<choose>
+				<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+					A.EVENT_TIME DESC,A.ATTEMPT,G.GROUP_NAME, A.WEEK_ID
+				</when>
+
+				<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.C_DATE DESC,A.ATTEMPT, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						CONCAT(A.C_DATE,A.GET_TIME) DESC,A.ATTEMPT, A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.C_DATE DESC,A.ATTEMPT,G.GROUP_NAME, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						CONCAT(A.C_DATE,A.GET_TIME) DESC,A.ATTEMPT,G.GROUP_NAME, A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+					A.EVENT_TIME DESC,A.ATTEMPT,G.GROUP_NAME, A.WEEK_ID
+				</when>
+			</choose>
+		</if>
+		LIMIT ${pageNo}, ${PAGINGNUM}
+	</select>
+
+	<select id="getS6AInfoListLength" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		COUNT(1) TOT_CNT
+		FROM
+		( SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				G.GROUP_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					G.GROUP_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		T.TEAM_NAME,
+		A.PKG_VER,
+		<if test="TYPE eq 'sum'">
+			ROUND(SUM(ATTEMPT),1) ATTEMPT,
+			ROUND(SUM(SUCCESS),1) SUCCESS,
+			ROUND(SUM(FAIL),1) FAIL,
+			ROUND(SUM(UNAB_COM),1) UNAB_COM,
+			ROUND(SUM(UUNKNOWN),1) UUNKNOWN,
+			ROUND(SUM(AUTHFAIL),1) AUTHFAIL,
+			ROUND(SUM(IDMISMAT),1) IDMISMAT,
+			ROUND(SUM(AVPERROR),1) AVPERROR,
+			ROUND(SUM(ROAMPERM),1) ROAMPERM,
+			ROUND(SUM(OPER_NOT),1) OPER_NOT,
+			ROUND(SUM(DATAUNAB),1) DATAUNAB,
+			ROUND(SUM(ETC),1) ETC
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			ROUND(AVG(ATTEMPT),1) ATTEMPT,
+			ROUND(AVG(SUCCESS),1) SUCCESS,
+			ROUND(AVG(FAIL),1) FAIL,
+			ROUND(AVG(UNAB_COM),1) UNAB_COM,
+			ROUND(AVG(UUNKNOWN),1) UUNKNOWN,
+			ROUND(AVG(AUTHFAIL),1) AUTHFAIL,
+			ROUND(AVG(IDMISMAT),1) IDMISMAT,
+			ROUND(AVG(AVPERROR),1) AVPERROR,
+			ROUND(AVG(ROAMPERM),1) ROAMPERM,
+			ROUND(AVG(OPER_NOT),1) OPER_NOT,
+			ROUND(AVG(DATAUNAB),1) DATAUNAB,
+			ROUND(AVG(ETC),1) ETC
+		</if>
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		LEFT JOIN
+		TB_CO_HSS_GROUP_ID G ON A.GROUP_ID = G.GROUP_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				G.GROUP_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					G.GROUP_NAME,
+				</if>
+			</when>
+		</choose>
+		A.WEEK_ID,
+		A.TEAM_ID,
+		A.PKG_VER
+		) A
+	</select>
+
+	<select id="getS6AExcel" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				G.GROUP_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					G.GROUP_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		T.TEAM_NAME,
+		A.PKG_VER,
+		<if test="TYPE eq 'sum'">
+			ROUND(SUM(ATTEMPT),1) ATTEMPT,
+			ROUND(SUM(SUCCESS),1) SUCCESS,
+			ROUND(SUM(FAIL),1) FAIL,
+			ROUND(SUM(UNAB_COM),1) UNAB_COM,
+			ROUND(SUM(UUNKNOWN),1) UUNKNOWN,
+			ROUND(SUM(AUTHFAIL),1) AUTHFAIL,
+			ROUND(SUM(IDMISMAT),1) IDMISMAT,
+			ROUND(SUM(AVPERROR),1) AVPERROR,
+			ROUND(SUM(ROAMPERM),1) ROAMPERM,
+			ROUND(SUM(OPER_NOT),1) OPER_NOT,
+			ROUND(SUM(DATAUNAB),1) DATAUNAB,
+			ROUND(SUM(ETC),1) ETC
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			ROUND(AVG(ATTEMPT),1) ATTEMPT,
+			ROUND(AVG(SUCCESS),1) SUCCESS,
+			ROUND(AVG(FAIL),1) FAIL,
+			ROUND(AVG(UNAB_COM),1) UNAB_COM,
+			ROUND(AVG(UUNKNOWN),1) UUNKNOWN,
+			ROUND(AVG(AUTHFAIL),1) AUTHFAIL,
+			ROUND(AVG(IDMISMAT),1) IDMISMAT,
+			ROUND(AVG(AVPERROR),1) AVPERROR,
+			ROUND(AVG(ROAMPERM),1) ROAMPERM,
+			ROUND(AVG(OPER_NOT),1) OPER_NOT,
+			ROUND(AVG(DATAUNAB),1) DATAUNAB,
+			ROUND(AVG(ETC),1) ETC
+		</if>
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		LEFT JOIN
+		TB_CO_HSS_GROUP_ID G ON A.GROUP_ID = G.GROUP_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.GROUP_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					G.GROUP_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					G.GROUP_NAME, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					G.GROUP_NAME,
+				</if>
+			</when>
+		</choose>
+		A.WEEK_ID,
+		A.TEAM_ID,
+		A.PKG_VER
+
+		ORDER BY
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.EVENT_TIME DESC,A.ATTEMPT,G.GROUP_NAME, A.WEEK_ID
+			</when>
+
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE DESC,A.ATTEMPT, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME) DESC,A.ATTEMPT, A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE DESC,A.ATTEMPT,G.GROUP_NAME, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME) DESC,A.ATTEMPT,G.GROUP_NAME, A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.EVENT_TIME DESC,A.ATTEMPT,G.GROUP_NAME, A.WEEK_ID
+			</when>
+		</choose>
+	</select>
+
+
+	<select id="getPcefInfoList" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="PCEF eq true">
+			A.PCEF,
+		</if>
+		<if test="PCEF_TYPE eq true">
+			A.TYPE,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="PCRF_ID != null and PCRF_ID != ''">
+			AND A.NE_ID IN (${PCRF_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="PCEF eq true">
+			A.PCEF,
+		</if>
+		<if test="PCEF_TYPE eq true">
+			A.TYPE,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+		ORDER BY
+		<if test='SORTOPTION.size() > 0'>
+			<foreach collection="SORTOPTION" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test='SORTOPTION.size() == 0'>
+			<choose>
+				<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+					A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+				</when>
+				<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.C_DATE, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.NE_NAME, A.C_DATE, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+					A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+				</when>
+			</choose>
+		</if>
+		LIMIT ${pageNo}, ${PAGINGNUM}
+	</select>
+
+	<select id="getPcefInfoListLength" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		COUNT(1) TOT_CNT
+		FROM ( SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="PCEF eq true">
+			A.PCEF,
+		</if>
+		<if test="PCEF_TYPE eq true">
+			A.TYPE,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="PCRF_ID != null and PCRF_ID != ''">
+			AND A.NE_ID IN ( ${PCRF_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+		A.WEEK_ID,
+		<if test="PCEF eq true">
+			A.PCEF,
+		</if>
+		<if test="PCEF_TYPE eq true">
+			A.TYPE,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+		) A
+	</select>
+	
+	<select id="getPcefExcel" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="PCEF eq 'true'">
+			A.PCEF,
+		</if>
+		<if test="PCEF_TYPE eq 'true'">
+			A.TYPE,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="PCRF_ID != null and PCRF_ID != ''">
+			AND A.NE_ID IN (${PCRF_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+		A.WEEK_ID,
+		<if test="PCEF eq 'true'">
+			A.PCEF,
+		</if>
+		<if test="PCEF_TYPE eq 'true'">
+			A.TYPE,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+		ORDER BY
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_NAME, A.C_DATE, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+			</when>
+		</choose>
+	</select>
+
+
+	<select id="getSprInfoList" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="SPR eq true">
+			A.SPR,
+		</if>
+		<if test="SPR_TYPE eq true">
+			A.TYPE,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="PCRF_ID != null and PCRF_ID != ''">
+			AND A.NE_ID IN (${PCRF_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="SPR eq true">
+			A.SPR,
+		</if>
+		<if test="SPR_TYPE eq true">
+			A.TYPE,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+		ORDER BY
+		<if test='SORTOPTION.size() > 0'>
+			<foreach collection="SORTOPTION" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test='SORTOPTION.size() == 0'>
+			<choose>
+				<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+					A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+				</when>
+				<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.C_DATE, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.NE_NAME, A.C_DATE, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+					A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+				</when>
+			</choose>
+		</if>
+		LIMIT ${pageNo}, ${PAGINGNUM}
+	</select>
+
+	<select id="getSprInfoListLength" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		COUNT(1) TOT_CNT
+		FROM ( SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="SPR eq true">
+			A.SPR,
+		</if>
+		<if test="SPR_TYPE eq true">
+			A.TYPE,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="PCRF_ID != null and PCRF_ID != ''">
+			AND A.NE_ID IN ( ${PCRF_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="SPR eq true">
+			A.SPR,
+		</if>
+		<if test="SPR_TYPE eq true">
+			A.TYPE,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+
+
+		) A
+	</select>
+	<select id="getSprExcel" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="SPR eq 'true'">
+			A.SPR,
+		</if>
+		<if test="SPR_TYPE eq 'true'">
+			A.TYPE,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="PCRF_ID != null and PCRF_ID != ''">
+			AND A.NE_ID IN (${PCRF_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="SPR eq 'true'">
+			A.SPR,
+		</if>
+		<if test="SPR_TYPE eq 'true'">
+			A.TYPE,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+		ORDER BY
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_NAME, A.C_DATE, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+			</when>
+		</choose>
+	</select>
+
+	<select id="getAfInfoList" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="AF eq true">
+			A.AF,
+		</if>
+		<if test="AF_TYPE eq true">
+			A.TYPE,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="PCRF_ID != null and PCRF_ID != ''">
+			AND A.NE_ID IN (${PCRF_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="AF eq true">
+			A.AF,
+		</if>
+		<if test="AF_TYPE eq true">
+			A.TYPE,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+		ORDER BY
+		<if test='SORTOPTION.size() > 0'>
+			<foreach collection="SORTOPTION" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test='SORTOPTION.size() == 0'>
+			<choose>
+				<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+					A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+				</when>
+				<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.C_DATE, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+					<if test="T_DAY eq true">
+						A.NE_NAME, A.C_DATE, A.WEEK_ID
+					</if>
+					<if test="T_HOUR eq true">
+						A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+					</if>
+				</when>
+
+				<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+					A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+				</when>
+			</choose>
+		</if>
+		LIMIT ${pageNo}, ${PAGINGNUM}
+	</select>
+
+	<select id="getAfInfoListLength" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		COUNT(1) TOT_CNT
+		FROM ( SELECT
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="AF eq true">
+			A.AF,
+		</if>
+		<if test="AF_TYPE eq true">
+			A.TYPE,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="PCRF_ID != null and PCRF_ID != ''">
+			AND A.NE_ID IN ( ${PCRF_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq false and T_DAY eq false and T_HOUR eq false">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq false and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and (T_DAY eq true or T_HOUR eq true)">
+				<if test="T_DAY eq true">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq true">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq true and T_DAY eq false and T_HOUR eq false">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="AF eq true">
+			A.AF,
+		</if>
+		<if test="AF_TYPE eq true">
+			A.TYPE,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+
+
+		) A
+	</select>
+	<select id="getAfExcel" resultType="java.util.HashMap"
+		parameterType="java.util.HashMap">
+		SELECT
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					A.NE_NAME, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME) C_DATE,
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_NAME,
+				</if>
+			</when>
+		</choose>
+		CASE
+		WHEN A.WEEK_ID='0' THEN '평일'
+		WHEN A.WEEK_ID='1' THEN '휴일'
+		END AS WEEK_ID,
+		<if test="AF eq 'true'">
+			A.AF,
+		</if>
+		<if test="AF_TYPE eq 'true'">
+			A.TYPE,
+		</if>
+		<if test="TYPE eq 'sum'">
+			<foreach collection="PEGLIST" item="value">
+				SUM(${value}) ${value},
+			</foreach>
+		</if>
+		<if test="TYPE eq 'day' or TYPE eq 'hour'">
+			<foreach collection="PEGLIST" item="value">
+				ROUND(AVG(${value}),1) ${value},
+			</foreach>
+		</if>
+		T.TEAM_NAME,
+		A.PKG_VER
+		FROM
+		${table_nm} A
+		LEFT JOIN
+		TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="PCRF_ID != null and PCRF_ID != ''">
+			AND A.NE_ID IN (${PCRF_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_ID,
+				<if test="TYPE eq 'day'">
+					A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				<if test="TYPE eq 'day'">
+					A.NE_ID, A.C_DATE,
+				</if>
+				<if test="TYPE eq 'hour'">
+					A.NE_ID, CONCAT(A.C_DATE,A.GET_TIME),
+				</if>
+				<if test="TYPE eq 'sum'">
+					A.NE_ID,
+				</if>
+			</when>
+		</choose>
+
+		A.WEEK_ID,
+
+		<if test="AF eq 'true'">
+			A.AF,
+		</if>
+		<if test="AF_TYPE eq 'true'">
+			A.TYPE,
+		</if>
+		A.TEAM_ID,
+		A.PKG_VER
+		ORDER BY
+		<choose>
+			<when test="T_DU eq 'false' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+			</when>
+			<when test="T_DU eq 'false' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.C_DATE, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and (T_DAY eq 'true' or T_HOUR eq 'true')">
+				<if test="T_DAY eq 'true'">
+					A.NE_NAME, A.C_DATE, A.WEEK_ID
+				</if>
+				<if test="T_HOUR eq 'true'">
+					A.NE_NAME, CONCAT(A.C_DATE,A.GET_TIME), A.WEEK_ID
+				</if>
+			</when>
+
+			<when test="T_DU eq 'true' and T_DAY eq 'false' and T_HOUR eq 'false'">
+				A.NE_NAME, A.EVENT_TIME, A.WEEK_ID
+			</when>
+		</choose>
+	</select>
+	
+	<sql id="sqlRecordInfo">
+		SELECT
+			<if test="(TYPE eq 'sum' and T_DAY neq true and T_HOUR neq true ) or T_SYSTEM eq true">
+				A.SYSTEM_NAME,
+			</if>
+			<choose>
+				<when test="(TYPE eq 'day' and T_HOUR eq true) or (TYPE eq 'hour' and T_DAY eq true)">
+					CONCAT(A.C_DATE, A.GET_TIME) AS C_DATE,
+				</when>
+				<when test="TYPE eq 'day' or T_DAY eq true">
+					A.C_DATE,
+				</when>
+				<when test="TYPE eq 'hour' or T_HOUR eq true">
+					A.GET_TIME AS C_DATE,
+				</when>
+			</choose>
+			<if test="TYPE eq 'sum'">
+				SUM(CALL_ATTEMPT) AS CALL_ATTEMPT,
+				SUM(CALL_SUCCESS) AS CALL_SUCCESS,
+				CAST(IFNULL(SUM(CALL_SUCCESS)/SUM(CALL_ATTEMPT)*100,100) AS DECIMAL(12,2)) AS CALL_SUCC_RATE,
+				SUM(PTT_ATTEMPT) AS PTT_ATTEMPT,
+				SUM(PTT_SUCCESS) AS PTT_SUCCESS,
+				CAST(IFNULL(SUM(PTT_SUCCESS)/SUM(PTT_ATTEMPT)*100,100) AS DECIMAL(12,2)) AS PTT_SUCC_RATE,
+			</if>
+			<if test="TYPE eq 'day' or TYPE eq 'hour'">
+				ROUND(AVG(CALL_ATTEMPT), 1) AS CALL_ATTEMPT,
+				ROUND(AVG(CALL_SUCCESS), 1) AS CALL_SUCCESS,
+				CAST(IFNULL(AVG(CALL_SUCCESS)/AVG(CALL_ATTEMPT)*100,100) AS DECIMAL(12,2)) AS CALL_SUCC_RATE,
+				ROUND(AVG(PTT_ATTEMPT), 1) AS PTT_ATTEMPT,
+				ROUND(AVG(PTT_SUCCESS), 1) AS PTT_SUCCESS,
+				CAST(IFNULL(AVG(PTT_SUCCESS)/AVG(PTT_ATTEMPT)*100,100) AS DECIMAL(12,2)) AS PTT_SUCC_RATE,
+			</if>
+			T.TEAM_NAME
+		FROM
+			TB_PS_REC A
+		LEFT JOIN
+			TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+		<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+			AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+		</if>
+		<if test="SYSTEM_ID != null and SYSTEM_ID != ''">
+			AND A.SYSTEM_ID IN (${SYSTEM_ID} )
+		</if>
+		<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+			AND A.C_DATE != #{EXCEPT_DAY}
+		</if>
+		<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+			AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+		</if>
+		GROUP BY
+			<if test="(TYPE eq 'sum' and T_DAY neq true and T_HOUR neq true ) or T_SYSTEM eq true">
+				A.SYSTEM_NAME,
+			</if>
+			<choose>
+				<when test="(TYPE eq 'day' and T_HOUR eq true) or (TYPE eq 'hour' and T_DAY eq true)">
+					CONCAT(A.C_DATE, A.GET_TIME),
+				</when>
+				<when test="TYPE eq 'day' or T_DAY eq true">
+					A.C_DATE,
+				</when>
+				<when test="TYPE eq 'hour' or T_HOUR eq true">
+					A.GET_TIME,
+				</when>
+			</choose>
+			T.TEAM_NAME
+	</sql>
+	
+	<select id="getRecordInfoList" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		<include refid="sqlRecordInfo" />
+		ORDER BY
+			<if test='SORTOPTION.size() > 0'>
+				<foreach collection="SORTOPTION" item="option" separator=",">
+					${option.colName} ${option.order}
+				</foreach>
+			</if>
+			<if test='SORTOPTION.size() == 0'>
+				<if test="(TYPE eq 'sum' and T_DAY eq false and T_HOUR eq false) or T_DU eq true">
+					SYSTEM_NAME ASC,
+				</if>
+				<choose>
+					<when test="(TYPE eq 'day' and T_HOUR eq true) or (TYPE eq 'hour' and T_DAY eq true)">
+						C_DATE ASC,
+					</when>
+					<when test="TYPE eq 'day' or T_DAY eq true">
+						C_DATE ASC,
+					</when>
+					<when test="TYPE eq 'hour' or T_HOUR eq true">
+						C_DATE ASC,
+					</when>
+				</choose>
+				TEAM_NAME
+			</if>
+		LIMIT ${pageNo}, ${PAGINGNUM}
+	</select>
+
+	<select id="getRecordInfoListLength" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+			COUNT(1) TOT_CNT
+		FROM (
+			<include refid="sqlRecordInfo" />
+		) A
+	</select>
+	
+	<select id="getRecordExcel" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+			<if test="(TYPE eq 'sum' and T_DAY neq 'true' and T_HOUR neq 'true' ) or T_SYSTEM eq 'true'">
+				A.SYSTEM_NAME,
+			</if>
+			<choose>
+				<when test="(TYPE eq 'day' and T_HOUR eq 'true') or (TYPE eq 'hour' and T_DAY eq 'true')">
+					CONCAT(A.C_DATE, A.GET_TIME) AS C_DATE,
+				</when>
+				<when test="TYPE eq 'day' or T_DAY eq 'true'">
+					A.C_DATE,
+				</when>
+				<when test="TYPE eq 'hour' or T_HOUR eq 'true'">
+					A.GET_TIME AS C_DATE,
+				</when>
+			</choose>
+			<if test="TYPE eq 'sum'">
+				SUM(CALL_ATTEMPT) AS CALL_ATTEMPT,
+				SUM(CALL_SUCCESS) AS CALL_SUCCESS,
+				CAST(IFNULL(SUM(CALL_SUCCESS)/SUM(CALL_ATTEMPT)*100,100) AS DECIMAL(12,2)) AS CALL_SUCC_RATE,
+				SUM(PTT_ATTEMPT) AS PTT_ATTEMPT,
+				SUM(PTT_SUCCESS) AS PTT_SUCCESS,
+				CAST(IFNULL(SUM(PTT_SUCCESS)/SUM(PTT_ATTEMPT)*100,100) AS DECIMAL(12,2)) AS PTT_SUCC_RATE,
+			</if>
+			<if test="TYPE eq 'day' or TYPE eq 'hour'">
+				ROUND(AVG(CALL_ATTEMPT), 1) AS CALL_ATTEMPT,
+				ROUND(AVG(CALL_SUCCESS), 1) AS CALL_SUCCESS,
+				CAST(IFNULL(AVG(CALL_SUCCESS)/AVG(CALL_ATTEMPT)*100,100) AS DECIMAL(12,2)) AS CALL_SUCC_RATE,
+				ROUND(AVG(PTT_ATTEMPT), 1) AS PTT_ATTEMPT,
+				ROUND(AVG(PTT_SUCCESS), 1) AS PTT_SUCCESS,
+				CAST(IFNULL(AVG(PTT_SUCCESS)/AVG(PTT_ATTEMPT)*100,100) AS DECIMAL(12,2)) AS PTT_SUCC_RATE,
+			</if>
+			T.TEAM_NAME
+		FROM
+			TB_PS_REC A
+		LEFT JOIN
+			TB_CO_TEAM T ON A.TEAM_ID = T.TEAM_ID
+		WHERE 1=1
+			<if test="FROM != null and FROM != '' and TO != null and TO != ''  ">
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(${FROM},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(${TO},'%Y%m%d%H%i')
+				AND A.C_DATE <![CDATA[>=]]> ${FROM} AND A.C_DATE <![CDATA[<]]> ${TO}
+			</if>
+			<if test="SYSTEM_ID != null and SYSTEM_ID != ''">
+				AND A.SYSTEM_ID IN (${SYSTEM_ID} )
+			</if>
+			<if test="EXCEPT_DAY != null and EXCEPT_DAY != ''">
+				AND A.C_DATE != #{EXCEPT_DAY}
+			</if>
+			<if test="EXCEPT_HOUR != null and EXCEPT_HOUR != ''">
+				AND A.GET_TIME IN ( ${EXCEPT_HOUR} )
+			</if>
+		GROUP BY
+			<if test="(TYPE eq 'sum' and T_DAY neq 'true' and T_HOUR neq 'true' ) or T_SYSTEM eq 'true'">
+				A.SYSTEM_NAME,
+			</if>
+			<choose>
+				<when test="(TYPE eq 'day' and T_HOUR eq 'true') or (TYPE eq 'hour' and T_DAY eq 'true')">
+					CONCAT(A.C_DATE, A.GET_TIME),
+				</when>
+				<when test="TYPE eq 'day' or T_DAY eq 'true'">
+					A.C_DATE,
+				</when>
+				<when test="TYPE eq 'hour' or T_HOUR eq 'true'">
+					A.GET_TIME,
+				</when>
+			</choose>
+			T.TEAM_NAME
+		ORDER BY
+			<if test="(TYPE eq 'sum' and T_DAY eq 'false' and T_HOUR eq 'false') or T_DU eq 'true'">
+				SYSTEM_NAME ASC,
+			</if>
+			<choose>
+				<when test="(TYPE eq 'day' and T_HOUR eq 'true') or (TYPE eq 'hour' and T_DAY eq 'true')">
+					C_DATE ASC,
+				</when>
+				<when test="TYPE eq 'day' or T_DAY eq 'true'">
+					C_DATE ASC,
+				</when>
+				<when test="TYPE eq 'hour' or T_HOUR eq 'true'">
+					C_DATE ASC,
+				</when>
+			</choose>
+			TEAM_NAME
+	</select>
+
+</mapper>

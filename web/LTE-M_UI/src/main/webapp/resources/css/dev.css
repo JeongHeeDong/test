@@ -1,0 +1,36 @@
+@charset "utf-8";
+
+/***** 네트워크 토폴로지 서비스 서버 장비 추가를 위한 이동 *****/
+.topologyWrap .serverGroup.storage{top:10px;left: 1%;}
+.topologyWrap .serverGroup.message{top:10px;left: 14%;}
+.topologyWrap .serverGroup.ucms{top:10px;left: 25%;}
+.topologyWrap .serverGroup.backup{top:10px;left: 35%;}
+.topologyWrap .serverGroup.mdm{top:10px;left: 45%;}
+.topologyWrap .serverGroup.positioning{top:10px;left: 55%;}
+.topologyWrap .serverGroup.firewall{top:10px;left: 66%;}
+.topologyWrap .serverGroup.iotcsgn{top:10px;left: 78%;}
+.topologyWrap .serverGroup.ptp{top:10px;left: 89%;}
+
+.topologyWrap .serverGroup.ppt{top:100px;left: -4%;}
+.topologyWrap .serverGroup.call{top:100px;left: 9%;}
+.topologyWrap .serverGroup.order{top:100px;left: 21%;}
+.topologyWrap .serverGroup.rectifier{top:100px;left: 31%;}
+.topologyWrap .serverGroup.fota{top:100px;left: 40%;}
+.topologyWrap .serverGroup.image{top:100px;left: 50%;}
+.topologyWrap .serverGroup.mgw{top:100px;left: 60%;}
+.topologyWrap .serverGroup.iothss{top:100px;left: 72%;}
+.topologyWrap .serverGroup.totalmonitoring{top:100px;left: 83%;}
+.topologyWrap .serverGroup.change{top:100px;left: 93%;}
+
+/***** 네트워크 토폴로지 EMS 장비 추가를 위한 이동 *****/
+.topologyWrap .serverGroup.ems-c{top:10px;left: -0.6%;}
+.topologyWrap .serverGroup.ems-r{top:10px;left: 20.2%;}
+.topologyWrap .serverGroup.ems-hss{top:10px;left: 41%;}
+.topologyWrap .serverGroup.ems-iothss{top:10px;left: 62.5%;}
+.topologyWrap .serverGroup.ems-ptp{top:10px;left: 83%;}
+
+.topologyWrap .serverGroup.ems-c-re{top:100px;left: -9%;}
+.topologyWrap .serverGroup.ems-nw{top:100px;left: 10.5%;}
+.topologyWrap .serverGroup.ems-rectifier{top:100px;left: 31%;}
+.topologyWrap .serverGroup.ems-message{top:100px;left: 52.5%;}
+.topologyWrap .serverGroup.ems-iotcsgn{top:100px;left: 76%;}

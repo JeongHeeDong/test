@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.MmeDAO">
+	<select id="getMmeDetail" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			TB_CO_MME.MME_ID,
+			IFNULL(EMS_INFO.EMS_NAME,'-') AS EMS_NAME,
+			IFNULL(TB_CO_MME.VENDOR_ID,'-') AS VENDOR_ID,
+			IFNULL(TB_CO_VENDOR.VENDOR_NAME,'-') AS VENDOR_NAME,
+			TB_CO_MME.MME_NAME,
+			DATE_FORMAT(TB_CO_MME.INSTALL_DATE,'%Y-%m-%d') AS INSTALL_DATE,
+			DATE_FORMAT(TB_CO_MME.UPDATE_DATE,'%Y-%m-%d %H:%i:%s') AS UPDATE_DATE,
+			IFNULL(TB_CO_MME.MME_IP,'-') AS MME_IP,
+			IFNULL(TB_CO_MME.EMS_ID,'-') AS EMS_ID,
+			IFNULL(TB_CO_MME.OPR_STATUS,'0') AS OPR_STATUS
+		FROM
+			TB_CO_MME
+			LEFT OUTER JOIN
+			(
+				SELECT DISTINCT EMS_ID, 
+				(
+					SELECT GROUP_CONCAT(EMS_NAME  separator ', ')  
+				 	FROM TB_CO_MME AS EMSA
+				 	WHERE EMSA.EMS_ID = EMSB.EMS_ID    
+				 ) as EMS_NAME
+				FROM TB_CO_EMS AS EMSB
+			) AS EMS_INFO
+			ON TB_CO_MME.EMS_ID = EMS_INFO.EMS_ID
+			LEFT OUTER JOIN
+			TB_CO_VENDOR
+			ON TB_CO_MME.VENDOR_ID = TB_CO_VENDOR.VENDOR_ID
+		WHERE
+			TB_CO_MME.MME_ID = #{mme_id}
+	</select>
+	
+	
+	<select id="getMmeDetail_Node" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			NODE,
+			PREFER_TYPE,
+			NODE_TYPE,
+			REDUN_TYPE,
+			GRP_NAME
+		FROM
+			TB_CO_MME_NODE
+		WHERE
+			NE_ID = #{mme_id}
+	</select>
+	
+	<select id="getMmeDetail_Ntp" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			SERVER,
+			STATUS,
+			ROLE,
+			CHK_STS
+		FROM
+			TB_CO_MME_NTP
+		WHERE
+			NE_ID = #{mme_id}
+	</select>
+	
+	<select id="getMmeDetail_Port" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			NODE,
+			PORT,
+			ACT_STS,
+			OPR_STS,
+			MATE_PORT,
+			DETAIL_STS,
+			DESCRIPTION
+		FROM
+			TB_CO_MME_PORT
+		WHERE
+			NE_ID = #{mme_id}
+	</select>
+	
+	<update id="mmeDetailupdate" parameterType="java.util.HashMap">
+		UPDATE 
+			TB_CO_MME
+		SET
+			MME_NAME = #{mme_name},
+			EMS_ID = #{ems_id},
+			VENDOR_ID = #{vendor_id},
+			<if test=" install_date != null and install_date != ''">
+			INSTALL_DATE = DATE_FORMAT(#{install_date},'%Y%m%d'),
+			</if>
+			MME_IP = #{mme_ip},
+			OPR_STATUS = #{opr_status},
+			UPDATE_DATE = NOW(),  
+			UPDATE_USER_ID = #{update_user_id}
+			
+		WHERE
+			MME_ID = #{mme_id}
+	</update>
+	
+    <delete id="mmeDetaildelete" parameterType="java.util.HashMap">
+        DELETE FROM TB_CO_MME
+        WHERE
+            MME_ID = #{mme_id}
+    </delete>
+	
+	<select id="mmeIdCheckResult" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT
+			COUNT(1) AS COUNT
+		FROM
+			TB_CO_MME
+		WHERE
+			MME_ID = #{mme_id}
+	</select>
+
+	<insert id="mmeAdd" parameterType="java.util.HashMap">
+		INSERT
+		INTO TB_CO_MME
+		(MME_ID,MME_IP,MME_NAME,EMS_ID,VENDOR_ID,INSTALL_DATE,UPDATE_USER_ID)
+		VALUES
+		(#{epc_id},#{epc_ip},#{epc_name},#{ems_id},#{vendor_id},#{install_date},#{update_user_id})
+	</insert>
+</mapper>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.DuChcSearchDAO">
+	
+	<select id="getEmsName" resultType="java.util.HashMap">
+		SELECT
+			EMS_NAME, EMS_ID
+		FROM
+			(
+				(SELECT EMS_NAME,EMS_ID FROM TB_CO_EMS WHERE EQUIP_TYPE = '14' GROUP BY EMS_NAME,EMS_ID)
+				UNION ALL
+				(SELECT '전체' AS EMS_NAME, '전체' AS EMS_ID FROM DUAL)
+			) A
+		ORDER BY
+			EMS_NAME DESC
+	</select>
+	
+	<select id = "getduChcSearch" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			LINE_NAME.LINE_ID,
+			TB_CO_DU.C_UID,
+			EMS_ID,
+			TB_CO_DU.DU_ID,
+			TB_CO_DU.DU_NAME,
+			IFNULL(TB_CO_DU.SERIALNUMBER,'-') AS SERIALNUMBER,
+			IFNULL(TB_CO_TEAM.TEAM_NAME, '-') AS TEAM_NAME
+		FROM
+			TB_CO_DU 
+			LEFT OUTER JOIN
+				TB_CO_TEAM
+				ON TB_CO_DU.TEAM_ID = TB_CO_TEAM.TEAM_ID
+			LEFT OUTER JOIN 
+	          ( SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID) LINE_NAME
+   		    ON TB_CO_DU.STATION_ID = LINE_NAME.STATION_ID
+		WHERE
+			1=1
+			<if test="emsId != '' and emsId != null and emsId != '전체'">
+				AND EMS_ID LIKE (CONCAT('%', #{emsId}, '%'))
+			</if>
+			<if test="duId != '' and duId != null ">
+				AND TB_CO_DU.DU_ID LIKE (CONCAT('%', #{duId}, '%'))
+			</if>
+			<if test="duName != '' and duName != null and duName != '전체'">
+				AND TB_CO_DU.DU_NAME LIKE (CONCAT('%', #{duName}, '%'))
+			</if>
+			<if test="lineId != '' and lineId != null ">
+				AND LINE_NAME.LINE_ID LIKE (CONCAT('%', #{lineId}, '%'))
+			</if>
+		ORDER BY
+			TB_CO_DU.C_UID, TB_CO_DU.DU_ID
+	</select>
+	
+	<select id="getChcSearch" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			IFNULL(UNIT_ID,'-') AS UNIT_ID,
+			IFNULL(UNITTYPE,'-') AS UNITTYPE,
+			IFNULL(PORT_TYPE,'-') AS PORTTYPE,
+			IFNULL(SHELF_ID,'-') AS SHELF_ID,
+			IFNULL(SLOT_ID,'-') AS SLOT_ID,
+			IFNULL(PORT_ID,'-') AS PORT_ID,
+			IFNULL(CASC_ID,'-') AS CASC_ID, 
+			IFNULL(BOARD_TYPE,'-') AS BOARD_TYPE,
+			IFNULL(TB_CO_CHANNEL_CARD.SERIALNUMBER,'-') AS SERIALNUMBER
+		FROM
+			TB_CO_CHANNEL_CARD
+			LEFT OUTER JOIN
+				TB_CO_DU
+				ON TB_CO_CHANNEL_CARD.DU_ID = TB_CO_DU.DU_ID
+			LEFT OUTER JOIN
+		      	TB_CO_STATION
+		     	ON TB_CO_DU.STATION_ID = TB_CO_STATION.STATION_ID
+		WHERE 
+			1=1 
+			<if test="emsId != '' and emsId != null and emsId != '전체'">
+				AND TB_CO_CHANNEL_CARD.EMS_ID LIKE (CONCAT('%', #{emsId}, '%'))
+			</if>
+			<if test="duId != '' and duId != null ">
+				AND TB_CO_CHANNEL_CARD.DU_ID LIKE (CONCAT('%', #{duId}, '%'))
+			</if>
+			<if test="duName != '' and duName != null and duName != '전체'">
+				AND TB_CO_DU.DU_NAME LIKE (CONCAT('%', #{duName}, '%')) 
+			</if>
+			<if test="lineId != '' and lineId != null ">
+				AND TB_CO_STATION.LINE_ID LIKE (CONCAT('%', #{lineId}, '%'))
+			</if>
+	</select>
+</mapper>

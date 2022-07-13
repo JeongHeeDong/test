@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+        http://www.springframework.org/schema/jdbc  http://www.springframework.org/schema/jdbc/spring-jdbc-3.2.xsd
+        http://www.springframework.org/schema/context 
+      	http://www.springframework.org/schema/context/spring-context-3.2.xsd
+        http://www.springframework.org/schema/util 
+        http://www.springframework.org/schema/util/spring-util-3.2.xsd">
+	
+	<util:properties id = "config" location = "classpath:jdbc.properties"></util:properties>
+	<util:properties id = "locationconfig" location = "classpath:config.properties"></util:properties>
+	
+	<!-- jdbc.properties 참조 -->
+	<bean id="propertyPlaceholderConfigurer"
+        class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <value>classpath:jdbc.properties</value>
+        </property>
+    </bean>
+    
+    <!-- JDBC 설정 -->
+    <bean id="dataSource"  class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+    	<property name="driverClassName" value="${jdbc.driver}"/>
+    	<property name="url" value="${jdbc.url}"/>
+    	<property name="username" value="${jdbc.username}"/>
+    	<property name="password" value="${jdbc.password}"/>
+    	<property name="validationQuery" value="select now() as nowdate" />
+    </bean> 
+    
+    <!-- SQL 출력 --> 
+    <bean id="logDataSource" class="net.sf.log4jdbc.Log4jdbcProxyDataSource">
+ 		<constructor-arg ref="dataSource" />
+ 		<property name="logFormatter">
+  			<bean class="net.sf.log4jdbc.tools.Log4JdbcCustomFormatter">
+   				<property name="loggingType" value="MULTI_LINE" />
+   				<property name="sqlPrefix" value="SQL:::" />
+  			</bean>
+ 		</property>
+	</bean>
+    
+	<!-- SqlSession setup for MyBatis Database Layer -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="logDataSource" />
+		<!-- <property name="dataSource" ref="dataSource" /> -->
+	    <property name="configLocation" value="classpath:sqlMap/sql-mapper-config.xml" />
+	    <property name="mapperLocations" value="classpath:sqlMap/mappers/*.xml" />	    
+	</bean>
+	
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sqlSessionFactory" />
+	</bean>
+	
+	
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.ltem.dao" />
+		<property name="sqlSessionTemplateBeanName" value="sqlSession" />
+	</bean>
+</beans>

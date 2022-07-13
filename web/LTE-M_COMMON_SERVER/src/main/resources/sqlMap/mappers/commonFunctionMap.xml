@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.CommonFunctionDAO">
+	
+	<insert id="insertWebLog" parameterType="java.util.HashMap">
+		INSERT INTO TB_SE_WEB_LOG (EVENT_TIME,USER_ID,TEAM_ID,MENU_ID,MENU_NAME,IP)
+		VALUES (DATE_FORMAT(#{DATE},'%Y-%m-%d %H:%i:%s'),#{USER_ID},#{TEAM_ID},#{MENU_ID},#{MENU_NM},#{USER_IP})
+	</insert>
+	
+	<select id="getMenuAuthList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			CASE WHEN MENU_URI='bunchFailureSettingPopup()' THEN '/failure/setting/bunchFailureSetting'
+			WHEN MENU_URI='unrecoveredAlarmSettingPopup()' THEN '/failure/setting/unrecoveredAlarmSetting'
+			WHEN MENU_URI='audioSettingPopup()' THEN '/failure/setting/audioSetting'
+			WHEN MENU_URI='failureActionCaseSettingPopup()' THEN '/failure/setting/failureActionCaseSetting'
+			WHEN MENU_URI='thresholdWindowPop()' THEN '/pm/pm_setting/threshold_setting'
+			WHEN MENU_URI='permitIpWindowPop()' THEN '/security/permit/Ip'
+			WHEN MENU_URI='perfromAudioSettingPopup()' THEN '/pm/setting/perFormSettingAudio'
+			ELSE MENU_URI END AS MENU_URI,
+			MENU_NAME,
+			MENU_AUTH
+		FROM
+			TB_SE_MENU
+		WHERE
+			MENU_URI != ''
+	</select>
+	
+	
+	<insert id="f_detectionLog_insert" parameterType="java.util.HashMap">
+	
+		INSERT INTO TB_SE_FDETECT 
+			(
+			EVENT_TIME,TYPE,ACCESS_IP
+			<if test="at_uri != null">
+				,AT_URI
+			</if>
+			<if test="user_id != null">
+				,USER_ID
+			</if>
+			<if test="at_id != null">
+				,AT_ID
+			</if>
+			<if test="menu_info != null">
+				,MENU_INFO
+			</if>
+			)
+		VALUES 
+			(
+			NOW(),#{type},INET_ATON(#{access_ip})
+			<if test="at_uri != null">
+				,#{at_uri}
+			</if>
+			<if test="user_id != null">
+				,#{user_id}
+			</if>
+			<if test="at_id != null">
+				,#{at_id}
+			</if>
+			<if test="menu_info != null">
+				,#{menu_info}
+			</if>
+			)
+	</insert>
+
+	<insert id="putFailureInfoClear" parameterType="java.util.HashMap">
+		INSERT INTO TB_SE_WEB_LOG (EVENT_TIME,USER_ID,TEAM_ID,MENU_ID,MENU_NAME,IP)
+		VALUES (DATE_FORMAT(#{DATE},'%Y-%m-%d %H:%i:%s'),#{USER_ID},#{TEAM_ID},'',#{failureDesc},#{USER_IP})
+	</insert>
+	
+	<select id="getEventTime" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT	DATE_FORMAT(MIN(EVENT_TIME), '%Y%m%d%H%i%s') AS EVENT_TIME
+		FROM	TB_SM_COLLECT_LOG 
+		WHERE	DATA_NAME IN 
+				<foreach collection="array" item="item" open="(" close=")" separator=",">
+					#{item}
+				</foreach>
+				
+	</select>
+
+</mapper>

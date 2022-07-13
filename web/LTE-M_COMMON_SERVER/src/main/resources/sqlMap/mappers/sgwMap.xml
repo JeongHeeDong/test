@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.SgwDAO">
+	
+	<select id="getSgwSearch" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			SGW_ID,
+			SGW_NAME,
+			IFNULL(TB_CO_EMS.EMS_NAME,'-') AS EMS_NAME,
+			IFNULL(TB_CO_VENDOR.VENDOR_NAME,'-') AS VENDOR_NAME,
+			DATE_FORMAT(TB_CO_SGW.INSTALL_DATE,'%Y-%m-%d %H:%i:%s') AS INSTALL_DATE,
+			COUNT.TOTAL_COUNT
+		FROM
+			TB_CO_SGW
+			LEFT OUTER JOIN
+			TB_CO_EMS
+			ON TB_CO_SGW.EMS_ID = TB_CO_EMS.EMS_ID
+			LEFT OUTER JOIN
+			TB_CO_VENDOR
+			ON TB_CO_SGW.VENDOR_ID = TB_CO_VENDOR.VENDOR_ID,
+			(
+				SELECT
+					COUNT(1) AS TOTAL_COUNT
+				FROM
+					TB_CO_SGW
+					LEFT OUTER JOIN
+					TB_CO_EMS
+					ON TB_CO_SGW.EMS_ID = TB_CO_EMS.EMS_ID
+					LEFT OUTER JOIN
+					TB_CO_VENDOR
+					ON TB_CO_SGW.VENDOR_ID = TB_CO_VENDOR.VENDOR_ID
+				WHERE
+					1=1
+					<if test="sgw_name != ''">
+						AND SGW_NAME LIKE (CONCAT('%', #{sgw_name}, '%'))
+					</if>
+			) AS COUNT
+		WHERE
+			1=1
+			<if test="sgw_name != ''">
+				AND SGW_NAME LIKE (CONCAT('%', #{sgw_name}, '%'))
+			</if>
+		ORDER BY
+			SGW_ID DESC
+		LIMIT #{pageNo}, 20
+	</select>
+	
+	<select id="getSgwDetail" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			TB_CO_SGW.SGW_ID,
+			TB_CO_SGW.EMS_ID,
+			IFNULL(TB_CO_EMS.EMS_NAME,'-') AS EMS_NAME,
+			TB_CO_SGW.VENDOR_ID,
+			IFNULL(TB_CO_VENDOR.VENDOR_NAME,'-') AS VENDOR_NAME,
+			TB_CO_SGW.SGW_NAME,
+			DATE_FORMAT(TB_CO_SGW.INSTALL_DATE,'%Y-%m-%d') AS INSTALL_DATE,
+			DATE_FORMAT(TB_CO_SGW.UPDATE_DATE,'%Y-%m-%d') AS UPDATE_DATE
+		FROM
+			TB_CO_SGW
+			LEFT OUTER JOIN
+			TB_CO_EMS
+			ON TB_CO_SGW.EMS_ID = TB_CO_EMS.EMS_ID
+			LEFT OUTER JOIN
+			TB_CO_VENDOR
+			ON TB_CO_SGW.VENDOR_ID = TB_CO_VENDOR.VENDOR_ID
+		WHERE
+			TB_CO_SGW.SGW_ID = #{sgw_id}
+	</select>
+	
+	<select id="getEmsName" resultType="java.util.HashMap"> 
+		SELECT
+			EMS_NAME, EMS_ID
+		FROM
+			TB_CO_EMS
+		WHERE
+			EQUIP_TYPE = '15'
+		GROUP BY
+			EMS_NAME, EMS_ID
+		ORDER BY
+			EMS_NAME DESC
+	</select>
+	
+	<select id="getVendor" resultType="java.util.HashMap"> 
+		SELECT
+			VENDOR_ID,
+			VENDOR_NAME
+		FROM
+			TB_CO_VENDOR
+		GROUP BY
+			VENDOR_ID,VENDOR_NAME
+		ORDER BY
+			VENDOR_NAME DESC
+	</select>
+	
+	<update id="sgwDetailupdate" parameterType="java.util.HashMap">
+		UPDATE 
+			TB_CO_SGW
+		SET
+			SGW_NAME = #{sgw_name},
+			EMS_ID = #{ems_id},
+			VENDOR_ID = #{vendor_id},
+			INSTALL_DATE = DATE_FORMAT(#{install_date},'%Y%m%d'),
+			<if test="update_date != ''">
+				UPDATE_DATE = DATE_FORMAT(#{update_date},'%Y%m%d'),
+			</if>
+			UPDATE_USER_ID = #{update_user_id}
+		WHERE
+			SGW_ID = #{sgw_id}
+	</update>
+	
+	<select id="sgwIdCheckResult" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT
+			COUNT(1) AS COUNT
+		FROM
+			TB_CO_SGW
+		WHERE
+			SGW_ID = #{sgw_id}
+	</select>
+	
+	<insert id="sgwAdd" parameterType="java.util.HashMap">
+		INSERT
+		INTO TB_CO_SGW
+		(SGW_ID,SGW_NAME,EMS_ID,VENDOR_ID,INSTALL_DATE,UPDATE_USER_ID)
+		VALUES
+		(#{sgw_id},#{sgw_name},#{ems_id},#{vendor_id},DATE_FORMAT(#{install_date},'%Y%m%d%H%i%s'),#{update_user_id})
+	</insert>
+</mapper>

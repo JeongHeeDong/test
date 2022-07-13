@@ -1,0 +1,24 @@
+@charset "utf-8";
+
+/* Layout */
+html,body{margin:0;width:100%;height:100%;min-height:100%}
+body{min-width:1280px;min-height:768px;background-color:#e7e7e7}
+.loginWrap{height:100%;margin-bottom:-26px;background:url(../images/login/bg_background.png) left bottom no-repeat;text-align:center}
+.loginWrap > .mu-hgroup{width:100%;padding:40px 56px 0}
+.loginWrap h1.mu-title{font-family:Arial,sans-serif;font-size:30px;font-weight:bold;color:#7c7d7f}
+
+.loginWrap > .mu-boxWrap{*zoom:1;margin-top:-85px;border-spacing:0}
+.loginWrap > .mu-boxWrap .mu-boxCell{border:0;vertical-align:middle}
+.loginForm{display:inline-block;padding:30px 55px;min-width:333px;}
+.loginForm .mu-title{margin-bottom:30px;font-family:verdana,sans-serif;font-size:55px;color:#7c7d7f}
+.loginForm .mu-title small{display:block;margin-top:-13px;font-size:16px;color:#9e9d9d}
+.loginForm .mu-title small b{font-weight:bold}
+.loginForm .mu-vgroup > *{display:block;width:100%}
+.mu-input{border-color:#fff;}
+.loginForm .mu-vgroup > .mu-input-icon .mu-icon{color:#7c7d7f}
+.loginForm .btnSignIn{height:46px;line-height:46px;font-weight:bold;font-size:16px;font-family:"Nanum Gothic"}
+.loginForm .btnSignUp{height:46px;line-height:46px;font-weight:bold;font-size:16px;font-family:"Nanum Gothic"}
+.loginForm .mu-checkbox label{padding-left:26px;height:23px;line-height:23px;font-family:dotum;font-size:11px;color:#6a6a6a}
+.loginForm .mu-checkbox label:before{top:0;font-size:23px}
+footer{height:26px;line-height:26px;text-align:center;font-size:10px;font-family:verdana;color:#777}
+footer .copyright{font-size:10px}

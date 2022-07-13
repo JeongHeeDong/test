@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.MobileLocationMonitorDAO">
+	<select id="getPerformanceTime" resultType="java.util.HashMap">
+		SELECT
+			DATE_FORMAT(EVENT_TIME, '%Y/%m/%d %T') AS PERFORMANCE_TIME
+		FROM TB_SM_COLLECT_LOG
+		WHERE DATA_NAME = 'TB_PM_PHONE'
+	</select>
+	
+	<select id="getMobileLocationAndAlarm" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			COUNT(RCELL.LOCATION) AS MOBILE_CNT,
+			RCELL.LOCATION AS LOCATION,
+			GROUP_CONCAT(TCCI.PHONE_NO) AS PHONES,
+			<choose>
+				<when test='filterLevel == "0"'>
+					IFNULL(LEAST(MIN(ATT_RATE_LEVEL), MIN(SUCC_RATE_LEVEL)), 4) AS MIN_LEVEL
+				</when>
+				<otherwise>
+					IF(LEAST(MIN(ATT_RATE_LEVEL), MIN(SUCC_RATE_LEVEL)) <![CDATA[>]]> #{filterLevel}, 4, IFNULL(LEAST(MIN(ATT_RATE_LEVEL), MIN(SUCC_RATE_LEVEL)), 4)) AS MIN_LEVEL
+				</otherwise>
+			</choose>
+			
+		FROM
+			(SELECT
+				TCCI.PHONE_NO, TCCI.LOCATION, TCCI.CELL_ID
+			 FROM
+				TB_CO_CELLINFO_CUR AS TCCI
+				LEFT JOIN TB_CO_PHONE_INFO AS TCPI
+				ON TCCI.PHONE_NO = TCPI.PHONE_NO
+			 WHERE
+				TCPI.OPR_STATUS = 1
+				AND TCPI.PHONE_TYPE = 2) AS TCCI
+				LEFT OUTER JOIN (
+									SELECT
+										TCCM.CELL_ID,
+										TCR.LOCATION
+									FROM
+										TB_CO_RU AS TCR
+										LEFT OUTER JOIN TB_CO_CELL_MAP AS TCCM
+										ON TCR.DU_ID =  TCCM.DU_ID
+										AND TCR.CELL_NUM =  TCCM.CELL_NUM
+								 	WHERE
+									 	TCR.LOCATION != ''
+									 	AND TCR.OPR_STATUS = 1
+									 	AND TCR.LOCATION IS NOT NULL
+									 	AND TCCM.CELL_ID IS NOT NULL
+								 	GROUP BY
+									 	TCCM.CELL_ID, TCR.LOCATION
+								) AS RCELL
+				ON TCCI.CELL_ID = RCELL.CELL_ID
+		    	LEFT OUTER JOIN (
+		      						SELECT
+										PHONE_NO
+							            ,MIN(ATT_RATE_LEVEL) AS ATT_RATE_LEVEL
+							            ,MIN(SUCC_RATE_LEVEL) AS SUCC_RATE_LEVEL
+									FROM
+										TB_PM_PHONE
+							      	WHERE
+										EVENT_TIME = #{eventTime}
+							      	GROUP BY
+							      		PHONE_NO
+		    					) TB_PM_PHONE
+				ON TCCI.PHONE_NO = TB_PM_PHONE.PHONE_NO
+			WHERE
+				RCELL.LOCATION IS NOT NULL
+			GROUP BY
+				RCELL.LOCATION
+			ORDER BY RCELL.LOCATION * 1 ASC
+	</select>
+	
+	<select id="getmobileInfo" resultType="java.util.HashMap">
+		SELECT
+			TCCI.PHONE_NO,
+			TCCI.PHONE_USE_NAME,
+			TCCI.CELL_ID,
+			RCELL.LOCATION,
+			IFNULL(RCELL.AREA_INFO, '') AS AREA_INFO
+		FROM
+			(SELECT
+				 TCCI.PHONE_NO, TCCI.LOCATION, TCCI.CELL_ID, TCPI.PHONE_TYPE, TCPI.PHONE_USE_NAME
+			 FROM
+				 TB_CO_CELLINFO_CUR AS TCCI
+				 LEFT JOIN TB_CO_PHONE_INFO AS TCPI
+					 ON TCCI.PHONE_NO = TCPI.PHONE_NO
+			 WHERE
+				 TCPI.OPR_STATUS = 1
+				 AND TCPI.PHONE_TYPE = 2) AS TCCI
+			LEFT JOIN (SELECT TB_CO_CELL_MAP.CELL_ID, TB_CO_RU.LOCATION, TB_CO_RU.AREA_INFO
+						 FROM
+							 TB_CO_RU
+							 LEFT OUTER JOIN TB_CO_CELL_MAP
+								 ON TB_CO_RU.DU_ID =  TB_CO_CELL_MAP.DU_ID
+									AND TB_CO_RU.CELL_NUM =  TB_CO_CELL_MAP.CELL_NUM
+						 WHERE
+							 TB_CO_RU.LOCATION != ''
+							 AND TB_CO_RU.OPR_STATUS = 1
+							 AND TB_CO_RU.LOCATION IS NOT NULL
+							 AND TB_CO_CELL_MAP.CELL_ID IS NOT NULL
+						 GROUP BY
+							 TB_CO_CELL_MAP.CELL_ID, TB_CO_RU.LOCATION
+						) AS RCELL
+				ON TCCI.CELL_ID = RCELL.CELL_ID
+		WHERE
+			RCELL.LOCATION IS NOT NULL
+		GROUP BY TCCI.PHONE_NO
+		ORDER BY RCELL.LOCATION * 1 ASC, TCCI.PHONE_NO ASC, TCCI.CELL_ID ASC
+	</select>
+	
+	<select id="getMobileLocationAndAlarmEms" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			TCCI.MOBILE_CNT
+			,TCCI.LOCATION AS LOCATION
+			,TCCI.PHONES
+			,TCCI.MIN_LEVEL
+		FROM
+			(
+				SELECT
+					RU.LOCATION
+					,GROUP_CONCAT(TCCI.PHONE_NO ORDER BY TCCI.PHONE_NO)	AS PHONES
+					,COUNT(*)						AS MOBILE_CNT
+					<choose>
+						<when test='filterLevel == "0"'>
+							,IFNULL(LEAST(MIN(ATT_RATE_LEVEL), MIN(SUCC_RATE_LEVEL)), 4) AS MIN_LEVEL
+						</when>
+						<otherwise>
+							,IF(LEAST(MIN(ATT_RATE_LEVEL), MIN(SUCC_RATE_LEVEL)) <![CDATA[>]]> #{filterLevel}, 4, IFNULL(LEAST(MIN(ATT_RATE_LEVEL), MIN(SUCC_RATE_LEVEL)), 4)) AS MIN_LEVEL
+						</otherwise>
+					</choose>
+				FROM
+					TB_CO_CELLINFO_CUR AS TCCI
+					INNER JOIN TB_CO_PHONE_INFO AS TCPI
+						ON TCCI.PHONE_NO = TCPI.PHONE_NO
+					INNER JOIN (
+						SELECT
+							DISTINCT DU_ID
+							,CELL_NUM
+							,LOCATION
+						FROM
+							TB_CO_RU
+						WHERE
+							LOCATION IS NOT NULL
+					) RU
+						ON TCCI.LOCATION = RU.DU_ID
+							AND TCCI.CELL_ID = RU.CELL_NUM
+					LEFT OUTER JOIN (
+						SELECT
+							PHONE_NO
+							,MIN(ATT_RATE_LEVEL) AS ATT_RATE_LEVEL
+							,MIN(SUCC_RATE_LEVEL) AS SUCC_RATE_LEVEL
+						FROM
+							TB_PM_PHONE
+						WHERE
+							EVENT_TIME = #{eventTime}
+						GROUP BY
+							PHONE_NO
+					) TB_PM_PHONE
+						ON TCCI.PHONE_NO = TB_PM_PHONE.PHONE_NO
+				WHERE
+					TCPI.OPR_STATUS = 1
+					AND TCPI.PHONE_TYPE = 2
+				GROUP BY
+					RU.LOCATION
+			) TCCI
+			ORDER BY LOCATION * 1 ASC
+	</select>
+	
+	<select id="getmobileInfoEms" resultType="java.util.HashMap">
+		SELECT
+			TCCI.PHONE_NO,
+			TCCI.PHONE_USE_NAME,
+			TCCI.CELL_ID,
+			RU.LOCATION,
+			IFNULL(RU.AREA_INFO, '') AS AREA_INFO
+		FROM
+			(SELECT
+				 TCCI.PHONE_NO, TCCI.LOCATION, TCCI.CELL_ID, TCPI.PHONE_TYPE, TCPI.PHONE_USE_NAME
+			 FROM
+				 TB_CO_CELLINFO_CUR AS TCCI
+				 LEFT JOIN TB_CO_PHONE_INFO AS TCPI
+					 ON TCCI.PHONE_NO = TCPI.PHONE_NO
+			 WHERE
+				 TCPI.OPR_STATUS = 1
+				 AND TCPI.PHONE_TYPE = 2
+			) TCCI
+			LEFT JOIN (
+				SELECT
+					DISTINCT DU_ID
+					,CELL_NUM
+					,LOCATION
+					,AREA_INFO
+				FROM
+					TB_CO_RU
+				WHERE
+					LOCATION IS NOT NULL
+			) RU
+				ON	TCCI.LOCATION = RU.DU_ID
+					AND TCCI.CELL_ID = RU.CELL_NUM
+		ORDER BY RU.LOCATION * 1 ASC, TCCI.PHONE_NO ASC, TCCI.CELL_ID ASC
+	</select>
+	
+	<select id="getPopPerformData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+		  PHONES.PHONE_NO,
+		  IFNULL(DATA_C.ATTEMPT, 0) AS ATTEMPT_C,
+		  IFNULL(DATA_R.ATTEMPT, 0) AS ATTEMPT_R,
+		  IFNULL(DATA_C.STD_ATT_5M, 0) AS STD_ATT_5M_C,
+		  IFNULL(DATA_R.STD_ATT_5M, 0) AS STD_ATT_5M_R,
+		  IFNULL(DATA_C.ATT_RATE, 0) AS ATT_RATE_C,
+		  IFNULL(DATA_R.ATT_RATE, 0) AS ATT_RATE_R,
+		  IFNULL(DATA_C.SUCCESS, 0) AS SUCCESS_C,
+		  IFNULL(DATA_R.SUCCESS, 0) AS SUCCESS_R,
+		  IFNULL(DATA_C.SUCC_RATE, 100) AS SUCC_RATE_C,
+		  IFNULL(DATA_R.SUCC_RATE, 100) AS SUCC_RATE_R,
+		  <choose>
+			<when test='filterLevel == "0"'>
+				IFNULL(DATA_C.ATT_RATE_LEVEL, 4) AS ATT_RATE_LEVEL_C,
+	  			IFNULL(DATA_R.ATT_RATE_LEVEL, 4) AS ATT_RATE_LEVEL_R,
+	  			IFNULL(DATA_C.SUCC_RATE_LEVEL, 4) AS SUCC_RATE_LEVEL_C,
+	  			IFNULL(DATA_R.SUCC_RATE_LEVEL, 4) AS SUCC_RATE_LEVEL_R
+			</when>
+			<otherwise>
+				IF(IFNULL(DATA_C.ATT_RATE_LEVEL, 4) <![CDATA[>]]> #{filterLevel}, 4, IFNULL(DATA_C.ATT_RATE_LEVEL, 4)) AS ATT_RATE_LEVEL_C,
+				IF(IFNULL(DATA_R.ATT_RATE_LEVEL, 4) <![CDATA[>]]> #{filterLevel}, 4, IFNULL(DATA_R.ATT_RATE_LEVEL, 4)) AS ATT_RATE_LEVEL_R,
+				IF(IFNULL(DATA_C.SUCC_RATE_LEVEL, 4) <![CDATA[>]]> #{filterLevel}, 4, IFNULL(DATA_C.SUCC_RATE_LEVEL, 4)) AS SUCC_RATE_LEVEL_C,
+				IF(IFNULL(DATA_R.SUCC_RATE_LEVEL, 4) <![CDATA[>]]> #{filterLevel}, 4, IFNULL(DATA_R.SUCC_RATE_LEVEL, 4)) AS SUCC_RATE_LEVEL_R
+			</otherwise>
+		</choose>
+		  
+		  
+		FROM
+		  (
+		    ${phoneSql}
+		  ) AS PHONES
+		  LEFT OUTER JOIN
+		  (
+		    SELECT
+		      PHONE_NO,
+		      ATTEMPT,
+		      STD_ATT_5M,
+		      ATT_RATE,
+		      ATT_RATE_LEVEL,
+		      SUCCESS,
+		      SUCC_RATE,
+		      SUCC_RATE_LEVEL
+		    FROM
+		      TB_PM_PHONE
+		    WHERE
+		      EVENT_TIME = #{eventTime}
+		      AND CALL_DIR = 1
+		      AND PHONE_TYPE = 2
+		  ) AS DATA_C
+		  ON PHONES.PHONE_NO = DATA_C.PHONE_NO
+		  LEFT OUTER JOIN
+		  (
+		     SELECT
+		      PHONE_NO,
+		      ATTEMPT,
+		      STD_ATT_5M,
+		      ATT_RATE,
+		      ATT_RATE_LEVEL,
+		      SUCCESS,
+		      SUCC_RATE,
+		      SUCC_RATE_LEVEL
+		    FROM
+		      TB_PM_PHONE
+		    WHERE
+		      EVENT_TIME = #{eventTime}
+		      AND CALL_DIR = 2
+		      AND PHONE_TYPE = 2 
+		  ) AS DATA_R
+		  ON PHONES.PHONE_NO = DATA_R.PHONE_NO
+	</select>
+	
+	<select id="getPhonePerformanceTrend" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+			DATE_FORMAT(TPP.EVENT_TIME, '%Y/%m/%d %T') AS EVENT_TIME,
+			TPP.CALL_DIR,
+			TPP.ATTEMPT,
+			TPP.ATT_RATE,
+			TPP.SUCCESS,
+			TPP.SUCC_RATE
+		FROM TB_PM_PHONE AS TPP
+		WHERE
+			TPP.PHONE_NO = #{phoneNo}
+			AND TPP.CALL_DIR = #{callDir}
+			AND TPP.EVENT_TIME <![CDATA[>=]]> #{startEventTime}
+			AND TPP.EVENT_TIME <![CDATA[<=]]> #{eventTime}
+	</select>
+</mapper>

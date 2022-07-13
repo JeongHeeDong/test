@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.PermitIpDAO">
+	<select id="getParmitIpList" resultType="java.util.HashMap">
+		SELECT
+			INET_NTOA(FROM_IP) AS FROM_IP,
+			INET_NTOA(TO_IP) AS TO_IP,
+			TB_SE_USER.USER_NAME,
+			DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME
+		FROM
+			TB_SE_PERMIT_IP
+		    LEFT OUTER JOIN
+		    TB_SE_USER
+		    ON TB_SE_PERMIT_IP.USER_ID = TB_SE_USER.USER_ID
+	</select>
+	
+	<insert id = "saveIp" parameterType="java.util.HashMap">
+		INSERT INTO TB_SE_PERMIT_IP
+		(FROM_IP,TO_IP,USER_ID,EVENT_TIME)
+		VALUES
+		(INET_ATON(#{from_ip}),INET_ATON(#{to_ip}),#{user_id},#{event_time})
+	</insert>
+	
+	<delete id="ipDel" parameterType = "java.util.HashMap">
+		DELETE FROM
+			TB_SE_PERMIT_IP
+		WHERE
+			FROM_IP = INET_ATON(#{from_ip})
+			AND TO_IP = INET_ATON(#{to_ip})
+	</delete>
+</mapper>
+

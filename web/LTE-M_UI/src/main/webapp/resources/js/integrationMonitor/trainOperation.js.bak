@@ -1,0 +1,1264 @@
+var graph = '',
+	line1 = '';
+
+var browserSize = {width: 0, height: 0};
+
+var params = {},
+	soundFlag = true,
+	watchFlag = true,
+	refresh = "",
+	tabFlag = '',
+	trainNo = '',
+	monitorTime = '',
+	performanceTime = '',
+	trainNoArr = [],
+	train_map = new Map(),
+	station_map = new Map();
+
+var stationData,
+	trackingData;
+
+var all_level_1 = 0,
+	all_level_2 = 0,
+	all_level_3 = 0,
+	all_level_4 = 0;
+
+var alarmLvlGlobal,
+	maxAlarm = 0;
+
+//0: Critical
+//1: Major
+//2: Minor
+var alarmCntTop = [0, 0, 0, 0];
+
+$(document).ready(function(){
+	quneeInit();
+	$("body").append("<div class='Q-Tooltip'></div>");
+	// setContextMenu();
+	tabs();
+	// resize 이벤트 등록
+	window.onresize = function () {
+		browserSize = {
+			width: document.body.clientWidth,
+			height: document.body.clientHeight
+		};
+		graph.zoomToOverview();	// Qunee 영역 해상도에 맞게 줌처리
+	};
+	// $(window).resize(function(){
+	// 	graph.zoomToOverview();	// Qunee 영역 해상도에 맞게 줌처리
+	// }).resize();
+
+	var alarmVolumes = getAlarmVolume();
+	//가청 오디오 세팅
+	audioFile.criticalaudio.src='/criticalAlarm';
+	audioFile.criticalaudio.load();
+	audioFile.criticalaudio.volume = alarmVolumes.P_CRITICAL_VOLUME/100;
+
+	audioFile.majoraudio.src='/majorAlarm';
+	audioFile.majoraudio.load();
+	audioFile.majoraudio.volume = alarmVolumes.P_MAJOR_VOLUME/100;
+
+	audioFile.minoraudio.src='/minorAlarm';
+	audioFile.minoraudio.load();
+	audioFile.minoraudio.volume = alarmVolumes.P_MINOR_VOLUME/100;
+
+	//가청, 감시 ON
+	$(".top-buttons").addClass("mu-toggle-on");
+	//가청, 감시 버튼 활성화
+	topButtons();
+
+	// //역사 정보
+	// getStationInfo();
+    //
+	// var stationLocationData = $.ajax({
+	// 	type: 'post',
+	// 	url: '/integration/monitor/train/stationlocationinfo',
+	// 	contentType: 'application/json',
+	// 	dataType: 'json'
+	// });
+    //
+	// stationLocationData.then(function (data) {
+	// 	$(data.stationLocationInfo).each(function (idx, value) {
+	// 		createStationNode(value);
+	// 	});
+	// 	setRefresh();
+	// },
+	// function (error) {
+	// 	console.error(error);
+	// });
+});
+
+//성능 알람 카운트 초기화
+function initLevelCount() {
+	all_level_1 = 0;
+	all_level_2 = 0;
+	all_level_3 = 0;
+	all_level_4 = 0;
+}
+
+// 성능 알람 카운트 계산
+function setLevelCount(level) {
+	if (level == "1") {
+		all_level_1++;
+	} else if (level == "2") {
+		all_level_2++;
+	} else if (level == "3") {
+		all_level_3++;
+	} else if (level == "4") {
+		all_level_4++;
+	}
+}
+
+// 화면을 재구성 (Qunee)
+function displayUI(params) {
+	params.filterLevel = params.filterLevel || '0';
+	initLevelCount();
+	getTrainInfo(params);
+
+	Promise.all([trackingData]).then(function() {
+		displayLevelCount();
+		alarmSound();
+		if (maxAlarm == 0) {
+			if (soundFlag) {
+				audioFunction.audioPuse();
+				audioFunction.audioPlay();
+			}
+		} else if (alarmLvlGlobal < maxAlarm) {
+			if (soundFlag) {
+				audioFunction.audioPuse();
+				audioFunction.audioPlay();
+			}
+		}
+		maxAlarm = alarmLvlGlobal;
+		setRefresh();
+	});
+}
+
+// 성능 알람 카운트 표시
+function displayLevelCount() {
+	$("#cntAllLevel1").html(all_level_1);
+	$("#cntAllLevel2").html(all_level_2);
+	$("#cntAllLevel3").html(all_level_3);
+	$("#cntAllLevel4").html(all_level_4);
+
+	alarmCntTop = [all_level_1, all_level_2, all_level_3, all_level_4];
+}
+
+function quneeInit() {
+	Q.registerImage("bg", "/resources/images/map/bg.png");
+	Q.registerImage("transfer_station", "/resources/images/map/transfer_station.png");
+	Q.registerImage("train" , "/resources/images/map/train.png");
+	Q.registerImage("train_reverse" , "/resources/images/map/train_reverse.png");
+
+	graph = new Q.Graph('topology');
+	graph.is
+	graph.isEditable = false;
+	graph.isMovable = false;
+	graph.isResizable = false;
+	graph.isRotatable = false;
+	graph.isSelectable = false;
+	graph.enableWheelZoom = false;
+	graph.enableTooltip = true;
+	graph.tooltipDelay = 0;
+	graph.tooltipDuration = 10000000;
+
+	graph.interactionMode = Q.MoveInteraction();
+
+	var group = createBackgroundNode("", 0, 0, "/resources/images/map/bg.png");
+
+	line1 = graph.createShapeNode("");
+	line1.moveTo(900, -220);
+	line1.lineTo(322, -220);
+	line1.curveTo(282, -220, 282, -185, 282, -185);
+	line1.lineTo(282, 206);
+	line1.curveTo(282, 246, 242, 246, 242, 246);
+	line1.lineTo(-764, 246);
+	line1.curveTo(-804, 246, -804, 206, -804, 206);
+	line1.lineTo(-804, -220);
+	//line.closePath();
+	line1.setStyle(Q.Styles.SHAPE_STROKE_STYLE, "#F46A23");
+	//line.setStyle(Q.Styles.SHAPE_LINE_DASH, [8, 5, 0.1, 6]);
+	line1.setStyle(Q.Styles.SHAPE_STROKE, 12);
+	//line.setStyle(Q.Styles.LINE_CAP, "round");
+	//line.setStyle(Q.Styles.SHAPE_OUTLINE_STYLE, "#fcfb9b");
+	line1.setStyle(Q.Styles.LAYOUT_BY_PATH, false);
+	line1.setStyle(Q.Styles.SHAPE_FILL_COLOR, null);
+
+	group.addChild(line1);
+
+	graph.html.style.visibility = 'hidden';
+	graph.navigationType = "navigation.none";
+
+	var ui = "";
+	graph.addCustomInteraction({
+		onclick: function (evt, graph) {
+			// Q.log("click");
+			ui = graph.getUIByMouseEvent(evt);
+			if (ui && ui.data.clickable) {
+				trainNo = ui.data.name;
+				tabFlag = true;
+				tabs();
+				qualityTrend('T');
+			}
+			// graph.popupmenu.hide();	// 우클릭 메뉴 숨기기
+		},
+		// ondblclick: function(evt, graph){
+		// 	Q.log("dblclick");
+		// 	var ui = graph.getUIByMouseEvent(evt);
+		// 	if(ui && ui.data.dblclickable){
+		// 		alert("Double Clicked at - '" + ui.data.name + "'");
+		// 	}
+		// },
+		onmousemove: function(evt, graph){
+			ui = graph.getUIByMouseEvent(evt);
+			if(!ui || !ui.data.clickable) {
+				$(".Q-Tooltip").empty();
+			}
+			if(ui && ui.data.clickable){
+				var qTooltip = $(".Q-Tooltip");
+
+				qTooltip.empty();
+				qTooltip.append(ui.data.tooltip);
+
+				var tooltipWidth = evt.clientX + qTooltip.width();
+
+				if(tooltipWidth > browserSize.width) {
+					qTooltip.css("left", browserSize.width - 20 - qTooltip.width());
+					qTooltip.css("top", evt.clientY);
+				} else {
+					qTooltip.css("left", evt.clientX);
+					qTooltip.css("top", evt.clientY);
+				}
+
+				graph.cursor = "pointer";
+			} else {
+				graph.cursor = null;
+				return;
+			}
+		}
+	});
+
+	var mapData = $.getJSON("/resources/json/map1.json");
+	mapData.then(function (data) {
+		data.stations.forEach(function(s){
+			var point = graph.createNode(s.name, s.x, s.y);
+			if(s.transfer == 'true') {
+				point.setStyle(Q.Styles.SHAPE_STROKE, 0);
+				point.image = "transfer_station";
+			} else {
+				point.setStyle(Q.Styles.SHAPE_STROKE, 4);
+				point.setStyle(Q.Styles.SHAPE_STROKE_STYLE, '#F46A23');
+				point.image = Q.Shapes.getShape(Q.Consts.SHAPE_CIRCLE, 18, 18);
+			}
+
+			if(s.id >= 101 && s.id <= 117) {
+				point.setStyle(Q.Styles.LABEL_PADDING, new Q.Insets(80, 60, -80, 110));
+				point.setStyle(Q.Styles.LABEL_ROTATE, Math.PI / 4);
+				point.setStyle(Q.Styles.LABEL_POSITION, Q.Position.CENTER_TOP);
+				point.setStyle(Q.Styles.LABEL_ANCHOR_POSITION, Q.Position.LEFT_BOTTOM);
+			} else if(s.id >= 126 && s.id <= 134) {
+				point.setStyle(Q.Styles.LABEL_PADDING, new Q.Insets(0,40, 40, 30));
+				point.setStyle(Q.Styles.LABEL_ROTATE, -Math.PI / 4);
+				point.setStyle(Q.Styles.LABEL_POSITION, Q.Position.CENTER_TOP);
+				point.setStyle(Q.Styles.LABEL_ANCHOR_POSITION, Q.Position.LEFT_BOTTOM);
+			} else if(s.id >= 118 && s.id <= 125) {
+				// point.setStyle(Q.Styles.LABEL_PADDING, 60);
+				point.setStyle(Q.Styles.LABEL_PADDING, new Q.Insets(60, 60, 60, 0));
+				point.setStyle(Q.Styles.LABEL_POSITION, Q.Position.RIGHT_MIDDLE);
+				point.setStyle(Q.Styles.LABEL_ANCHOR_POSITION, Q.Position.LEFT_MIDDLE);
+			} else if(s.id <= 100) {
+				// point.setStyle(Q.Styles.LABEL_PADDING, 60);
+				point.setStyle(Q.Styles.LABEL_PADDING, new Q.Insets(60, 0, 60, 60));
+				point.setStyle(Q.Styles.LABEL_POSITION, Q.Position.LEFT_MIDDLE);
+				point.setStyle(Q.Styles.LABEL_ANCHOR_POSITION, Q.Position.RIGHT_MIDDLE);
+			} else {
+				point.setStyle(Q.Styles.LABEL_POSITION, Q.Position.CENTER_BOTTOM);
+				point.setStyle(Q.Styles.LABEL_ANCHOR_POSITION, Q.Position.CENTER_TOP);
+			}
+
+			point.setStyle(Q.Styles.LABEL_FONT_SIZE, 16);
+			point.setStyle(Q.Styles.LABEL_COLOR, "#FFF");
+			point.setStyle(Q.Styles.SHAPE_FILL_COLOR, '#FFF');
+
+			point.zIndex = 10;
+
+			line1.addChild(point);
+
+			station_map.put(s.id, {x:s.x, y:s.y});
+		});
+	});
+	Promise.all([mapData]).then(function() {
+		// 역 정보를 가져온다.
+		getStationInfo();
+
+		// 감시시간 호출
+		getMonitorTime();
+	});
+	// Q.loadJSON("/resources/json/map1.json", function(data){
+		// Q.forEach(data.stations, function(s){
+		// 	var point = graph.createNode(s.name, s.x, s.y);
+		// 	if(s.transfer == 'true') {
+		// 		point.setStyle(Q.Styles.SHAPE_STROKE, 0);
+		// 		point.image = "transfer_station";
+		// 	} else {
+		// 		point.setStyle(Q.Styles.SHAPE_STROKE, 4);
+		// 		point.setStyle(Q.Styles.SHAPE_STROKE_STYLE, '#F46A23');
+		// 		point.image = Q.Shapes.getShape(Q.Consts.SHAPE_CIRCLE, 18, 18);
+		// 	}
+        //
+		// 	point.setStyle(Q.Styles.LABEL_PADDING, new Q.Insets(0,40, 40, 0));
+        //
+		// 	if((s.id >= 26 && s.id <= 34) || (s.id >=1 && s.id <= 17)) {
+		// 		point.setStyle(Q.Styles.LABEL_ROTATE,  -Math.PI / 4);
+		// 		point.setStyle(Q.Styles.LABEL_POSITION, Q.Position.CENTER_TOP);
+		// 		point.setStyle(Q.Styles.LABEL_ANCHOR_POSITION, Q.Position.LEFT_BOTTOM);
+		// 	} else if(s.id >= 18 && s.id <= 25) {
+		// 		point.setStyle(Q.Styles.LABEL_PADDING, 60);
+		// 		point.setStyle(Q.Styles.LABEL_POSITION, Q.Position.RIGHT_MIDDLE);
+		// 		point.setStyle(Q.Styles.LABEL_ANCHOR_POSITION, Q.Position.LEFT_MIDDLE);
+		// 	} else if(s.id >= 35) {
+		// 		point.setStyle(Q.Styles.LABEL_PADDING, 60);
+		// 		point.setStyle(Q.Styles.LABEL_POSITION, Q.Position.LEFT_MIDDLE);
+		// 		point.setStyle(Q.Styles.LABEL_ANCHOR_POSITION, Q.Position.RIGHT_MIDDLE);
+		// 	} else {
+		// 		point.setStyle(Q.Styles.LABEL_POSITION, Q.Position.CENTER_BOTTOM);
+		// 		point.setStyle(Q.Styles.LABEL_ANCHOR_POSITION, Q.Position.CENTER_TOP);
+		// 	}
+        //
+		// 	point.setStyle(Q.Styles.LABEL_FONT_SIZE, 16);
+		// 	point.setStyle(Q.Styles.LABEL_COLOR, "#FFF");
+		// 	point.setStyle(Q.Styles.SHAPE_FILL_COLOR, '#FFF');
+        //
+		// 	point.zIndex = 10;
+        //
+		// 	line1.addChild(point);
+        //
+		// 	station_map.put(s.id, {x:s.x, y:s.y});
+		// });
+
+		// // 역 정보를 가져온다.
+		// // 역 정보는 변경되지 않으므로 한번만 호출
+		// getStationInfo();
+        //
+		// // 감시시간 호출
+		// getMonitorTime();
+	// });
+	preLoadImages(graph, function(){
+		// 이미지 전부 로드 후 토폴로지 표시 및 사이즈 조정
+		graph.html.style.visibility = 'visible';
+		// graph.zoomToOverview();
+	});
+}
+
+//Qunee - Node 생성 (백그라운드용)
+function createBackgroundNode(title, x, y, imageName) {
+	var bgNode = graph.createNode(title, x, y);
+	bgNode.image = imageName;
+	bgNode.tooltip = title;
+
+	return bgNode;
+}
+
+function createStationNode(data) {
+	var x = Number(data.POSITION_X);
+	var y = Number(data.POSITION_Y);
+	var point = graph.createNode(data.STATION_NAME, x, y);
+	if (data.TRANSFER_FLAG === 1) {
+		point.setStyle(Q.Styles.SHAPE_STROKE, 0);
+		point.image = "transfer_station";
+	} else {
+		point.setStyle(Q.Styles.SHAPE_STROKE, 4);
+		point.setStyle(Q.Styles.SHAPE_STROKE_STYLE, '#F46A23');
+		point.image = Q.Shapes.getShape(Q.Consts.SHAPE_CIRCLE, 18, 18);
+	}
+
+	point.setStyle(Q.Styles.LABEL_PADDING, new Q.Insets(0, 40, 40, 0));
+
+	if ((data.LOCATION >= 126 && data.LOCATION <= 134) || (data.LOCATION >= 101 && data.LOCATION <= 117)) {
+		point.setStyle(Q.Styles.LABEL_ROTATE, -Math.PI / 4);
+		point.setStyle(Q.Styles.LABEL_POSITION, Q.Position.CENTER_TOP);
+		point.setStyle(Q.Styles.LABEL_ANCHOR_POSITION, Q.Position.LEFT_BOTTOM);
+	} else if (data.LOCATION >= 118 && data.LOCATION <= 125) {
+		point.setStyle(Q.Styles.LABEL_PADDING, 60);
+		point.setStyle(Q.Styles.LABEL_POSITION, Q.Position.RIGHT_MIDDLE);
+		point.setStyle(Q.Styles.LABEL_ANCHOR_POSITION, Q.Position.LEFT_MIDDLE);
+	} else if (data.LOCATION >= 135) {
+		point.setStyle(Q.Styles.LABEL_PADDING, 60);
+		point.setStyle(Q.Styles.LABEL_POSITION, Q.Position.LEFT_MIDDLE);
+		point.setStyle(Q.Styles.LABEL_ANCHOR_POSITION, Q.Position.RIGHT_MIDDLE);
+	} else {
+		point.setStyle(Q.Styles.LABEL_POSITION, Q.Position.CENTER_BOTTOM);
+		point.setStyle(Q.Styles.LABEL_ANCHOR_POSITION, Q.Position.CENTER_TOP);
+	}
+
+	point.setStyle(Q.Styles.LABEL_FONT_SIZE, 16);
+	point.setStyle(Q.Styles.LABEL_COLOR, "#FFF");
+	point.setStyle(Q.Styles.SHAPE_FILL_COLOR, '#FFF');
+	// point.zIndex = 10;
+
+	line1.addChild(point);
+
+	station_map.put(data.LOCATION, {x: data.POSITION_X, y: data.POSITION_Y});
+}
+
+function findAllImagesInGraph(graph) {
+	var REG_IMAGES = /.(jpg|png|gif)$/gi;
+	var images = {};
+	graph.forEach(function (element) {
+		if (Q.isString(element.image) && REG_IMAGES.test(element.image)) {
+			images[element.image] = true;
+		}
+	});
+	var result = [];
+	for (var image in images) {
+		result.push(image);
+	}
+	return result;
+}
+
+function preLoadImages(images, callback) {
+	if (images instanceof Q.Graph) {
+		images = findAllImagesInGraph(images);
+	}
+	var imageCount = images.length;
+	var index = 0;
+	images.forEach(function (url) {
+		preLoadImage(url, function () {
+			index++;
+			if (index == imageCount) {
+				//all images pre loaded
+				callback();
+			}
+		});
+	});
+}
+
+function preLoadImage(url, callback) {
+	var image = new Image();
+	image.onload = function () {
+		callback();
+	};
+	image.src = url;
+}
+
+function resetTrain(train) {
+	train.setStyle(Q.Styles.LABEL_POSITION, Q.Position.CENTER_BOTTOM);
+	train.setStyle(Q.Styles.LABEL_ANCHOR_POSITION, Q.Position.CENTER_BOTTOM);
+	train.setStyle(Q.Styles.LABEL_PADDING, -10);
+	// train.setStyle(Q.Styles.LABEL_FONT_STYLE, "bold");
+	train.setStyle(Q.Styles.LABEL_COLOR, "#ffffff");
+	train.name = '';
+	train.image = '';
+	train.tooltip = '';
+	// train.clickable = false;
+	// train.dblclickable = false;
+}
+
+function createTrain(data) {
+	var train = graph.createNode("" + data.TRAIN_NO);
+//				train.setStyle(Q.Styles.SHAPE_FILL_COLOR, '#ff0000');
+	train.setStyle(Q.Styles.LABEL_POSITION, Q.Position.CENTER_BOTTOM);
+	train.setStyle(Q.Styles.LABEL_ANCHOR_POSITION, Q.Position.CENTER_BOTTOM);
+	train.setStyle(Q.Styles.LABEL_PADDING, -10);
+	// train.setStyle(Q.Styles.LABEL_FONT_STYLE, "bold");
+	train.setStyle(Q.Styles.LABEL_COLOR, "#ffffff");
+	train.zIndex = 20;
+	train.clickable = true;
+	// train.dblclickable = true;
+	train.trainNo = "" + data.TRAIN_NO;
+	train.lastStatoin = data.LAST_STATION_NAME;
+	trainNoArr.push(name);
+	train_map.put(name, train);
+
+	return train;
+}
+
+
+function trainLocation(train, data) {
+	var
+		direction = data.DIRECTION,
+		opCode = data.OP_CODE,
+		station = data.STATION_ID,
+		lastStation = data.LAST_STATION_ID;
+
+	train.lastStation = lastStation;
+	train.direction = direction;
+	train.opCode = opCode;
+	train.station = station;
+	train.name = train.trainNo;
+	train.size = {height: 20};
+	if(station_map.get(station) !== null) {
+		switch(direction) {
+			case 1 :	// 상행
+				train.image = "train_reverse";
+				switch(opCode) {
+					case 177 :	// 출발
+						if(station === 100 ) {
+							train.x = station_map.get(station).x + 38;
+							train.y = station_map.get(station).y + 7;
+						} else if(station === 117) {
+							train.x = station_map.get(station).x + 4;
+							train.y = station_map.get(station).y - 45;
+						} else if(station === 125) {
+							train.x = station_map.get(station).x - 38;
+							train.y = station_map.get(station).y - 45;
+						} else if(station >= 101 && station <= 116) {
+							train.x = station_map.get(station).x + 15;
+							train.y = station_map.get(station).y - 45;
+						} else if(station >= 126 && station <= 133) {
+							train.x = station_map.get(station).x + 10;
+							train.y = station_map.get(station).y - 45;
+						} else if(station >= 118 && station <= 124) {
+							train.x = station_map.get(station).x - 38;
+							train.y = station_map.get(station).y - 25;
+						} else if(station >= 95 && station <= 99) {
+							train.x = station_map.get(station).x + 38;
+							train.y = station_map.get(station).y + 25;
+						} else if(station == 134) {
+							//상행 노포역에서 출발하는 경우 해당 열차는 보이면 안됨
+							train.image ="";
+							train.name ="";
+						}
+
+						if(station === lastStation) {
+							train.image ="";
+							train.name ="";
+						}
+						break;
+					case 178 :	// 도착
+						if(station >= 101 && station <= 117) {
+							train.x = station_map.get(station).x;
+							train.y = station_map.get(station).y - 45;
+						} else if(station >= 126 && station <= 134) {
+							train.x = station_map.get(station).x;
+							train.y = station_map.get(station).y - 45;
+						} else if(station >= 118 && station <= 125) {
+							train.x = station_map.get(station).x - 38;
+							train.y = station_map.get(station).y;
+						} else if(station >= 95 && station <= 100) {
+							train.x = station_map.get(station).x +38;
+							train.y = station_map.get(station).y;
+						}
+						break;
+					case 179 :	// 접근
+						if(station === 101) {
+							train.x = station_map.get(station).x - 10;
+							train.y = station_map.get(station).y - 45
+						} else if(station === 118) {
+							train.x = station_map.get(station).x - 35;
+							train.y = station_map.get(station).y + 5
+						} else if(station === 126) {
+							train.x = station_map.get(station).x - 55;
+							train.y = station_map.get(station).y - 15
+						} else if(station >= 102 && station <= 117) {
+							train.x = station_map.get(station).x - 15;
+							train.y = station_map.get(station).y - 45;
+						} else if(station >= 127 && station <= 134) {
+							train.x = station_map.get(station).x - 8;
+							train.y = station_map.get(station).y - 45;
+						} else if(station >= 119 && station <= 125) {
+							train.x = station_map.get(station).x - 38;
+							train.y = station_map.get(station).y + 20;
+						} else if(station >= 96 && station <= 100) {
+							train.x = station_map.get(station).x + 38;
+							train.y = station_map.get(station).y - 25;
+						} else if(station <= 95) {
+							//상행 다대포 해수욕장에 접근하는 경우 해당 열차는 보이면 안됨
+							train.image ="";
+							train.name ="";
+						}
+						break;
+				}
+				break;
+			case 2 :	// 하행
+				train.image = "train";
+				switch(opCode) {
+					case 177 :	// 출발
+						if(station === 101) {
+							//신평역을 출발하여 청호냉동역으로 가는 지하철
+							train.x = station_map.get(station).x - 45;
+							train.y = station_map.get(station).y + 25;
+						} else if(station === 118) {
+							// 범내골역을 출발하여 범일골로 가는 지하철
+							train.x = station_map.get(station).x + 35;
+							train.y = station_map.get(station).y + 25;
+						} else if(station === 126) {
+							// 명륜역을 출발하여 동래골로 가는 지하철
+							train.x = station_map.get(station).x + 5;
+							train.y = station_map.get(station).y + 45;
+						} else if(station >= 102 && station <= 117) {
+							train.x = station_map.get(station).x - 25;
+							train.y = station_map.get(station).y + 35;
+						} else if(station >= 127 && station <= 134) {
+							train.x = station_map.get(station).x - 25;
+							train.y = station_map.get(station).y + 35;
+						} else if(station >= 119 && station <= 125) {
+							train.x = station_map.get(station).x + 38;
+							train.y = station_map.get(station).y + 25;
+						} else if(station >= 96 && station <= 100) {
+							train.x = station_map.get(station).x - 38;
+							train.y = station_map.get(station).y - 25;
+						} else if(station == 95) {
+							//하행 다대포 해수욕장에서 출발하는 경우 해당 열차는 보이면 안됨
+							train.image ="";
+							train.name ="";
+						}
+
+						if(station === lastStation) {
+							train.image ="";
+							train.name ="";
+						}
+						break;
+					case 178 :	// 도착
+						if(station >= 101 && station <= 117) {
+							train.x = station_map.get(station).x;
+							train.y = station_map.get(station).y + 35;
+						} else if(station >= 126 && station <= 134) {
+							train.x = station_map.get(station).x;
+							train.y = station_map.get(station).y + 35
+						} else if(station >= 118 && station <= 125) {
+							train.x = station_map.get(station).x + 38;
+							train.y = station_map.get(station).y;
+						} else if(station >= 95 && station <= 100) {
+							train.x = station_map.get(station).x -38;
+							train.y = station_map.get(station).y;
+						}
+						break;
+					case 179 :	// 접근
+						if(station === 100) {
+							//동매역으로 접근
+							train.x = station_map.get(station).x - 25;
+							train.y = station_map.get(station).y + 45;
+						} else if(station === 117) {
+							//범일로 접근
+							train.x = station_map.get(station).x + 40;
+							train.y = station_map.get(station).y + 25;
+						} else if(station === 125) {
+							//동래역으로 접근
+							train.x = station_map.get(station).x + 40;
+							train.y = station_map.get(station).y - 25;
+						} else if(station >= 101 && station <= 116) {
+							train.x = station_map.get(station).x + 25;
+							train.y = station_map.get(station).y + 35;
+						} else if(station >= 126 && station <= 133) {
+							train.x = station_map.get(station).x + 25;
+							train.y = station_map.get(station).y + 35;
+						} else if(station >= 118 && station <= 124) {
+							train.x = station_map.get(station).x + 38;
+							train.y = station_map.get(station).y - 25;
+						} else if(station >= 95 && station <= 99) {
+							train.x = station_map.get(station).x - 38;
+							train.y = station_map.get(station).y + 25;
+						} else if(station == 134) {
+							//하행 노포로 접근하는 경우 해당 열차는 보이면 안됨
+							train.x = station_map.get(station).x + 25;
+							train.y = station_map.get(station).y + 35;
+							train.image ="";
+							train.name ="";
+						}
+						break;
+				}
+				break;
+		}
+
+		train_map.put(train.trainNo, train);
+
+	} else {
+		alert("Not station info");
+	}
+}
+
+function levelText(level) {
+	return {
+		1 : "Critical",
+		2 : "Major",
+		3 : "Minor",
+		4 : "Normal",
+		5 : ""
+	}[level];
+}
+
+function levelColor(level) {
+	return {
+		1: "red",
+		2: "#eb8206",
+		3: "yellow",
+		4: "green",
+		5: ""
+	}[level];
+}
+
+// 열차 정보 가져와서 위치 이동
+function getTrainInfo(params) {
+	var train;
+	trackingData = $.ajax({
+		type: 'post',
+		url: '/integration/monitor/train/traininfo',
+		contentType: 'application/json',
+		dataType: 'json',
+		data: JSON.stringify(params)
+	});
+
+	trackingData.then(function (data) {
+		if(trainNoArr.length !== 0) {
+			$(trainNoArr).each(function(idx, value) {
+				resetTrain(train_map.get(value));
+			});
+		}
+
+		$(data.trainInfo.trackingInfo).each(function(i, row){
+			if(train_map.get(row.TRAIN_NO) === undefined) {
+				train = createTrain(row);
+			} else {
+				train = train_map.get(row.TRAIN_NO);
+			}
+			trainLocation(train, row);
+		});
+		var qualityInfo = data.trainInfo.qualityInfo;
+
+		//툴팁 알람등급을 위한 변수
+		var level = 5;
+		var tmpLvl = 0;
+
+		for(var i = 0, q = qualityInfo.length; i < q; i += 1) {
+			train = train_map.get(qualityInfo[i].TRAIN_NO);
+			var prevTrain = i === 0 ? {} : train_map.get(qualityInfo[i - 1].TRAIN_NO);
+
+			var name = train.name;
+			var prevName = prevTrain.name;
+			var dir = train.direction;
+			var opCode = train.opCode;
+
+			var phoneNo = qualityInfo[i].PHONE_NO;
+			var prevPhoneNo = qualityInfo[i === 0 ? i : i - 1].PHONE_NO;
+			var phoneNoNode = '';
+
+			if(i !== 0 && (i === (q - 1) || name !== prevName)) {
+				//QUNEE의 toolttip에 적용하기 전 알람등급을 세팅
+				document.querySelector('.rating>td:nth-child(2)>span').className = levelText(level).toLowerCase();
+				document.querySelector('.rating>td:nth-child(2)>span').textContent = levelText(level);
+
+
+				var tooltip = document.getElementById('tooltip');
+				var tooltipText = tooltip.outerHTML;
+
+				tooltipText = tooltipText.replace('display:none;', '');
+
+				prevTrain.tooltip = tooltipText;
+				// prevTrain.setStyle(Q.Styles.SHAPE_STROKE, 4);
+				// prevTrain.setStyle(Q.Styles.SHAPE_STROKE_STYLE, '#F46A23');
+				// prevTrain.image = Q.Shapes.getShape(Q.Consts.SHAPE_CIRCLE, 18, 18);
+				prevTrain.setStyle(Q.Styles.BACKGROUND_COLOR, levelColor(level === 4 ? "" : level));
+			}
+
+			if(name !== prevName) {
+				document.querySelector('.mu-tooltip-header.main').textContent
+					= train.lastStatoin + "행 " + name + "호(" + monitorTime.substr(11, 5) + ")";
+
+				document.querySelector('.mu-tooltip-header.sub').textContent
+					= stationData[train.station] + " " + opCodeText(opCode);
+
+				// 각 툴팁이 만들어는 순간 알람등급 관련 변수 초기화
+				level = 4;
+				attRateLvl = 0;
+				succRateLvl = 0;
+			}
+
+			var resultIdx = -2;
+
+			// k는 차량 번호
+			// 차량마다 2개의 차량 단말이 있고 차량 단말은 발/착신이 있으므로 총 4개의 같은 차량번호를 가지고 있음
+			var nthIdxTr  = parseInt((i % 4) / 2) + 1;
+
+			// 성능 정보는 시도호, 시도율, 성공호, 성공율 4개를 보여준다(4번의 루프)
+			// 알람등급을 각 단말마다 보여준다면 5번의 루프가 필요
+			// RESULT1: ATTEMPT, RESULT2: SUCCESS
+			// RESULT3: ATT_RATE, RESULT4: SUCC_RATE
+			// RESULT5: ATT_RATE_LV, RESULT6: SUCC_RATE_LV
+			for(var j = 3; j >= 0; j-=1) {
+				//var nthIdxTd = (j === 3 ? 3 : 2);
+				var nthIdxTd = 0;
+				var trIdx = nthIdxTr * 4 - j;
+
+				// 각 단말의 발/착신의 알람 등급을 보여주기 위해서 알람등급을 먼저 세팅
+				if(j === 3) {
+					//시도율
+					attRateLvl = qualityInfo[i]["RESULT5"];
+					//성공율
+					succRateLvl = qualityInfo[i]["RESULT6"];
+
+					level = (attRateLvl >= succRateLvl
+						? (level >= succRateLvl ? succRateLvl : level)
+						: (level >= attRateLvl ? attRateLvl : level))
+				}
+
+				//if(j === 1) {
+				//	//시도율
+				//	tmpLvl = qualityInfo[i]["RESULT5"];
+				//	if(level >= tmpLvl) {
+				//		level = tmpLvl;
+				//	}
+				//} else if(j === 0) {
+				//	//성공율
+				//	tmpLvl = qualityInfo[i]["RESULT6"];
+				//	if(level >= tmpLvl) {
+				//		level = tmpLvl;
+				//	}
+				//}
+
+				if(Number(qualityInfo[i].CALL_DIR) === 1) {
+					nthIdxTd = (j === 3 ? 3 : 2);
+					document.querySelector('#tooltipTable>tr:nth-child(' + trIdx + ')>td:nth-child(' + nthIdxTd + ')').innerText
+						= qualityInfo[i]["RESULT" + (j+resultIdx)];
+					document.querySelector('#tooltipTable>tr:nth-child(' + trIdx + ')>td:nth-child(' + nthIdxTd + ')').style.color
+						= levelColor((j === 1 ? (attRateLvl === 4 ? 5 : attRateLvl) : (j === 0 ? (succRateLvl === 4 ? 5 : succRateLvl) : 5)));
+				} else if(Number(qualityInfo[i].CALL_DIR) === 2) {
+					nthIdxTd = (j === 3 ? 4 : 3);
+					document.querySelector('#tooltipTable>tr:nth-child(' + trIdx + ')>td:nth-child(' + nthIdxTd + ')').innerText
+						= qualityInfo[i]["RESULT" + (j+resultIdx)];
+					document.querySelector('#tooltipTable>tr:nth-child(' + trIdx + ')>td:nth-child(' + nthIdxTd + ')').style.color
+						= levelColor((j === 1 ? (attRateLvl === 4 ? 5 : attRateLvl) : (j === 0 ? (succRateLvl === 4 ? 5 : succRateLvl) : 5)));
+				}
+
+				resultIdx += 2;
+			}
+
+			phoneNoNode = document.querySelectorAll('.phoneNo');
+			if(phoneNoNode[0].textContent === '' || (name !== prevName)) {
+				phoneNoNode[0].innerText = phoneNo;
+				//알람 등급 카운트 추가
+				setLevelCount(level);
+			} else if(prevPhoneNo !== phoneNo) {
+				phoneNoNode[1].innerText = phoneNo;
+			}
+		}
+		browserSize = {
+			width: document.body.clientWidth,
+			height: document.body.clientHeight
+		};
+		graph.zoomToOverview();
+	},
+	function (error) {
+		console.error(error);
+	});
+}
+
+function opCodeText(code) {
+	return {
+		"177" : "출발",
+		"178" : "도착",
+		"179" : "접근 중"
+	}[code];
+}
+
+function getMonitorTime() {
+	var trackingData = $.ajax({
+		type:'post',
+		url:'/integration/monitor/train/monitortime',
+		contentType: 'application/json',
+		dataType : 'json',
+		success : function(data) {
+			$('.timeWrap').text(setDate());
+			// if(monitorTime !== data.MONITOR_TIME) {
+				params.updateTime = monitorTime = data.MONITOR_TIME;
+				params.eventTime = performanceTime = data.PERFORMANCE_TIME;
+				// $('.timeWrap').text("감시시간 : " + monitorTime);
+				displayUI(params);
+				qualityTrend('A');
+			// }
+		},
+		error : function(xhr, stat, err) {
+			console.log(stat);
+		}
+	});
+}
+
+function qualityTrend(flag) {
+	var params = {};
+	var chartId = '';
+	var trainTab = $("#trainNo").find('a');
+
+	if(flag === 'T') {
+		trainTab.empty();
+		trainTab.text(trainNo);
+		params.trainNo = trainNo;
+		params.eventTime = performanceTime;
+	}
+
+	var endEventTime = startEventTime = "";
+	endEventTime = performanceTime;
+
+	var startDateTime = new Date(startEventTime).format("yyyy-MM-dd HH:mm:ss");
+	var endDateTime = new Date(performanceTime).format("yyyy-MM-dd HH:mm:ss");
+
+	if((new Date(endDateTime).getTime() - new Date(startDateTime).getTime())/1000/3600 < 0){
+		alert('조회 범위가 잘못되었습니다.');
+		return false;
+	}else if((new Date(endDateTime).getTime() - new Date(startDateTime).getTime())/1000/3600 > 12){
+		alert('최대 12시간 조회만 가능합니다.');
+		return false;
+	}
+	params.startEventTime = startEventTime;
+	params.endEventTime = endDateTime;
+
+	$.ajax({
+		type: 'post',
+		url: '/integration/monitor/train/trend',
+		contentType: 'application/json',
+		dataType: 'json',
+		data: JSON.stringify(params),
+		success: function (data) {
+			data = data.trainQualityInfo;
+			if(flag === 'T') {
+				var phoneNo = data.PHONE_NO;
+				drawChart("#phone1", data[phoneNo[0].PHONE_NO], 930, 200, flag);
+				drawChart("#phone2", data[phoneNo[1].PHONE_NO], 930, 200, flag);
+			} else if(flag === 'A') {
+				drawChart('#tab1', data, 1850, 200, flag);
+			}
+
+			//$("#start-date").datepicker("setDate", data.START_EVENT_TIME.substr(0,10));
+			//$("select[name=start-hour]").val(data.START_EVENT_TIME.substr(11,2));
+			//$("select[name=start-minute]").val(data.START_EVENT_TIME.substr(14,2));
+            //
+            //
+			//$("#end-date").datepicker("setDate", data.END_EVENT_TIME.substr(0,10));
+			//$("select[name=end-hour]").val(data.END_EVENT_TIME.substr(11,2));
+			//$("select[name=end-minute]").val(data.END_EVENT_TIME.substr(14,2));
+            //
+			//$("#trendRequest").data("duid", data.DU_ID);
+			//$("#trendRequest").data("stationid", data.STATION_ID);
+            //
+			//$(".du-trend").find(".title").text("품질 Trend : " + data.DU_NAME);
+
+			// drawChart(chartId, data);
+
+			//Trend 내 성공율/절단율 Show/Hide
+			//Trend가 로딩 된 이후
+			//im.trendToggle();
+		},
+		error: function () {
+			//alert('에러발생');
+		}
+	});
+}
+
+function drawChart(chartId, data, w, h, flag) {
+	var ticInterval = 1;
+	var maxCnt = 8;
+	var timeCount = data.CATEGORY ? data.CATEGORY.length : 0;
+	if(timeCount > maxCnt) {
+		ticInterval = Math.ceil(timeCount / maxCnt);
+	}
+
+	var legendX = 0;
+	if(flag === 'A') {
+		legendX = 0;
+	} else {
+		legendX = -250;
+	}
+
+	$(chartId).highcharts({
+		chart: {
+			height: h,
+			width: w,
+			zoomType: 'x',
+			events: {
+				selection: function(event) {
+					if (event.resetSelection) {
+						try {
+							setTimeout(function () {
+								$(chartId).highcharts().xAxis[0].update({
+									tickInterval: ticInterval
+								});
+							}, 0);
+						} catch (event) {
+							// console.log(e);
+						}
+					} else {
+						var _ticInterval = 1;
+						var _xCnt = event.xAxis[0].max - event.xAxis[0].min;
+						if (_xCnt > maxCnt) {
+							_ticInterval = Math.ceil(_xCnt / maxCnt);
+						}
+						try {
+							setTimeout(function () {
+								$(chartId).highcharts().xAxis[0].update({
+									tickInterval: _ticInterval
+								});
+							}, 0);
+						} catch (event) {
+							// console.log(e);
+						}
+					}
+				}
+			}
+		},
+		credits: {
+			enabled: false
+		},
+		title:{
+			text:data.PHONE_NO
+		},
+		xAxis: [{
+			categories: data.CATEGORY,
+			tickInterval: ticInterval
+		}],
+		yAxis: [{
+			min: 0,
+			title: {
+				text: '시도호',
+				// align: "high",
+				// rotation: 0,
+				// offset: 0,
+				// x: -7,
+				// y: -15,
+				style: {
+					color: "#4572A6"
+				}
+			},
+			labels: {
+				//formatter: function () {
+				//	return this.value;
+				//},
+				format: '{value}',
+				style: {
+					color: "#4572A6"
+				}
+			},
+			showEmpty: false
+		}, {
+			min: 0,
+			max: 100,
+			//gridLineWidth: 0,
+			title: {
+				text: '성공율',
+				// align: "high",
+				// rotation: 0,
+				// offset: 0,
+				// x: -15,
+				// y: -15,
+				style: {
+					color: "#E07400"
+				}
+			},
+			labels: {
+				//formatter: function () {
+				//	return this.value;
+				//},
+				x: -10,
+				format: '{value}',
+				style: {
+					color: "#E07400"
+				}
+			},
+			opposite: true,
+			showEmpty: false
+		}],
+		tooltip: {
+			shared: true
+		},
+		legend: {
+			// layout: 'vertical',
+			// align: 'right',
+			// verticalAlign: 'middle',
+			align: 'center',
+			verticalAlign: 'top',
+			x: legendX,
+			y: 0,
+			backgroundColor: '#FFFFFF',
+			borderWidth: 0
+		},
+		//legendItemClick: function(event) {
+		//	if (!this.visible)
+		//		return false;
+		//
+		//	var seriesIndex = this.index;
+		//	var series = this.chart.series;
+		//
+		//	for (var i = 0; i < series.length; i++) {
+		//		if (series[i].index != seriesIndex) {
+		//			series[i].visible ?
+		//					series[i].hide();
+		//					series[i].show();
+		//		}
+		//	}
+		//	return false;
+		//},
+		plotOptions:{
+			spline: {
+				marker: {
+					enabled: false
+				}
+			}
+		},
+		series: [{
+			name: '발신 시도호',
+			type: 'column',
+			yAxis: 0,
+			data: data.SEND_ATTEMPTS,
+			color: "#4572A6",
+			tooltip: {
+				valueSuffix: ''
+			},
+			zIndex: 10
+
+		},{
+			name: '발신 성공율',
+			type: 'spline',
+			yAxis: 1,
+			data: data.SEND_SUCC_RATES,
+			color: "#E07400",
+			tooltip: {
+				valueSuffix: ''
+			},
+			zIndex: 21
+		},{
+			name: '착신 시도호',
+			type: 'column',
+			yAxis: 0,
+			data: data.RECV_ATTEMPTS,
+			color: "#8BC34A",
+			tooltip: {
+				valueSuffix: ''
+			},
+			zIndex: 11
+
+		},{
+			name: '착신 성공율',
+			type: 'spline',
+			yAxis: 1,
+			data: data.RECV_SUCC_RATES,
+			color: "#E040FB",
+			tooltip: {
+				valueSuffix: ''
+			},
+			zIndex: 20
+		}]
+	});
+}
+
+function tabs() {
+	if(!tabFlag) {
+		$('#trainNo').css('display', 'none');
+	} else {
+		$('#trainNo').css('display', 'inline-block');
+	}
+
+	$(".tab_content").hide();
+
+	$("ul.mu-tab li").removeClass("active");
+	if(trainNo === "") {
+		$(".tab_content:first").show();
+		$("li[rel~='tab1']").addClass("active");
+	} else {
+		$(".tab_content:nth-child(2)").show();
+		$("li[rel~='tab2']").addClass("active");
+	}
+
+	$("ul.mu-tab li").click(function () {
+		$("ul.mu-tab li").removeClass("active");
+		$(this).addClass("active");
+		$(".tab_content").hide();
+		var activeTab = $(this).attr("rel");
+		$("#" + activeTab).show();
+	});
+}
+
+function setContextMenu() {
+	graph.popupmenu = new Q.PopupMenu();
+	return false;
+}
+
+function getStationInfo() {
+	$.ajax({
+		type: 'post',
+		url: '/integration/monitor/train/stationinfo',
+		contentType: 'application/json',
+		dataType: 'json',
+		success: function (data) {
+			stationData = data.stationInfo;
+		},
+		error : function (xhr, stat, err) {
+			// console.log(stat);
+		}
+	});
+}
+
+function topButtons() {
+	$(".top-buttons").click(function() {
+		var watch_test = $(this).children().hasClass("watch");
+		var sound_test = $(this).children().hasClass("sound");
+
+		if(watch_test && watchFlag) {
+			//감시 onoff 버튼 && 감시 on 상태일 때 클릭
+			$(this).removeClass("mu-toggle-on");
+			$(".sound").parent().removeClass("mu-toggle-on");
+			soundFlag = false;
+			watchFlag = false;
+			setRefresh();
+		} else if(watch_test) {
+			// 감시 onoff 버튼 && 감시 off 상태일 때 클릭
+			$(this).addClass("mu-toggle-on");
+			$(".sound").parent().addClass("mu-toggle-on");
+			soundFlag = true;
+			watchFlag = true;
+			audioFunction.audioPuse();
+			audioFunction.audioPlay();
+			setRefresh();
+		}
+
+		if(sound_test && soundFlag) {
+			$(this).removeClass("mu-toggle-on");
+			soundFlag = false;
+
+			audioFunction.audioPuse();
+		} else if(sound_test) {
+			if(watchFlag) {
+				$(this).addClass("mu-toggle-on");
+				soundFlag = true;
+
+				audioFunction.audioPuse();
+				audioFunction.audioPlay();
+			} else {
+				alert("감시 중이 아닐 경우 가청을 활성화 할 수 없습니다.");
+				return false;
+			}
+		}
+	});
+}
+
+function setRefresh() {
+	//감시 중 ON인 경우 Interval 등록
+	if(watchFlag) {
+		refresh = setTimeout("getMonitorTime()", 1000 * 10);		// 정해진 시간 주기로 refresh
+	} else {
+		//감시중 Off인 경우 Interval 삭제
+		clearTimeout(refresh);
+		//감시중 Off인 경우 가청 삭제
+		audioFunction.audioPuse();
+	}
+}
+
+//알람 가청
+function alarmSound() {
+	var resultCnt1 = alarmCntTop.map(function(el) {
+		return parseInt(el, 10);
+	});
+
+	var alarmLvl = 4;
+
+	if(resultCnt1[2] > 0) alarmLvl = 3;
+	if(resultCnt1[1] > 0) alarmLvl = 2;
+	if(resultCnt1[0] > 0) alarmLvl = 1;
+
+	$("#audioAlarmLevel").val(alarmLvl);
+	alarmLvlGlobal = alarmLvl;
+}
+
+function filterSaveSearch(flag, filterLevel) {
+	params.updateTime = monitorTime;
+	params.eventTime = performanceTime;
+	params.filterLevel = filterLevel;
+	displayUI(params);
+}

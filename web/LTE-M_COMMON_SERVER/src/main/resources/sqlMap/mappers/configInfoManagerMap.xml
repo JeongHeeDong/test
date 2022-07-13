@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.ConfigInfoManagerDAO">
+	
+	<select id="getMaxUpDateTime" resultType="java.util.HashMap">
+		SELECT
+			DU_UPDATETIME,
+		    RU_UPDATETIME,
+		    CELL_UPDATETIME,
+		    CHANNEL_UPDATETIME,
+		    MME_UPDATETIME,
+		    MME_NODE_UPDATETIME,
+		    MME_NTP_UPDATETIME,
+		    MME_PORT_UPDATETIME,
+		    GW_UPDATETIME,
+		    GW_NODE_UPDATETIME,
+		    GW_NTP_UPDATETIME,
+		    GW_PORT_UPDATETIME,
+		    MME_UPDATETIME,
+		    PCRF_UPDATETIME,
+		    PCRF_NODE_UPDATETIME,
+		    PCRF_NTP_UPDATETIME,
+		    PCRF_PORT_UPDATETIME
+		FROM
+			(SELECT IFNULL(DATE_FORMAT(MAX(EVENT_TIME),'%Y-%m-%d %H:%i:%s'),'') AS DU_UPDATETIME FROM TB_CO_DU_RAW) AS DU,
+		    (SELECT IFNULL(DATE_FORMAT(MAX(EVENT_TIME),'%Y-%m-%d %H:%i:%s'),'') AS RU_UPDATETIME FROM TB_CO_RU_RAW) AS RU,
+		    (SELECT IFNULL(DATE_FORMAT(MAX(EVENT_TIME),'%Y-%m-%d %H:%i:%s'),'') AS CELL_UPDATETIME FROM TB_CO_CELL_MAP_RAW) AS CELL,
+		    (SELECT IFNULL(DATE_FORMAT(MAX(EVENT_TIME),'%Y-%m-%d %H:%i:%s'),'') AS CHANNEL_UPDATETIME FROM TB_CO_CHANNEL_CARD_RAW) AS CHANNEL_CARD,
+		    (SELECT IFNULL(DATE_FORMAT(MAX(EVENT_TIME),'%Y-%m-%d %H:%i:%s'),'') AS MME_UPDATETIME FROM TB_CO_MME_RAW) AS MME,
+		    (SELECT IFNULL(DATE_FORMAT(MAX(EVENT_TIME),'%Y-%m-%d %H:%i:%s'),'') AS MME_NODE_UPDATETIME FROM TB_CO_MME_NODE_RAW) AS MME_NODE,
+		    (SELECT IFNULL(DATE_FORMAT(MAX(EVENT_TIME),'%Y-%m-%d %H:%i:%s'),'') AS MME_NTP_UPDATETIME FROM TB_CO_MME_NTP_RAW) AS MME_NTP,
+		    (SELECT IFNULL(DATE_FORMAT(MAX(EVENT_TIME),'%Y-%m-%d %H:%i:%s'),'') AS MME_PORT_UPDATETIME FROM TB_CO_MME_PORT_RAW) AS MME_PORT,
+		    (SELECT IFNULL(DATE_FORMAT(MAX(EVENT_TIME),'%Y-%m-%d %H:%i:%s'),'') AS GW_UPDATETIME FROM TB_CO_PGW_RAW) AS GW,
+		    (SELECT IFNULL(DATE_FORMAT(MAX(EVENT_TIME),'%Y-%m-%d %H:%i:%s'),'') AS GW_NODE_UPDATETIME FROM TB_CO_GW_NODE_RAW) AS GW_NODE,
+		    (SELECT IFNULL(DATE_FORMAT(MAX(EVENT_TIME),'%Y-%m-%d %H:%i:%s'),'') AS GW_NTP_UPDATETIME FROM TB_CO_GW_NTP_RAW) AS GW_NTP,
+		    (SELECT IFNULL(DATE_FORMAT(MAX(EVENT_TIME),'%Y-%m-%d %H:%i:%s'),'') AS GW_PORT_UPDATETIME FROM TB_CO_GW_PORT_RAW) AS GW_PORT,
+		    (SELECT IFNULL(DATE_FORMAT(MAX(EVENT_TIME),'%Y-%m-%d %H:%i:%s'),'') AS PCRF_UPDATETIME FROM TB_CO_PCRF_RAW) AS PCRF,
+		    (SELECT IFNULL(DATE_FORMAT(MAX(EVENT_TIME),'%Y-%m-%d %H:%i:%s'),'') AS PCRF_NODE_UPDATETIME FROM TB_CO_PCRF_NODE_RAW) AS PCRF_NODE,
+		    (SELECT IFNULL(DATE_FORMAT(MAX(EVENT_TIME),'%Y-%m-%d %H:%i:%s'),'') AS PCRF_NTP_UPDATETIME FROM TB_CO_PCRF_NTP_RAW) AS PCRF_NTP,
+		    (SELECT IFNULL(DATE_FORMAT(MAX(EVENT_TIME),'%Y-%m-%d %H:%i:%s'),'') AS PCRF_PORT_UPDATETIME FROM TB_CO_PCRF_PORT_RAW) AS PCRF_PORT
+	</select>
+	
+	<select id="getStandardList" parameterType="java.util.HashMap" resultType = "java.util.HashMap">
+		SELECT
+			<foreach item="item" index="index" collection="COL" separator="," close="">
+				${item}
+			</foreach>
+		FROM
+			${STDTABLE}
+	</select>
+	
+	<select id="getCompareList" parameterType="java.util.HashMap" resultType = "java.util.HashMap">
+		SELECT
+			<foreach item="item" index="index" collection="COL" separator="," close="">
+				${item}
+			</foreach>
+		FROM
+			${COMPTABLE}
+		WHERE
+			EVENT_TIME = STR_TO_DATE(#{UPDATETIME},'%Y-%m-%d %H:%i:%s')
+	</select>
+	
+	
+	<select id="getHeaderList" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			COLUMN_COMMENT,
+			COLUMN_NAME
+		FROM
+			INFORMATION_SCHEMA.COLUMNS
+		WHERE
+			TABLE_SCHEMA = 'NMS'
+			AND TABLE_NAME = #{comptable}
+		GROUP BY
+			COLUMN_COMMENT,COLUMN_NAME;
+	</select>
+	
+	<insert id="checkAdd" parameterType = "java.util.HashMap">
+		INSERT INTO ${table_nm}
+		<foreach item="col" index="index" collection="columns" open=" (" separator="," close=") VALUES">
+			${col}
+		</foreach>
+		<foreach item="_data" index="index" collection="values" open=" (" separator="," close=")">
+			${_data}
+		</foreach>
+		
+	</insert>
+	
+	<select id = "getModSelectMap" parameterType="java.util.HashMap" resultType = "java.util.HashMap">
+		SELECT
+			<foreach item="item" index="index" collection="COL" separator="," close="">
+				${item}
+			</foreach>
+		FROM
+			${COMPTABLE}
+		WHERE
+			${KEYS}
+			AND EVENT_TIME = STR_TO_DATE(#{UPDATETIME},'%Y-%m-%d %H:%i:%s')
+	</select>
+	
+	<update id="checkMod" parameterType="java.util.HashMap">
+		UPDATE
+			${STDTABLE}
+		SET
+			${VALUES}
+		WHERE
+			${KEYS}
+	</update>
+	
+	<delete id="checkDel" parameterType="java.util.HashMap">
+		DELETE FROM 
+		${table_nm}
+		WHERE 
+		${KEYS}
+	</delete>
+	
+</mapper>

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<title>1호선 열차무선설비 통합관리장치</title>
+	<meta charset="UTF-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<!--[if lt IE 9]>
+	<script src="js/html5.js"></script>
+	<script src="js/respond.min.js"></script>
+	<![endif]-->
+	<link href="/resources/css/common.css" rel="stylesheet" type="text/css" />
+	<link href="/resources/css/layout_top.css" rel="stylesheet" type="text/css" />
+	<link href="/resources/css/style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+	<!-- GNB -->
+	<header>
+		<h1 class="fl"><span>1호선 열차무선설비 통합관리장치</span></h1>
+		<nav class="mu-gnb fl">
+			<ul class="mu-hMenu fl">
+				<li><a href="#"><i class="mu-icon-img gnb01"></i><span>통합감시</span></a>
+					<ul class="mu-list">
+						<li><a href="#"><span>네트워크 토폴로지</span></a></li>
+						<li><a href="#"><span>역사별 통합 감시</span></a></li>
+						<li><a href="#"><span>서비스 장비 통합 감시</span></a></li>
+						<li><a href="#"><span>열차 운행 감시</span></a></li>
+						<li><a href="#"><span>단말 위치 감시</span></a></li>
+					</ul>
+				</li>
+				<li class="active"><a href="#"><i class="mu-icon-img gnb02"></i><span>성능감시</span></a>
+					<ul class="mu-list">
+						<li><a href="#"><span>감시</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>Core망 감시</span></a></li>
+								<li><a href="#"><span>Access망 감시</span></a></li>
+							</ul>
+						</li>
+						<li class="active"><a href="#"><span>분석</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>Trend 분석</span></a></li>
+								<li><a href="#"><span>장비 상세 내역 조회</span></a></li>
+								<li><a href="#"><span>기지국 정보 조회</span></a></li>
+							</ul>
+						</li>
+						<li><a href="#"><span>설정</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>임계치 설정</span></a></li>
+								<li><a href="#"><span>감시 장비 설정</span></a></li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+				<li><a href="#"><i class="mu-icon-img gnb03"></i><span>성능통계</span></a>
+					<ul class="mu-list">
+						<li><a href="#"><span>RAN통계</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>호처리 통계</span></a></li>
+								<li><a href="#"><span>Packet 통계</span></a></li>
+							</ul>
+						</li>
+						<li><a href="#"><span>Core통계</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>MME</span></a>
+									<ul class="mu-list">
+										<li><a href="#"><span>호처리 통계</span></a></li>
+										<li><a href="#"><span>SP(Signaling Protocal) 통계</span></a></li>
+										<li><a href="#"><span>SM(Session Management) 통계</span></a></li>
+									</ul>
+								</li>
+								<li><a href="#"><span>SGW</span></a>
+									<ul class="mu-list">
+										<li><a href="#"><span>호처리 통계</span></a></li>
+										<li><a href="#"><span>SP(Signaling Protocal) 통계</span></a></li>
+										<li><a href="#"><span>SM(Session Management) 통계</span></a></li>
+									</ul>
+								</li>
+								<li><a href="#"><span>PGW</span></a>
+									<ul class="mu-list">
+										<li><a href="#"><span>호처리 통계</span></a></li>
+										<li><a href="#"><span>SP(Signaling Protocal) 통계</span></a></li>
+										<li><a href="#"><span>SM(Session Management) 통계</span></a></li>
+										<li><a href="#"><span>트래픽 통계</span></a></li>
+									</ul>
+								</li>
+								<li><a href="#"><span>HSS통계</span></a></li>
+								<li><a href="#"><span>PCRF통계</span></a></li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+				<li><a href="#"><i class="mu-icon-img gnb04"></i><span>고장감시</span></a>
+					<ul class="mu-list">
+						<li><a href="#"><span>감시</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>메인감시</span></a></li>
+							</ul>
+						</li>
+						<li><a href="#"><span>설정</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>알람 등급 필터 설정</span></a></li>
+								<li><a href="#"><span>알람 코드 필터 설정</span></a></li>
+								<li><a href="#"><span>감시 장비 필터 설정</span></a></li>
+								<li><a href="#"><span>다발 고장 설정</span></a></li>
+								<li><a href="#"><span>미복구 알람 설정</span></a></li>
+								<li><a href="#"><span>가청 설정</span></a></li>
+								<li><a href="#"><span>조치사례 관리</span></a></li>
+							</ul>
+						</li>
+						<li><a href="#"><span>분석</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>고장이력 조회</span></a></li>
+								<li><a href="#"><span>다발고장 이력조회</span></a></li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+				<li><a href="#"><i class="mu-icon-img gnb05"></i><span>고장통계</span></a>
+					<ul class="mu-list">
+						<li><a href="#"><span>고장조회</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>일일고장조회</span></a></li>
+								<li><a href="#"><span>기지국 정보 조회</span></a></li>
+							</ul>
+						</li>
+						<li><a href="#"><span>고장분석</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>장비별 알람분석</span></a></li>
+								<li><a href="#"><span>시간별 알람분석</span></a></li>
+								<li><a href="#"><span>조치코드별 알람분석</span></a></li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+				<li><a href="#"><i class="mu-icon-img gnb06"></i><span>구성관리</span></a>
+					<ul class="mu-list">
+						<li><a href="#"><span>DU/RU 관리</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>eNB 기지국 관리</span></a></li>
+								<li><a href="#"><span>RU 기지국 관리</span></a></li>
+								<li><a href="#"><span>DU ChanelCard 현황조회</span></a></li>
+							</ul>
+						</li>
+						<li><a href="#"><span>CORE망 관리</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>MME 관리</span></a></li>
+								<li><a href="#"><span>SGW 관리</span></a></li>
+								<li><a href="#"><span>PGW 관리</span></a></li>
+								<li><a href="#"><span>PCRF 관리</span></a></li>
+								<li><a href="#"><span>HSS 관리</span></a></li>
+								<li><a href="#"><span>CN-EMS 관리</span></a></li>
+								<li><a href="#"><span>HSS-EMS 관리</span></a></li>
+								<li><a href="#"><span>RAN-EMS 관리</span></a></li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+				<li><a href="#"><i class="mu-icon-img gnb07"></i><span>시스템</span></a>
+					<ul class="mu-list">
+						<li><a href="#"><span>서버 상태 관리</span></a></li>
+						<li><a href="#"><span>서버 프로세스 관리</span></a></li>
+						<li><a href="#"><span>DB 백업 관리</span></a></li>
+						<li><a href="#"><span>수집 관리</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>구성정보 수집</span></a></li>
+								<li><a href="#"><span>성능정보 수집</span></a></li>
+								<li><a href="#"><span>고장정보 수집</span></a></li>
+							</ul>
+						</li>
+						<li><a href="#"><span>장애정보알림 관리</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>SMS 발행 권한 설정</span></a></li>
+								<li><a href="#"><span>SMS 발행 이력 조회</span></a></li>
+							</ul>
+						</li>
+						<li><a href="#"><span>공지사항 관리</span></a></li>
+					</ul>
+				</li>
+				<li><a href="#"><i class="mu-icon-img gnb08"></i><span>보안</span></a>
+					<ul class="mu-list">
+						<li><a href="#"><span>계정 관리</span></a></li>
+						<li><a href="#"><span>접속 이력 관리</span></a></li>
+						<li><a href="#"><span>메뉴 권한 관리</span></a></li>
+					</ul>
+				</li>
+			</ul>
+			<div class="mu-topMenu fr">
+				<div class="userInfo">
+					<i class="iconUser mu-icon user"></i>
+					<b class="userName">admin</b>
+					<button class="btnSetting mu-btn mu-btn-icon mu-btn-bg-non"><i class="mu-icon setting"></i></button>
+				</div>
+				<button type="button" class="btnLogout mu-btn mu-btn-icon mu-btn-bg-non" ><i class="mu-icon logout2"></i></button>
+			</div>
+		</nav>
+	</header>
+	<!--// GNB -->
+
+	<div class="mu-container">
+		<section>
+			<!-- title -->
+			<div class="titleWrap">
+				<h3 class="mu-title">구성관리 대사</h3>
+				<ol class="mu-path">
+					<li><a href="#none">구성관리</a></li>
+					<li><a href="#none">구성관리 대사</a></li>
+				</ol>
+			</div>
+
+			<!-- 기준시간 -->
+			<div class="mu-search-group">
+				<div class="mu-search-item">
+					<div class="mu-item-group" id="update_time">기준시간 : 2016-03-16 13:15:00</div>
+				</div>
+			</div>
+
+			<!-- Data -->
+			<div class="mu-boxWrap">
+				<div class="mu-boxRow">
+					<!-- col -->
+					<div class="mu-boxCell">
+						<table class="mu-formbox2 mu-formbox-vertical">
+							<colgroup>
+								<col style="width:50%" span="2">
+							</colgroup>
+							<thead>
+								<tr>
+									<th colspan="2">추가</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<th>기지국</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>중계기</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>CELL</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>CHANNEL_CARD</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>MME</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>GW</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>EMS</th>
+									<td>3</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<!-- col -->
+					<div class="mu-boxCell">
+						<table class="mu-formbox2 mu-formbox-vertical">
+							<colgroup>
+								<col style="width:50%" span="2">
+							</colgroup>
+							<thead>
+								<tr>
+									<th colspan="2">변경</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<th>기지국</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>중계기</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>CELL</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>CHANNEL_CARD</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>MME</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>GW</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>EMS</th>
+									<td>3</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>				
+					<!-- col -->
+					<div class="mu-boxCell">
+						<table class="mu-formbox2 mu-formbox-vertical">
+							<colgroup>
+								<col style="width:50%" span="2">
+							</colgroup>
+							<thead>
+								<tr>
+									<th colspan="2">삭제</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<th>기지국</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>중계기</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>CELL</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>CHANNEL_CARD</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>MME</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>GW</th>
+									<td>3</td>
+								</tr>
+								<tr>
+									<th>EMS</th>
+									<td>3</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<!-- Tab -->
+			<ul class="mu-tab line">
+				<li class="active"><a href="">기지국</a></li>
+				<li><a href="">중계기</a></li>
+				<li><a href="">CELL</a></li>
+				<li><a href="">CHANNEL_CARD</a></li>
+				<li><a href="">MME</a></li>
+				<li><a href="">GW</a></li>
+				<li><a href="">EMS</a></li>
+			</ul>
+			<div class="mu-tab-body line">
+				<!-- Tab Cont 기지국 -->
+				<div class="mu-tabCont show">
+					<!-- Sub Title -->
+					<div class="subtitleWrap">
+						<h4 class="mu-title">추가</h4>
+						<div class="hdRight">
+							<button type="button" class="mu-btn mu-btn-icon mu-btn-search"><i class="mu-icon search"></i>선택조회</button>
+						</div>
+					</div>
+					<!-- Grid -->
+					<div class="gridScrollT">
+						<table class="mu-grid mu-grid-border mu-grid-strip">
+							<colgroup>
+								<col style="width:5%" span="20">
+							</colgroup>
+							<thead>
+							<tr>
+								<th>
+									<div class="mu-checkbox">
+										<input id="ch01" type="checkbox">
+										<label for="ch01"></label>
+									</div>
+								</th>
+								<th>2</th>
+								<th>3</th>
+								<th>4</th>
+								<th>5</th>
+								<th>6</th>
+								<th>7</th>
+								<th>8</th>
+								<th>9</th>
+								<th>10</th>
+								<th>11</th>
+								<th>12</th>
+								<th>13</th>
+								<th>14</th>
+								<th>15</th>
+								<th>16</th>
+								<th>17</th>
+								<th>18</th>
+								<th>19</th>
+								<th>20</th>
+							</tr>
+							</thead>
+						</table>
+					</div>
+					<div class="mu-scroll-v scrollY" style="height:66px;">
+						<table class="mu-grid mu-grid-border mu-grid-strip">
+							<colgroup>
+								<col style="width:5%" span="20">
+							</colgroup>
+							<tbody>
+								<tr>
+									<td class="tc">
+										<div class="mu-checkbox">
+											<input id="ch02" type="checkbox">
+											<label for="ch02"></label>
+										</div>
+									</td>
+									<td>2</td>
+									<td>3</td>
+									<td>4</td>
+									<td>5</td>
+									<td>6</td>
+									<td>7</td>
+									<td>8</td>
+									<td>9</td>
+									<td>10</td>
+									<td>11</td>
+									<td>12</td>
+									<td>13</td>
+									<td>14</td>
+									<td>15</td>
+									<td>16</td>
+									<td>17</td>
+									<td>18</td>
+									<td>19</td>
+									<td>20</td>
+								</tr>
+								<tr>
+									<td class="tc">
+										<div class="mu-checkbox">
+											<input id="ch03" type="checkbox">
+											<label for="ch03"></label>
+										</div>
+									</td>
+									<td>2</td>
+									<td>3</td>
+									<td>4</td>
+									<td>5</td>
+									<td>6</td>
+									<td>7</td>
+									<td>8</td>
+									<td>9</td>
+									<td>10</td>
+									<td>11</td>
+									<td>12</td>
+									<td>13</td>
+									<td>14</td>
+									<td>15</td>
+									<td>16</td>
+									<td>17</td>
+									<td>18</td>
+									<td>19</td>
+									<td>20</td>
+								</tr>
+
+							</tbody>
+						</table>
+					</div>
+					<!-- Sub Title -->
+					<div class="subtitleWrap">
+						<h4 class="mu-title">변경</h4>
+						<div class="hdRight">
+							<button type="button" class="mu-btn mu-btn-icon mu-btn-search"><i class="mu-icon search"></i>선택조회</button>
+						</div>
+					</div>
+					<!-- Grid -->
+					<div class="gridScrollT">
+						<table class="mu-grid mu-grid-border mu-grid-strip">
+							<colgroup>
+								<col style="width:5%" span="20">
+							</colgroup>
+							<thead>
+							<tr>
+								<th>
+									<div class="mu-checkbox">
+										<input id="ch04" type="checkbox">
+										<label for="ch04"></label>
+									</div>
+								</th>
+								<th>2</th>
+								<th>3</th>
+								<th>4</th>
+								<th>5</th>
+								<th>6</th>
+								<th>7</th>
+								<th>8</th>
+								<th>9</th>
+								<th>10</th>
+								<th>11</th>
+								<th>12</th>
+								<th>13</th>
+								<th>14</th>
+								<th>15</th>
+								<th>16</th>
+								<th>17</th>
+								<th>18</th>
+								<th>19</th>
+								<th>20</th>
+							</tr>
+							</thead>
+						</table>
+					</div>
+					<div class="mu-scroll-v scrollY" style="height:66px;">
+						<table class="mu-grid mu-grid-border mu-grid-strip">
+							<colgroup>
+								<col style="width:5%" span="20">
+							</colgroup>
+							<tbody>
+								<tr>
+									<td class="tc">
+										<div class="mu-checkbox">
+											<input id="ch05" type="checkbox">
+											<label for="ch05"></label>
+										</div>
+									</td>
+									<td>2</td>
+									<td>3</td>
+									<td>4</td>
+									<td>5</td>
+									<td>6</td>
+									<td>7</td>
+									<td>8</td>
+									<td>9</td>
+									<td>10</td>
+									<td>11</td>
+									<td>12</td>
+									<td>13</td>
+									<td>14</td>
+									<td>15</td>
+									<td>16</td>
+									<td>17</td>
+									<td>18</td>
+									<td>19</td>
+									<td>test test test</td>
+								</tr>
+								<tr>
+									<td class="tc">
+										<div class="mu-checkbox">
+											<input id="ch06" type="checkbox">
+											<label for="ch06"></label>
+										</div>
+									</td>
+									<td>2</td>
+									<td>3</td>
+									<td>4</td>
+									<td>5</td>
+									<td>6</td>
+									<td>7</td>
+									<td>8</td>
+									<td>9</td>
+									<td>10</td>
+									<td>11</td>
+									<td>12</td>
+									<td>13</td>
+									<td>14</td>
+									<td>15</td>
+									<td>16</td>
+									<td>17</td>
+									<td>18</td>
+									<td>19</td>
+									<td>20</td>
+								</tr>
+
+							</tbody>
+						</table>
+					</div>				
+					<!-- Sub Title -->
+					<div class="subtitleWrap">
+						<h4 class="mu-title">삭제</h4>
+						<div class="hdRight">
+							<button type="button" class="mu-btn mu-btn-icon mu-btn-search"><i class="mu-icon search"></i>선택조회</button>
+						</div>
+					</div>
+					<!-- Grid -->
+					<div class="gridScrollT">
+						<table class="mu-grid mu-grid-border mu-grid-strip">
+							<colgroup>
+								<col style="width:5%" span="20">
+							</colgroup>
+							<thead>
+							<tr>
+								<th>
+									<div class="mu-checkbox">
+										<input id="ch07" type="checkbox">
+										<label for="ch07"></label>
+									</div>
+								</th>
+								<th>2</th>
+								<th>3</th>
+								<th>4</th>
+								<th>5</th>
+								<th>6</th>
+								<th>7</th>
+								<th>8</th>
+								<th>9</th>
+								<th>10</th>
+								<th>11</th>
+								<th>12</th>
+								<th>13</th>
+								<th>14</th>
+								<th>15</th>
+								<th>16</th>
+								<th>17</th>
+								<th>18</th>
+								<th>19</th>
+								<th>20</th>
+							</tr>
+							</thead>
+						</table>
+					</div>
+					<div class="mu-scroll-v scrollY" style="height:66px;">
+						<table class="mu-grid mu-grid-border mu-grid-strip">
+							<colgroup>
+								<col style="width:5%" span="20">
+							</colgroup>
+							<tbody>
+								<tr>
+									<td class="tc">
+										<div class="mu-checkbox">
+											<input id="ch08" type="checkbox">
+											<label for="ch08"></label>
+										</div>
+									</td>
+									<td>2</td>
+									<td>3</td>
+									<td>4</td>
+									<td>5</td>
+									<td>6</td>
+									<td>7</td>
+									<td>8</td>
+									<td>9</td>
+									<td>10</td>
+									<td>11</td>
+									<td>12</td>
+									<td>13</td>
+									<td>14</td>
+									<td>15</td>
+									<td>16</td>
+									<td>17</td>
+									<td>18</td>
+									<td>19</td>
+									<td>20</td>
+								</tr>
+								<tr>
+									<td class="tc">
+										<div class="mu-checkbox">
+											<input id="ch09" type="checkbox">
+											<label for="ch09"></label>
+										</div>
+									</td>
+									<td>2</td>
+									<td>3</td>
+									<td>4</td>
+									<td>5</td>
+									<td>6</td>
+									<td>7</td>
+									<td>8</td>
+									<td>9</td>
+									<td>10</td>
+									<td>11</td>
+									<td>12</td>
+									<td>13</td>
+									<td>14</td>
+									<td>15</td>
+									<td>16</td>
+									<td>17</td>
+									<td>18</td>
+									<td>19</td>
+									<td>20</td>
+								</tr>
+
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="mu-tabCont">2</div><!-- Tab Cont 중계기 -->
+				<div class="mu-tabCont">3</div><!-- Tab Cont CELL -->
+				<div class="mu-tabCont">4</div><!-- Tab Cont CHANNEL_CARD -->
+				<div class="mu-tabCont">5</div><!-- Tab Cont MME -->
+				<div class="mu-tabCont">6</div><!-- Tab Cont GW -->
+				<div class="mu-tabCont">7</div><!-- Tab Cont EMS -->
+
+			</div>
+		
+		</section>
+	</div>
+
+	<script src="js/jquery.min.js"></script>
+	<script src="js/jquery-ui.min.js"></script>
+	<script src="js/common.js"></script>
+</body>
+</html>

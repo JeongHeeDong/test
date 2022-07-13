@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.SystemDBDeleteDAO">
+
+	<select id="getDelData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT TABLE_NAME,
+			   CASE WHEN PARTITION_TYPE = 'N' THEN '데이터 삭제 안함' WHEN PARTITION_TERM % 30 = 0 THEN '월별'
+			   ELSE '일별' END AS PARTITION_TYPE,
+		       CASE WHEN PARTITION_TYPE = 'N' THEN '' WHEN PARTITION_TERM % 30 = 0 THEN FORMAT(PARTITION_TERM / 30, 0)
+		       ELSE PARTITION_TERM END AS PARTITION_TERM, 
+			   IFNULL(TABLE_DESC,'') AS TABLE_DESC, 
+			   CASE WHEN DELETE_DATE IS NULL THEN '-' WHEN DELETE_DATE = '' THEN '-' ELSE DATE_FORMAT(DELETE_DATE,'%Y-%m-%d %H:%i:%s') END AS DELETE_DATE
+		FROM   
+			TB_CO_TABLE_INFO
+		WHERE
+			PARTITION_TERM != 0
+		<if test="searchOpt != ''">
+		AND ${searchOpt} LIKE '%${searchWord}%'
+		</if>
+		ORDER BY DELETE_DATE DESC
+		<if test="pageNo != null">
+			LIMIT ${pageNo}, ${pageSize}
+		</if>
+	</select>
+	
+	<select id="getTotalCnt" parameterType="java.util.HashMap" resultType="java.lang.Integer">
+		SELECT COUNT(*) AS TOTAL_COUNT
+		FROM TB_CO_TABLE_INFO
+		WHERE
+			PARTITION_TERM != 0
+		<if test="searchOpt != ''">
+			AND	${searchOpt} LIKE '%${searchWord}%'
+		</if>		
+	</select>
+	
+	<select id="getPopTableInfo" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT 
+			TABLE_NAME,IFNULL(TABLE_DESC,'') AS TABLE_COMMENT
+		FROM
+			TB_CO_TABLE_INFO
+		WHERE
+			PARTITION_TERM != 0
+			AND TABLE_NAME = #{tableNm}
+		ORDER BY
+			TABLE_NAME
+	</select>
+	
+	<update id="cyclePopMod" parameterType = "java.util.HashMap" >
+		UPDATE
+			TB_CO_TABLE_INFO
+		SET
+			PARTITION_TYPE = #{del_type},
+			PARTITION_TERM = #{del_cycle}
+			<if test="table_desc != null and table_desc !=''">
+				,TABLE_DESC = #{table_desc}
+			</if>
+		WHERE
+			TABLE_NAME = #{table_name}
+	</update>
+</mapper>
+

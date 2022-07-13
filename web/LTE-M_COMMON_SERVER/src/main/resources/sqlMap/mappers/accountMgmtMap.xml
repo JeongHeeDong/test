@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.AccountMgmtDAO">
+    <select id="getAccountList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        /* accountMgmtMap.xml.getAccountList */
+        SELECT
+            CNT_TB.TOTAL_COUNT AS TOTAL_COUNT,
+            USER_ID,
+            USER_NAME,
+            USER_PHONE,
+            USER_MOBILE,
+            AUTH,
+            CASE
+                WHEN AUTH = '1' THEN '시스템 관리자'
+                WHEN AUTH = '2' THEN '관리자'
+                WHEN AUTH = '3' THEN '운영자'
+                ELSE '일반'
+            END AS AUTH_NM,
+            USE_FLAG,
+            CASE
+                WHEN USE_FLAG = 1 THEN '승인'
+                ELSE '승인대기'
+            END AS USE_FLAG_NM,
+            EMAIL,
+            PASSWORD_INIT_YN,
+            PASSWORD_UPDATE_TIME,
+            PASSWORD_ERR_CNT,
+            USE_PERIOD,
+            REGIST_DATE,
+			CASE
+			    WHEN LOGIN_TIME IS NULL THEN '미 사용'
+			    ELSE
+			    CASE
+			        WHEN (
+			        SELECT
+			            TIMESTAMPDIFF(MONTH, LOGIN_TIME, now())) <![CDATA[>=]]> 3 THEN '미접속 3개월'
+			        ELSE '-'
+			    END
+			END LOGIN_STATUS,
+            CASE WHEN
+                USE_PERIOD != 0 || USE_PERIOD != NULL 
+                THEN
+                    CASE WHEN
+                        date_add(REGIST_DATE , interval USE_PERIOD month) <![CDATA[<]]> now()
+                    THEN
+                        'N'
+                    ELSE    
+                        'Y'
+                    END
+                ELSE    
+                    'Y'
+            END AS USE_PERIOD_YN  		            
+        FROM
+            TB_SE_USER,
+            (SELECT
+                COUNT(1) AS TOTAL_COUNT
+            FROM TB_SE_USER
+            WHERE 1 = 1
+            <if test='auth != null and auth != "0"'>
+                AND AUTH = #{auth}
+            </if>
+            <if test='useFlag != null and useFlag != "0"'>
+                AND USE_FLAG = #{useFlag}
+            </if>
+            <choose>
+                <when test='optionWord != null and option == "id"'>
+                    AND USER_ID LIKE CONCAT('%',#{optionWord},'%')
+                </when>
+                <when test='optionWord != null and option == "name"'>
+                    AND USER_NAME LIKE CONCAT('%',#{optionWord},'%')
+                </when>
+            </choose>
+            <if test='userId != null'>
+                AND USER_ID = #{userId}
+            </if>
+            ) AS CNT_TB
+        WHERE 1 = 1
+        <if test='auth != null and auth != "0"'>
+            AND AUTH = #{auth}
+        </if>
+        <if test='useFlag != null and useFlag != "0"'>
+            AND USE_FLAG = #{useFlag}
+        </if>
+        <choose>
+            <when test='optionWord != null and option == "id"'>
+                AND USER_ID LIKE CONCAT('%',#{optionWord},'%')
+            </when>
+            <when test='optionWord != null and option == "name"'>
+                AND USER_NAME LIKE CONCAT('%',#{optionWord},'%')
+            </when>
+        </choose>
+        <if test='userId != null'>
+            AND USER_ID = #{userId}
+        </if>
+        <if test='pageNo != null'>
+        LIMIT #{pageNo}, #{pageSize}
+        </if>
+    </select>
+
+    <insert id="accountRegister" parameterType="java.util.HashMap">
+        INSERT INTO TB_SE_USER
+          (USER_ID, USER_PASSWORD, TEAM_ID, USER_NAME, USER_MOBILE, USER_PHONE, EMAIL, AUTH, USE_FLAG, USE_PERIOD)
+        VALUES
+          (#{userId}, #{userPwd}, #{teamId}, #{userName}, #{userMobile}, #{userPhone}, #{userEmail}, #{userAuth}, #{userFlag}, #{usePeriod})
+    </insert>
+
+    <!--<insert id="accountRegister" parameterType="java.util.HashMap">-->
+        <!--INSERT INTO TB_SE_USER-->
+            <!--(USER_ID, USER_PASSWORD, TEAM_ID, USER_NAME, USER_MOBILE, USER_PHONE, EMAIL, AUTH, USE_FLAG)-->
+        <!--VALUES-->
+            <!--(#{userId}, #{userPwd}, #{teamId}, #{userName}, #{userMobile}, #{userPhone}, #{userEmail}, #{userAuth}, #{userFlag})-->
+    <!--</insert>-->
+
+    <update id="accountModify" parameterType="java.util.HashMap">
+        UPDATE
+            TB_SE_USER
+        SET
+            <if test='usePeriod != null'>
+            USE_PERIOD = #{usePeriod},
+            </if>
+            <if test='changePwd != null'>
+            USER_PASSWORD = #{changePwd},
+            </if>
+            USER_NAME = #{userName},
+            USER_MOBILE = #{userMobile},
+            USER_PHONE = #{userPhone},
+            EMAIL = #{userEmail},
+            AUTH = #{userAuth},
+            USE_FLAG = #{userFlag},
+            USE_PERIOD = #{usePeriod}
+        WHERE
+            USER_ID = #{userId}
+    </update>
+
+    <delete id="accountRemove" parameterType="java.util.HashMap" >
+        DELETE
+        FROM TB_SE_USER
+        WHERE
+            USER_ID IN <foreach collection="userIds" item="item" separator="," open="(" close=")">#{item}</foreach>
+    </delete>
+    
+    <update id="initPassword" parameterType="com.ltem.v2.dto.TbSeUserDTO" >
+        UPDATE TB_SE_USER
+            SET PASSWORD_INIT_YN = 'Y', 
+            PASSWORD_INIT_ID = #{passwordInitId}, 
+            PASSWORD_ERR_CNT = 0,
+            USER_PASSWORD = #{userPassword},
+            LOGIN_TIME = now()
+        WHERE
+            USER_ID = #{userId}
+    </update>    
+
+
+    <select id="accountDuplicationCheck" parameterType="java.util.HashMap" resultType="java.lang.Integer">
+        SELECT
+            COUNT(USER_ID)
+        FROM
+            TB_SE_USER
+        WHERE
+            USER_ID = #{userId}
+    </select>
+
+    <select id="accountPwdDuplicationCheck" parameterType="java.util.HashMap" resultType="java.lang.Integer">
+        SELECT
+            COUNT(USER_ID)
+        FROM
+            TB_SE_USER
+        WHERE
+            USER_ID = #{userId}
+            AND USER_PASSWORD = #{currentPwd}
+    </select>
+
+    <select id="getUserRoll" resultType="java.util.HashMap">
+        SELECT
+            ROLL_ID,
+            ROLL_NAME
+        FROM
+            TB_SE_ROLL
+    </select>
+    
+    <select id="selectAccountInfo" parameterType="HashMap" resultType="Map">
+    /* accountMgmtMap.selectAccountInfo */
+	    SELECT USER_ID
+			 , USER_PASSWORD
+			 , LOGIN_TIME
+			 , LOGOUT_TIME
+			 , TEAM_ID
+			 , USER_NAME
+			 , USER_MOBILE
+			 , USER_PHONE
+			 , EMAIL
+			 , AUTH
+			 , USE_FLAG
+			 , PASSWORD_INIT_YN
+			 , PASSWORD_UPDATE_TIME
+			 , PASSWORD_ERR_CNT
+			 , USE_PERIOD
+			 , REGIST_DATE
+		  FROM TB_SE_USER
+		 WHERE USER_ID = #{userId}
+    </select>
+
+</mapper>

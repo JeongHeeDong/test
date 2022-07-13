@@ -1,0 +1,526 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.StationMonitorDAO">
+	<!-- 역사별 통합감시 마지막 업데이트 시간 -->
+	<!--<select id="getStationMonitorTime" resultType="java.util.HashMap">
+		SELECT
+			DATE_FORMAT(MIN(EVENT_TIME), '%Y/%m/%d %H:%i') AS MONITOR_TIME
+		FROM TB_SM_COLLECT_LOG
+		WHERE
+			DATA_NAME IN ('TB_PM_ACCESS_KPI')
+			AND EVENT_TIME IS NOT NULL;
+	</select>-->
+
+	<select id="getStationMonitorTime" resultType="java.util.HashMap">
+		SELECT
+			DATE_FORMAT(EVENT_TIME, '%Y/%m/%d %H:%i') AS MONITOR_TIME
+		FROM TB_PM_ACCESS_KPI
+		ORDER BY EVENT_TIME DESC
+		LIMIT 1
+	</select>
+
+	<!-- 역사별 통합감시 - 전체 현황 -->
+	<select id="getTotData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* getTotData */
+		SELECT IFNULL(SUM(TPAK.ATTEMPT), 0)                                                                        AS ATTEMPT
+			 , IFNULL(SUM(TPAK.STD_ATT_5M), 0)                                                                     AS STD_ATTEMPT
+			 , IFNULL(ROUND((((SUM(TPAK.ATTEMPT) - SUM(TPAK.STD_ATT_5M))/SUM(TPAK.STD_ATT_5M))*100), 1), 0)        AS ATT_RATE
+			 , IFNULL(SUM(TPAK.ERAB_ATTEMPT), 0)                                                                   AS ERAB_ATTEMPT
+			 , IFNULL(SUM(TPAK.STD_ERAB_5M), 0)                                                                    AS STD_ERAB_ATTEMPT
+			 , IFNULL(ROUND((((SUM(TPAK.ERAB_ATTEMPT) - SUM(TPAK.STD_ERAB_5M))/SUM(TPAK.STD_ERAB_5M))*100), 1), 0) AS EMPT_ATT_RATE 
+			 , IFNULL(SUM(TPAK.RRC), 0) AS RRC
+			 , CASE
+				WHEN SUM(IFNULL(TPAK.ATTEMPT, 0)) = 0
+					THEN 100
+				ELSE IFNULL(ROUND(SUM(TPAK.RRC) / SUM(TPAK.ATTEMPT) * 100, 1), 0)
+				END                         AS RRC_RATE
+			 , IFNULL(SUM(TPAK.ANSWER), 0) AS ANSWER
+			 , CASE
+				WHEN SUM(IFNULL(TPAK.ERAB_ATTEMPT, 0)) = 0
+					THEN 100
+				ELSE IFNULL(ROUND(SUM(TPAK.ANSWER) / SUM(TPAK.ERAB_ATTEMPT) * 100, 1), 0)
+				END                     AS ANSWER_RATE
+			 , IFNULL(SUM(TPAK.CD), 0) AS CD
+			 , CASE
+				WHEN ( IFNULL(SUM(TPAK.ERAB_SUCCESS), 0) + IFNULL(SUM(TPAK.ERAB_ADD_SUCCESS), 0) ) = 0
+					THEN 0
+				ELSE IFNULL(ROUND(SUM(TPAK.CD) / (IFNULL(SUM(TPAK.ERAB_SUCCESS), 0) + IFNULL(SUM(TPAK.ERAB_ADD_SUCCESS), 0)) * 100, 1), 0)
+				END AS CD_RATE
+		FROM
+			TB_PM_ACCESS_KPI TPAK
+		  ,
+			<if test='ruCellType == "RU"'>
+					(SELECT DISTINCT 
+						TCR.C_UID AS C_UID,
+						TCR.DU_ID,
+						TCR.CELL_NUM,
+						TCR.STATION_ID AS STATION_ID,
+						TCR.RU_NAME,
+						TCS.STATION_NAME
+					FROM
+						TB_CO_RU AS TCR,
+						TB_CO_STATION AS TCS
+					WHERE
+						TCR.STATION_ID = TCS.STATION_ID
+						<if test="lineId != null and lineId != -1">
+							AND TCS.LINE_ID LIKE (CONCAT('%', #{lineId}, '%'))
+						</if>
+						) AS TCR
+				WHERE
+					TPAK.EVENT_TIME = #{eventTime}
+					AND REPLACE(TPAK.RU_CUID, 'cNum', '') = TCR.CELL_NUM
+					AND TPAK.DU_ID = TCR.DU_ID
+					AND TCR.STATION_ID <![CDATA[<>]]> '0'
+					
+			</if>
+			<if test='ruCellType == "CELL"'>
+					(SELECT
+						DISTINCT TCR.STATION_ID,
+						TCR.DU_ID,
+						TCR.CELL_NUM,
+						TCS.STATION_NAME
+					FROM
+						TB_CO_RU AS TCR,
+						TB_CO_STATION AS TCS
+					WHERE
+						TCR.STATION_ID = TCS.STATION_ID
+						<if test="lineId != null and lineId != -1">
+							AND TCS.LINE_ID LIKE (CONCAT('%', #{lineId}, '%'))
+						</if>
+						) AS TCR
+				WHERE
+					TPAK.EVENT_TIME = #{eventTime}
+					AND REPLACE(TPAK.RU_CUID, 'cNum', '') = TCR.CELL_NUM
+					AND TPAK.DU_ID = TCR.DU_ID
+					AND TCR.STATION_ID <![CDATA[<>]]> '0'
+			</if>
+			AND EVENT_TIME = #{eventTime}
+	</select>
+
+	<!-- 역사별 통합감시 - 역사 현황 -->
+	<select id="getStationTotData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<!-- SELECT
+			ALL_DATA.STATION_ID AS STATION_ID,
+			ALL_DATA.STATION_NAME AS STATION_NAME,
+			ALL_DATA.ATTEMPT,
+			ALL_DATA.RRC,
+			ALL_DATA.ANSWER,
+			ALL_DATA.CD,
+			ALL_DATA.ERAB_ADD_SUCC,
+			ALL_DATA.ATT_RATE,
+			ALL_DATA.RRC_RATE,
+			ALL_DATA.ANSWER_RATE,
+			ALL_DATA.CD_RATE,
+		<choose>
+			<when test='filterLevel != null and filterLevel != "0"'>
+				IF(ALL_DATA.ATT_RATE_5M_LEVEL <![CDATA[<=]]> #{filterLevel}, ALL_DATA.ATT_RATE_5M_LEVEL, 4) AS ATT_RATE_5M_LEVEL,
+				IF(ALL_DATA.RRC_RATE_LEVEL <![CDATA[<=]]> #{filterLevel}, ALL_DATA.RRC_RATE_LEVEL, 4) AS RRC_RATE_LEVEL,
+				IF(ALL_DATA.ANSWER_RATE_LEVEL <![CDATA[<=]]> #{filterLevel}, ALL_DATA.ANSWER_RATE_LEVEL, 4) AS ANSWER_RATE_LEVEL,
+				IF(ALL_DATA.CD_RATE_LEVEL <![CDATA[<=]]> #{filterLevel}, ALL_DATA.CD_RATE_LEVEL, 4) AS CD_RATE_LEVEL,
+				LEAST(
+					IF(ALL_DATA.RRC_RATE_LEVEL <![CDATA[<=]]> #{filterLevel}, ALL_DATA.RRC_RATE_LEVEL, 4),
+					IF(ALL_DATA.ANSWER_RATE_LEVEL <![CDATA[<=]]> #{filterLevel}, ALL_DATA.ANSWER_RATE_LEVEL, 4),
+					IF(ALL_DATA.CD_RATE_LEVEL <![CDATA[<=]]> #{filterLevel}, ALL_DATA.CD_RATE_LEVEL, 4)
+				) AS LEVEL
+			</when>
+			<otherwise>
+				ALL_DATA.ATT_RATE_5M_LEVEL,
+				ALL_DATA.ANSWER_RATE_LEVEL,
+				ALL_DATA.CD_RATE_LEVEL,
+				ALL_DATA.RRC_RATE_LEVEL,
+				LEAST(
+					ALL_DATA.ATT_RATE_5M_LEVEL,
+					ALL_DATA.ANSWER_RATE_LEVEL,
+					ALL_DATA.CD_RATE_LEVEL,
+					ALL_DATA.RRC_RATE_LEVEL
+				) AS LEVEL
+			</otherwise>
+		</choose>
+		FROM
+			(SELECT
+				TCS.STATION_ID AS STATION_ID,
+				TCS.STATION_NAME AS STATION_NAME,
+				IFNULL(SUM(TPAK.ATTEMPT), 0) AS ATTEMPT,
+				IFNULL(SUM(TPAK.RRC), 0) AS RRC,
+				IFNULL(SUM(TPAK.ANSWER), 0) AS ANSWER,
+				IFNULL(SUM(TPAK.CD), 0) AS CD,
+				IFNULL(SUM(TPAK.ERAB_ADD_SUCCESS), 0) AS ERAB_ADD_SUCC,
+				CASE WHEN IFNULL(SUM(TPAK.STD_ATT_5M), 0) = 0 THEN FORMAT(0, 2) ELSE FORMAT((IFNULL(SUM(TPAK.ATTEMPT), 0) - SUM(TPAK.STD_ATT_5M)) / SUM(TPAK.ATTEMPT) * 100, 2) END AS ATT_RATE,
+				CASE WHEN SUM(IFNULL(TPAK.ATTEMPT, 0)) = 0 THEN FORMAT(100, 2) ELSE FORMAT(SUM(TPAK.RRC) / SUM(TPAK.ATTEMPT) * 100, 2) END AS RRC_RATE,
+				CASE WHEN SUM(IFNULL(TPAK.ERAB_ATTEMPT, 0)) = 0 THEN FORMAT(100, 2) ELSE FORMAT(SUM(TPAK.ANSWER) / SUM(TPAK.ERAB_ATTEMPT) * 100, 2) END AS ANSWER_RATE,
+				CASE WHEN (IFNULL(SUM(TPAK.ERAB_SUCCESS), 0) + IFNULL(SUM(TPAK.ERAB_ADD_SUCCESS), 0)) = 0 THEN FORMAT(0, 2) ELSE FORMAT(SUM(TPAK.CD) / (IFNULL(SUM(TPAK.ERAB_SUCCESS), 0) + IFNULL(SUM(TPAK.ERAB_ADD_SUCCESS), 0)) * 100, 2) END AS CD_RATE,
+				IFNULL(MIN(TPAK.ATT_RATE_5M_LEVEL), 4) AS ATT_RATE_5M_LEVEL,
+				IFNULL(MIN(TPAK.ANSWER_RATE_LEVEL), 4) AS ANSWER_RATE_LEVEL,
+				IFNULL(MIN(TPAK.RRC_RATE_LEVEL), 4) AS RRC_RATE_LEVEL,
+				IFNULL(MIN(TPAK.CD_RATE_LEVEL), 4) AS CD_RATE_LEVEL
+			FROM
+				TB_CO_STATION TCS
+				LEFT JOIN (
+					SELECT	
+						DISTINCT DU_ID
+						,CELL_NUM
+						,STATION_ID
+					FROM
+						TB_CO_RU
+				) TCR
+					ON TCR.STATION_ID = TCS.STATION_ID
+				LEFT JOIN TB_PM_ACCESS_KPI TPAK
+					ON	REPLACE(TPAK.RU_CUID, 'cNum', '') = TCR.CELL_NUM
+					AND TPAK.DU_ID = TCR.DU_ID
+					AND TCR.STATION_ID <![CDATA[<>]]> '0'
+					AND TPAK.EVENT_TIME = #{eventTime}
+			GROUP BY TCS.STATION_ID) AS ALL_DATA
+		ORDER BY ALL_DATA.STATION_ID * 1 ASC -->
+		/* getStationTotData */
+		SELECT 
+			EVENT_TIME,
+			STATION_ID,
+			STATION_NAME,
+			ROUND(SUM(ATT_RATE)/COUNT(ATT_RATE), 2) ATT_RATE,
+			MIN(ATT_RATE_LEVEL) ATT_RATE_LEVEL,
+			ROUND(SUM(ERAB_ATT_RATE)/COUNT(ERAB_ATT_RATE), 2)    ERAB_ATT_RATE,
+  			MIN(ERAB_ATT_RATE_LEVEL)                        ERAB_ATT_RATE_LEVEL,
+			ROUND(SUM(RRC_RATE)/COUNT(RRC_RATE), 2) RRC_RATE,
+			MIN(RRC_RATE_LEVEL) RRC_RATE_LEVEL,
+			ROUND(SUM(ANSWER_RATE)/COUNT(RRC_RATE), 2) ANSWER_RATE,
+			MIN(ANSWER_RATE_LEVEL) ANSWER_RATE_LEVEL,
+			ROUND(SUM(CD_RATE)/COUNT(CD_RATE), 2) CD_RATE,
+			MIN(CD_RATE_LEVEL) CD_RATE_LEVEL, 
+			MIN(AL_LV) LEVEL
+		FROM
+			(
+			SELECT
+				TB.EVENT_TIME,
+				TB.STATION_ID,
+				TB.STATION_NAME,
+				TB.DU_ID,
+				TB.C_UID,
+				TB.DU_NAME,
+				TB.RU_CUID,
+				TB.RU_NAME,
+				TB.ATTEMPT,
+				TB.STD_ATTEMPT,
+				TB.ATT_RATE,
+				TB.ATT_RATE_LEVEL,
+				TB.ERAB_ATTEMPT,
+		      	TB.STD_ERAB_ATTEMPT,
+		      	TB.ERAB_ATT_RATE,
+		      	TB.ERAB_ATT_RATE_LEVEL,
+				TB.RRC,
+				TB.RRC_RATE,
+				TB.RRC_RATE_LEVEL,
+				TB.ANSWER,
+				TB.ANSWER_RATE,
+				TB.ANSWER_RATE_LEVEL,
+				TB.CD,
+				TB.CD_RATE,
+				TB.CD_RATE_LEVEL,
+				TB.AL_LV,
+				CASE
+					WHEN TB.AL_LV = '1' THEN 'CRITICAL'
+					WHEN TB.AL_LV = '2' THEN 'MAJOR'
+					WHEN TB.AL_LV = '3' THEN 'MINOR'
+					WHEN TB.AL_LV = '4' THEN 'NORMAL'
+					WHEN TB.AL_LV = '5' THEN 'NORMAL'
+				END AS AL_LV_NM
+			FROM
+				(SELECT
+					DATE_FORMAT(TPAK.EVENT_TIME, '%Y-%m-%d %T') AS EVENT_TIME,
+					TCR.STATION_ID AS STATION_ID,
+					TCR.STATION_NAME AS STATION_NAME,
+					TPAK.DU_ID AS DU_ID,
+					TPAK.C_UID  AS C_UID,
+					TPAK.DU_NAME AS DU_NAME,
+					TPAK.RU_CUID AS RU_CUID,
+					TCR.RU_NAME AS RU_NAME,
+					TPAK.ATTEMPT AS ATTEMPT,
+					TPAK.STD_ATT_5M AS STD_ATTEMPT,
+					IFNULL(ROUND((((TPAK.ATTEMPT - TPAK.STD_ATT_5M)/TPAK.STD_ATT_5M)*100), 2),0) AS ATT_RATE,
+					TPAK.ATT_RATE_5M_LEVEL AS ATT_RATE_LEVEL,
+					TPAK.ERAB_ATTEMPT                                                                       AS ERAB_ATTEMPT,
+					TPAK.STD_ERAB_5M                                                                        AS STD_ERAB_ATTEMPT,
+					IFNULL(ROUND((((TPAK.ERAB_ATTEMPT - TPAK.STD_ERAB_5M)/TPAK.STD_ERAB_5M)*100), 2),0)     AS ERAB_ATT_RATE,
+					TPAK.ERAB_ATT_RATE_LEVEL                                                                AS ERAB_ATT_RATE_LEVEL,
+					TPAK.RRC AS RRC,
+					TPAK.RRC_RATE AS RRC_RATE,
+					TPAK.RRC_RATE_LEVEL AS RRC_RATE_LEVEL,
+					TPAK.ANSWER AS ANSWER,
+					TPAK.ANSWER_RATE AS ANSWER_RATE,
+					TPAK.ANSWER_RATE_LEVEL AS ANSWER_RATE_LEVEL,
+					TPAK.CD AS CD,
+					TPAK.CD_RATE AS CD_RATE,
+					TPAK.CD_RATE_LEVEL AS CD_RATE_LEVEL,
+					<choose>
+					<when test='filterLevel != null and filterLevel != "0"'>
+						CASE
+							WHEN LEAST(TPAK.ATT_RATE_5M_LEVEL,TPAK.RRC_RATE_LEVEL,TPAK.ANSWER_RATE_LEVEL,TPAK.CD_RATE_LEVEL) <![CDATA[<=]]> #{filterLevel}
+							THEN LEAST(TPAK.ATT_RATE_5M_LEVEL,TPAK.RRC_RATE_LEVEL,TPAK.ANSWER_RATE_LEVEL,TPAK.CD_RATE_LEVEL) ELSE 4
+						END AS AL_LV
+					</when>
+					<otherwise>
+						LEAST(TPAK.ATT_RATE_5M_LEVEL,TPAK.RRC_RATE_LEVEL,TPAK.ANSWER_RATE_LEVEL,TPAK.CD_RATE_LEVEL) AS AL_LV
+					</otherwise>
+					</choose>
+				FROM
+					TB_PM_ACCESS_KPI AS TPAK,
+				
+						(SELECT
+							TCR.C_UID AS C_UID,
+							TCR.DU_ID,
+							TCR.CELL_NUM,
+							TCR.STATION_ID AS STATION_ID,
+							TCR.RU_NAME,
+							TCS.STATION_NAME
+						FROM
+							TB_CO_RU AS TCR,
+							TB_CO_STATION AS TCS
+						WHERE
+							TCR.STATION_ID = TCS.STATION_ID) AS TCR
+					WHERE
+						TPAK.EVENT_TIME = #{eventTime}
+						AND REPLACE(TPAK.RU_CUID, 'cNum', '') = TCR.CELL_NUM
+						AND TPAK.DU_ID = TCR.DU_ID
+						AND TCR.STATION_ID <![CDATA[<>]]> '0'
+				
+				
+					
+					<if test='filterLevel != null and filterLevel != "0"'>
+						AND (
+							ATT_RATE_LEVEL <![CDATA[<=]]> #{filterLevel}
+							OR ERAB_ATT_RATE_LEVEL <![CDATA[<=]]> #{filterLevel}
+							OR RRC_RATE_LEVEL <![CDATA[<=]]> #{filterLevel}
+							OR ANSWER_RATE_LEVEL <![CDATA[<=]]> #{filterLevel}
+							OR CD_RATE_LEVEL <![CDATA[<=]]> #{filterLevel}
+						)
+					</if>
+					) AS TB
+			) AS TT
+			GROUP BY STATION_NAME
+		
+		
+	</select>
+
+	<!-- 역사별 통합감시 - 하단 Grid -->
+	<select id="getStationData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getStationData */
+		SELECT
+			TB.EVENT_TIME,
+			TB.STATION_ID,
+			TB.STATION_NAME,
+			TB.DU_ID,
+			TB.C_UID,
+			TB.DU_NAME,
+			TB.RU_CUID,
+			TB.RU_NAME,
+			TB.ATTEMPT,
+			TB.STD_ATTEMPT,
+			TB.ATT_RATE,
+			TB.ERAB_ATTEMPT,
+			TB.STD_ERAB_ATTEMPT,
+			TB.ERAB_ATT_RATE,
+			TB.RRC,
+			TB.RRC_RATE,
+			TB.RRC_RATE_LEVEL,
+			TB.ANSWER,
+			TB.ANSWER_RATE,
+			TB.ANSWER_RATE_LEVEL,
+			TB.CD,
+			TB.CD_RATE,
+			TB.CD_RATE_LEVEL,
+			TB.AL_LV,
+			CASE
+				WHEN TB.AL_LV = '1' THEN 'CRITICAL'
+				WHEN TB.AL_LV = '2' THEN 'MAJOR'
+				WHEN TB.AL_LV = '3' THEN 'MINOR'
+				WHEN TB.AL_LV = '4' THEN 'NORMAL'
+				WHEN TB.AL_LV = '5' THEN 'NORMAL'
+			END AS AL_LV_NM,
+			ERAB_ADD_SUCCESS
+		FROM
+			(SELECT
+				DATE_FORMAT(TPAK.EVENT_TIME, '%Y-%m-%d %T') AS EVENT_TIME,
+				TCR.STATION_ID AS STATION_ID,
+				TCR.STATION_NAME AS STATION_NAME,
+				TPAK.DU_ID AS DU_ID,
+				TPAK.C_UID  AS C_UID,
+				TPAK.DU_NAME AS DU_NAME, 
+				TPAK.RU_CUID AS RU_CUID,
+				TCR.RU_NAME AS RU_NAME,
+				TPAK.ATTEMPT AS ATTEMPT,
+				TPAK.STD_ATT_5M AS STD_ATTEMPT,
+				IFNULL(ROUND((((TPAK.ATTEMPT - TPAK.STD_ATT_5M)/TPAK.STD_ATT_5M)*100), 2),0) AS ATT_RATE,
+				TPAK.ERAB_ATTEMPT AS ERAB_ATTEMPT,
+				TPAK.STD_ERAB_5M STD_ERAB_ATTEMPT,
+				IFNULL(ROUND((((TPAK.ERAB_ATTEMPT - TPAK.STD_ERAB_5M)/TPAK.STD_ERAB_5M)*100), 2),0) AS ERAB_ATT_RATE,
+				TPAK.RRC AS RRC,
+				TPAK.RRC_RATE AS RRC_RATE,
+				TPAK.RRC_RATE_LEVEL AS RRC_RATE_LEVEL,
+				TPAK.ANSWER AS ANSWER,
+				TPAK.ANSWER_RATE AS ANSWER_RATE,
+				TPAK.ANSWER_RATE_LEVEL AS ANSWER_RATE_LEVEL,
+				TPAK.CD AS CD,
+				TPAK.CD_RATE AS CD_RATE,
+				TPAK.CD_RATE_LEVEL AS CD_RATE_LEVEL,
+				TPAK.ERAB_ADD_SUCCESS,
+				<choose>
+				<when test='filterLevel != null and filterLevel != "0"'>
+					CASE
+						WHEN LEAST(TPAK.ATT_RATE_5M_LEVEL,TPAK.RRC_RATE_LEVEL,TPAK.ANSWER_RATE_LEVEL,TPAK.CD_RATE_LEVEL) <![CDATA[<=]]> #{filterLevel}
+						THEN LEAST(TPAK.ATT_RATE_5M_LEVEL,TPAK.RRC_RATE_LEVEL,TPAK.ANSWER_RATE_LEVEL,TPAK.CD_RATE_LEVEL) ELSE 4
+					END AS AL_LV
+				</when>
+				<otherwise>
+					LEAST(TPAK.ATT_RATE_5M_LEVEL,TPAK.RRC_RATE_LEVEL,TPAK.ANSWER_RATE_LEVEL,TPAK.CD_RATE_LEVEL) AS AL_LV
+				</otherwise>
+				</choose>
+			FROM
+				TB_PM_ACCESS_KPI AS TPAK,
+			<if test='ruCellType == "RU"'>
+					/* ruCellType == "RU" */
+					(SELECT DISTINCT
+						TCR.C_UID AS C_UID,
+						TCR.DU_ID,
+						TCR.CELL_NUM,
+						TCR.STATION_ID AS STATION_ID,
+						TCR.RU_NAME,
+						TCS.STATION_NAME
+					FROM
+						TB_CO_RU AS TCR,
+						TB_CO_STATION AS TCS
+					WHERE
+						TCR.STATION_ID = TCS.STATION_ID
+						<if test="lineId != null and lineId != -1">
+							AND TCS.LINE_ID LIKE (CONCAT('%', #{lineId}, '%'))
+						</if>
+					) AS TCR
+				WHERE
+					TPAK.EVENT_TIME = #{eventTime}
+					AND REPLACE(TPAK.RU_CUID, 'cNum', '') = TCR.CELL_NUM
+					AND TPAK.DU_ID = TCR.DU_ID
+					AND TCR.STATION_ID <![CDATA[<>]]> '0'
+			</if>
+			<if test='ruCellType == "CELL"'>
+					/* ruCellType == "CELL" */
+					(SELECT
+						DISTINCT TCR.STATION_ID,
+						TCR.DU_ID,
+						TCR.CELL_NUM,
+						TCS.STATION_NAME
+					FROM
+						TB_CO_RU AS TCR,
+						TB_CO_STATION AS TCS
+					WHERE
+						TCR.STATION_ID = TCS.STATION_ID
+						<if test="lineId != null and lineId != -1">
+							AND TCS.LINE_ID LIKE (CONCAT('%', #{lineId}, '%'))
+						</if>
+						) AS TCR
+				WHERE
+					TPAK.EVENT_TIME = #{eventTime}
+					AND REPLACE(TPAK.RU_CUID, 'cNum', '') = TCR.CELL_NUM
+					AND TPAK.DU_ID = TCR.DU_ID
+					AND TCR.STATION_ID <![CDATA[<>]]> '0'
+			</if>
+				<if test='stationId != "9990" and stationId != "9999" and stationId != "9998"'>
+					AND TCR.STATION_ID = #{stationId}
+				</if>
+				<if test='filterLevel != null and filterLevel != "0"'>
+					AND (RRC_RATE_LEVEL <![CDATA[<=]]> #{filterLevel}
+						OR ANSWER_RATE_LEVEL <![CDATA[<=]]> #{filterLevel}
+						OR CD_RATE_LEVEL <![CDATA[<=]]> #{filterLevel}
+					)
+				</if>
+				) AS TB
+		ORDER BY
+		<if test = 'sortOption.size() > 0'>
+			<foreach collection="sortOption" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test = 'sortOption.size() == 0'>
+			TB.AL_LV ASC,
+			TB.EVENT_TIME DESC,
+			TB.STATION_NAME ASC,
+			TB.RU_CUID ASC
+		</if>
+	</select>
+
+	<!-- 역사별 통합감시 - 하단 Grid Click Trend -->
+	<select id="getStationQualityTrend" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			DATE_FORMAT(EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME,
+<!-- 			TCR.STATION_ID AS STATION_ID,
+			TCR.STATION_NAME AS STATION_NAME, -->
+			TPAK.DU_ID,
+			TPAK.C_UID,
+			TPAK.DU_NAME,
+			TPAK.RU_CUID,
+			TPAK.RU_NAME,
+			TPAK.ATTEMPT,
+			TPAK.ATT_RATE,
+			TPAK.ATT_RATE_5M_LEVEL,
+			TPAK.RRC,
+			TPAK.RRC_RATE,
+			TPAK.RRC_RATE_LEVEL,
+			TPAK.ANSWER,
+			TPAK.ANSWER_RATE,
+			TPAK.ANSWER_RATE_LEVEL,
+			TPAK.CD,
+			TPAK.CD_RATE,
+			TPAK.CD_RATE_LEVEL,
+			LEAST(TPAK.ATT_RATE_5M_LEVEL, TPAK.RRC_RATE_LEVEL, TPAK.ANSWER_RATE_LEVEL, TPAK.CD_RATE_LEVEL) AS AL_LV,
+			TPAK.ERAB_ATTEMPT,
+			TPAK.ERAB_ATT_RATE,
+			TPAK.ERAB_ATT_RATE_LEVEL
+		FROM
+			TB_PM_ACCESS_KPI AS TPAK
+			<!-- <if test='ruCellType == "RU"'>
+				INNER JOIN (SELECT
+								TCR.C_UID AS C_UID,
+								TCR.STATION_ID AS STATION_ID,
+								TCS.STATION_NAME
+							FROM
+								TB_CO_RU AS TCR
+								INNER JOIN  TB_CO_STATION AS TCS
+								ON TCR.STATION_ID = TCS.STATION_ID
+							WHERE
+								TCS.STATION_ID = #{stationId}) AS TCR
+				ON TPAK.RU_CUID = TCR.C_UID
+			</if>
+			<if test='ruCellType == "CELL"'>
+				INNER JOIN (SELECT
+								DISTINCT TCR.STATION_ID,
+								TCR.DU_ID,
+								TCR.CELL_NUM,
+								TCS.STATION_NAME
+							FROM
+								TB_CO_RU AS TCR,
+								TB_CO_STATION AS TCS
+							WHERE
+								TCR.STATION_ID = TCS.STATION_ID
+								AND TCS.STATION_ID = #{stationId}) AS TCR
+				ON TPAK.DU_ID = TCR.DU_ID
+					AND REPLACE(TPAK.RU_CUID, 'cNum', '') = TCR.CELL_NUM
+			</if> -->
+		WHERE
+			TPAK.DU_ID = #{duId}
+			AND TPAK.RU_CUID = #{ruId}
+			AND EVENT_TIME <![CDATA[>=]]> #{startEventTime}
+			AND EVENT_TIME <![CDATA[<=]]> #{eventTime}
+		ORDER BY
+			EVENT_TIME ASC
+	</select>
+
+	<!-- 역사별 통합감시 - 역정보 -->
+	<select id="getStationInfoData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			STATION_ID,
+			STATION_NAME
+		FROM
+			TB_CO_STATION
+	</select>
+	
+</mapper>

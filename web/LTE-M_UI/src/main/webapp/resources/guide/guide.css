@@ -1,0 +1,56 @@
+@charset "utf-8";
+/* ---------------------------------------
+	Filename: guide.css
+	Description : 코딩리스트용 
+	Author	: mobigen
+	Date	: 2015-09-07
+   --------------------------------------- */ 
+/* Reset ******************************/
+
+
+/* Layout */
+.guideWrap {width:1240px; margin:0 auto; padding:20px 0;}
+.guideWrap > h1 {height:50px; line-height:50px; color:#5c548f; font-size:25px; text-align:center;}
+.guideWrap2 {width:1254px; margin:0 auto; padding:20px 0;}
+.guideWrap2 h1 {width:auto; height:50px; line-height:50px; border:none; background:none; color:#333; font-size:25px; text-align:center;}
+.guideBox {position:relative; margin-bottom:20px;}
+.guideBox > h2 {margin-top:10px; border-top:1px dotted #dadada; padding:20px 0 10px; font-size:16px;}
+.guideBox > h2:first-child {border-top:none;}
+.guideBox .txtGuide {margin:15px 0 10px; padding:10px; border:1px dotted #dadada; font-size:14px; color:#156495; font-weight:bold;}
+.guideBox .txtGuide:before{content:"▼ "}
+.boxArea {position:relative; height:320px; border:1px solid #eee;}/* position예시용임시영역임 */ 
+
+/* Table Guide List */
+table {border-collapse:collapse; border-spacing:0; width:100%;}
+caption {visibility:hidden; overflow:hidden; width:0; height:0; font-size:0; line-height:0;}
+.tblGuide {width:100%; margin:0 0 40px; border-bottom:1px solid #aeaeae;}
+.tblGuide th {color:#fff; text-align:center;}
+.tblGuide th:first-child, .tblGuide td:first-child{border-left:0;}
+.tblGuide thead th {padding:5px 0; border-left:1px solid #fff; background:#8d939d; line-height:16px; font-size:11px;}
+.tblGuide td {padding:7px 7px 7px 13px; border-top:1px dashed #aeaeae; border-left:1px dashed #aeaeae; line-height:16px; font-size:11px; background:#fff;}
+.tblGuide tbody tr:first-child td {border-top:none;}
+.tblGuide td a,.tblGuide td a:hover {font-weight:700; color:#2080eb; text-decoration:underline;}
+.tblGuide tr:hover td {background:#f7f7f7;}
+.tblGuide td.txtC {padding-left:7px; text-align:center;}
+.tblGuide tr.not td {background:#f5f5f5;}
+.tblGuide tr.del td {background:#fff; color:#ddd; font-weight:700;}
+.counter {counter-reset:number;}
+.counter tbody tr td:first-child {counter-increment:number;}
+.counter tbody tr td:first-child:before {content:counter(number);}
+.counter tbody tr td.tit {counter-increment:none; border-top:1px solid #aeaeae; border-bottom:1px solid #aeaeae; background:#cbced2; font-weight:bold;}
+.counter tbody tr td.tit:before {content:none;}
+
+/* Tab */
+.tabs {overflow:hidden; margin-bottom:20px;}
+.tabs li {float:left; width:50%; background:#717884;}
+.tabs li a {display:block; height:36px; line-height:36px; font-size:15px; color:#fff; text-align:center;}
+.tabs li.on{border-bottom:none; background:#fd7745;}
+
+/* Etc */
+span.info {display:inline-block; padding:2px 0; line-height:14px; font-weight:500; color:#4b4b4b;}
+span.info:before {content:"- "; margin-left:-7px;}
+span.mod {display:inline-block; padding:2px 0; line-height:14px; color:#ea002c; font-weight:700;}
+span.mod:before {content:"- "; margin-left:-7px;}
+span.add {display:inline-block; padding:2px 0; line-height:14px; color:#64ad16; font-weight:700;}
+span.add:before {content:"- "; margin-left:-7px;}
+p.info {padding:10px;}

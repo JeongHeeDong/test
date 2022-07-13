@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>Basic Guide | LTE_R</title>
+<link rel="stylesheet" type="text/css" href="guide.css"><!-- //가이드용임 -->
+<link rel="stylesheet" href="/resources/css/jquery-ui.css">
+<link href="../css/common.css" rel="stylesheet" type="text/css">
+<link href="../css/layout_top.css" rel="stylesheet" type="text/css">
+<link href="../css/style.css" rel="stylesheet" type="text/css">
+
+<script src="../js/jquery-1.11.2.min.js"></script>
+<script src="../js/jquery-ui.min.js"></script>
+<script src="../js/failureSpec.js"></script><!-- 서버에 /resources/js/failure/main/failureSpec.js"></script> 스피너 html테스트임., 경로는 달라요. -->
+<script src="../js/jquery.mousewheel.js"></script><!-- 스피너휠 -->
+</head>
+<body>
+<!-- guideWrap2 -->
+<div class="guideWrap2">
+	<h1>Basic Guide</h1>
+	<div class="guideBox">
+			<h2>페이지 기본Style</h2>
+			<div class="mu-container">
+				<section>
+					<div class="titleWrap">
+						<h3 class="mu-title">mu-title 페이지 기본 Title (title.jsp)</h3>
+						<!-- 디자인변경 추가됨 title.jsp수정 -->
+						<ol class="mu-path">
+							<li><a href="#none">경로1</a></li>
+							<li><a href="#none">경로2</a></li>
+							<li><a href="#none">현재화면임</a></li>
+						</ol>
+						<!-- //디자인변경 추가됨 title.jsp수정 -->
+					</div>
+					<p class="txtGuide">mu-search-group 검색단</p>
+					<div class="mu-search-group">
+						<div class="mu-search-item">
+							검색공간
+						</div>
+						<div class="mu-search-btn">
+							버튼, 아이콘 공간 <button type="button" class="mu-btn mu-btn-icon">버튼</button>
+							<button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon refresh"></i></button>
+						</div>
+					</div> <br>							
+					<div class="mu-search-group mu-more-item"><!-- // 다단 검색폼을 사용할 경우 해당 태그에  mu-more-item  클래스를 추가해주시면 됩니다. -->
+						<div class="mu-search-item">
+							<div class="mu-item-group">
+								<div class="mu-radio">
+									<input type="radio" id="r1" name="accessEpc" checked="checked">
+									<label for="r1">Access</label>
+								</div>
+								<div class="mu-radio">
+									<input type="radio" id="r2" name="accessEpc">
+									<label for="r2">EPC</label>
+								</div>
+							</div>
+							<div class="mu-item-group">
+								<div class="searchTarget">
+									<button type="button" class="mu-btn mu-btn-icon"><i class="mu-icon search"></i>검색대상</button>
+									<input type="text" class="mu-input" readonly="readonly">
+								</div>
+								<div class="mt5">
+									<div class="mu-hgroup">
+										<div class="mu-datepicker">
+											<input type="text" class="hasDatepicker" readonly="readonly">
+											<button class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon calendar"></i></button>
+										</div>
+										<span>~</span>
+										<div class="mu-datepicker">
+											<input type="text" class="hasDatepicker" readonly="readonly">
+											<button class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon calendar"></i></button>
+										</div>
+									</div>
+									<div class="mu-hgroup">
+										<div class="mu-radio">
+											<input type="radio" id="r11" name="access" checked="checked">
+											<label for="r11">전체</label>
+										</div>
+										<div class="mu-radio">
+											<input type="radio" id="r12" name="access">
+											<label for="r12">고장</label>
+										</div>
+										<div class="mu-radio">
+											<input type="radio" id="r13" name="access">
+											<label for="r13">삭제</label>
+										</div>
+									</div>
+									<div class="mu-hgroup">
+										<div class="mu-checkbox">
+											<input id="c11" type="checkbox">
+											<label for="c11">미복구</label>
+										</div>
+										<div class="mu-checkbox">
+											<input id="c12" type="checkbox">
+											<label for="c12">특정알람</label>
+										</div>
+										<div class="mu-checkbox">
+											<input id="c13" type="checkbox">
+											<label for="c13">특정시간</label>
+										</div>
+										<div class="mu-checkbox">
+											<input id="c14" type="checkbox">
+											<label for="c14">고장시간</label>
+										</div>
+										<div class="mu-checkbox">
+											<input id="c15" type="checkbox">
+											<label for="c15">특정일자제외</label>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div><!-- //mu-search-item -->
+						<div class="mu-search-btn">
+							<button type="button" class="mu-btn mu-btn-icon mu-btn-search" onclick="javascript:btnSearchClick()"><i class="mu-icon search"></i>검색</button>
+						</div>
+					</div> <br>
+					<div class="mu-search-group mu-more-item"><!-- // 다단 검색폼을 사용할 경우 해당 태그에  mu-more-item  클래스를 추가해주시면 됩니다. -->
+						<div class="mu-search-item">
+							<div class="mu-item-group">
+								<div class="mu-radio">
+									<input type="radio" id="r1" name="accessEpc" checked="checked">
+									<label for="r1">Access</label>
+								</div>
+								<div class="mu-radio">
+									<input type="radio" id="r2" name="accessEpc">
+									<label for="r2">EPC</label>
+								</div>
+							</div>
+							<div class="mu-item-group">
+								<div class="searchTarget">
+									<button type="button" class="mu-btn mu-btn-icon"><i class="mu-icon search"></i>검색대상</button>
+									<input type="text" class="mu-input" readonly="readonly">
+								</div>
+								<div class="mt5">
+									<div class="mu-hgroup">
+										<div class="mu-datepicker">
+											<input type="text" class="hasDatepicker" readonly="readonly">
+											<button class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon calendar"></i></button>
+										</div>
+										<span>~</span>
+										<div class="mu-datepicker">
+											<input type="text" class="hasDatepicker" readonly="readonly">
+											<button class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon calendar"></i></button>
+										</div>
+									</div>
+									<div class="mu-hgroup">
+										<span>그래프:</span>
+										<div class="mu-radio">
+											<input type="radio" id="r11" name="access" checked="checked">
+											<label for="r11">장비별</label>
+										</div>
+										<div class="mu-radio">
+											<input type="radio" id="r12" name="access">
+											<label for="r12">알람코드별</label>
+										</div>
+									</div>
+									<div class="mu-hgroup">
+										<div class="mu-checkbox">
+											<input id="c11" type="checkbox">
+											<label for="c11">특정시간</label>
+										</div>
+										<div class="mu-checkbox">
+											<input id="c12" type="checkbox">
+											<label for="c12">특정일자제외</label>
+										</div>
+										<div class="mu-checkbox">
+											<input id="c13" type="checkbox">
+											<label for="c13">그래프 표시안함</label>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div><!-- //mu-search-item -->
+						<div class="mu-search-btn">
+							<button type="button" class="mu-btn mu-btn-icon mu-btn-search" onclick="javascript:btnSearchClick()"><i class="mu-icon search"></i>검색</button>
+						</div>
+					</div><br>			
+					<div class="mu-search-group">
+						<div class="mu-search-item">
+							<div class="mu-item-group">
+								기준시간 : 2015-12-09 10:30:00
+							</div>
+						</div>
+						<div class="mu-search-btn">
+							<button type="button" class="mu-btn mu-btn-icon">기본설정</button>
+							<span class="lineY">
+								<button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon refresh"></i></button>
+								<button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon pause"></i></button>
+							</span>
+						</div>
+					</div> <br>
+					<div class="mu-search-group"><!-- // 다단 검색폼을 사용할 경우 해당 태그에  mu-more-item  클래스를 추가해주시면 됩니다. -->
+						<div class="mu-search-item">
+							<div class="mu-item-group">
+								<label>Total</label>
+								<input type="text" value="119" class="mu-input">
+							</div>
+						</div><!-- //mu-search-item -->
+						<div class="mu-search-btn">
+							<button type="button" class="mu-btn mu-btn-icon">미복구</button>
+							<span class="lineY">
+								<button type="button" class="mu-btn mu-btn-icon">알람등급</button>
+								<button type="button" class="mu-btn mu-btn-icon">알람코드</button>
+								<button type="button" class="mu-btn mu-btn-icon">장비</button>
+							</span>
+							<span class="lineY">
+								<button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon refresh"></i></button>
+							</span>
+						</div>
+					</div><br>					
+					<div class="mu-search-group"><!-- // 다단 검색폼을 사용할 경우 해당 태그에  mu-more-item  클래스를 추가해주시면 됩니다. -->
+						<div class="mu-search-item">
+							<div class="mu-item-group">
+								<div class="mu-datepicker">
+									<input value="05/20/2015" readonly="readonly" type="text">
+									<button class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon calendar"></i></button>
+								</div>
+								<input id="spinner_failureSpec_fromhour" type="text" name="spinner_failureSpec_hour" value="00"><span class="txtS">h</span>
+								<input id="spinner_failureSpec_frommin" type="text" name="spinner_failureSpec_min" value="00"><span class="txtS">m</span>
+								<span class="txtS">~</span>
+								<div class="mu-datepicker">
+									<input value="05/20/2015" readonly="readonly" type="text">
+									<button class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon calendar"></i></button>
+								</div>		
+								<input id="spinner_failureSpec_tohour" type="text" name="spinner_failureSpec_hour" value="23"><span class="txtS">h</span>
+								<input id="spinner_failureSpec_tomin" type="text" name="spinner_failureSpec_min" value="59"><span class="txtS">m</span>					
+								<span class="lineY">
+									<label>Alarm Type</label>
+									<div id="searchOption" class="mu-selectbox">
+										<select name="searchOptSelect" class="mu-value">
+											<option value="id">ID</option>
+											<option value="name">이름</option>
+										</select>
+									</div>
+								</span>
+								<span class="lineY">
+									<label>선택장비</label>
+									<input type="text" value="" id="searchInput" class="mu-input">
+									<button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon search"></i></button>
+								</span>
+							</div>
+						</div><!-- //mu-search-item -->
+						<div class="mu-search-btn">
+							<button type="button" class="mu-btn mu-btn-icon mu-btn-search" onclick="javascript:btnSearchClick()"><i class="mu-icon search"></i>검색</button>
+						</div>
+					</div>		<br>	
+					<div class="mu-search-group"><!-- // 다단 검색폼을 사용할 경우 해당 태그에  mu-more-item  클래스를 추가해주시면 됩니다. -->
+						<div class="mu-search-item">
+							<div class="mu-item-group">
+								<label>사용자등급</label>
+								<div id="userLevel" class="mu-selectbox">
+									<select name="userLevelSelect" class="mu-value">
+										<option value="0">전체</option>
+										<option value="1">시스템 관리자</option>
+										<option value="2">관리자</option>
+										<option value="3">운영자</option>
+										<option value="4">일반</option>
+									</select>
+								</div>
+								<label>상태</label>
+								<div id="userState&quot;" class="mu-selectbox">
+									<select name="userStateSelect" class="mu-value">
+										<option value="0">전체</option>
+										<option value="1">승인</option>
+										<option value="2">승인요청</option>
+									</select>
+								</div>
+								<label>검색옵션</label>
+								<div id="searchOption" class="mu-selectbox">
+									<select name="searchOptSelect" class="mu-value">
+										<option value="id">ID</option>
+										<option value="name">이름</option>
+									</select>
+								</div>
+								<input type="text" value="" id="searchInput" class="mu-input">
+							</div>
+						</div><!-- //mu-search-item -->
+						<div class="mu-search-btn">
+							<button type="button" class="mu-btn mu-btn-icon mu-btn-search" onclick="javascript:btnSearchClick()"><i class="mu-icon search"></i>검색</button>
+						</div>
+					</div>		<br>			
+					<div class="mu-search-group"><!-- // 다단 검색폼을 사용할 경우 해당 태그에  mu-more-item  클래스를 추가해주시면 됩니다. -->
+						<div class="mu-search-item">
+							<div class="mu-item-group">
+								<label>EMS Name</label>
+								<div class="mu-selectbox">
+									<button id="ems_enb_name" class="mu-value">전체</button>
+									<ul id="ems_enb_ul" class="mu-list"><li data-id="전체">전체</li><li data-id="7779">RAN-EMS 04</li><li data-id="0005">RAN-EMS 03</li><li data-id="0004">RAN-EMS 02</li><li data-id="0001">RAN-EMS 01</li></ul>
+								</div>
+								
+								<label>DU ID</label>
+								<input id="du_value" type="text" class="mu-input">
+								
+								<label>DU 명</label>
+								<input id="du_name_value" type="text" class="mu-input">
+							</div>
+						</div><!-- //mu-search-item -->
+						<div class="mu-search-btn">
+							<button id="Detail_Btn" type="button" class="mu-btn mu-btn-icon"><i class="mu-icon up"></i>상세조건</button>
+							<button type="button" class="mu-btn mu-btn-icon mu-btn-search" onclick="javascript:btnSearchClick()"><i class="mu-icon search"></i>검색</button>
+							<button type="button" class="mu-btn mu-btn-icon" onclick="javascript:duAddView()"><i class="mu-icon add"></i>추가</button>
+						</div>
+					</div>
+					<div id="Detail_Con" class="mu-search-group mu-more-item">
+					    <div class="mu-search-item">
+					        <table>					
+								<colgroup>
+									<col width="12%">
+									<col width="auto">
+									<col width="12%">
+									<col width="auto">
+								</colgroup>
+					            <tbody>
+									<tr>
+										<th>DU 명</th>
+										<td>
+											<div class="mu-selectbox">
+												<button id="du_dropdown_text" class="mu-value">전체</button>
+												<ul id="du_ul" class="mu-list">
+													<li>전체1</li>
+													<li>전체2</li>
+												</ul>
+											</div>
+										</td>
+										<th>C_UID</th>
+										<td>
+											<input id="c_uid_value" type="text" class="mu-input">
+										</td>
+									</tr>
+									<tr>
+										<th>VLAN</th>
+										<td>
+											<input id="vlan_value" type="text" class="mu-input">
+										</td>
+										<th>MCType</th>
+										<td>
+											<input id="mcType_value" type="text" class="mu-input">
+										</td>
+									</tr>
+									<tr>
+										<th>SWITCH</th>
+										<td>
+											<input id="switch_value" type="text" class="mu-input">
+										</td>
+									</tr>
+								</tbody>
+							</table>
+					    </div>
+					    <div class="mu-search-btn">
+					        <button type="button" class="mu-btn mu-btn-icon mu-btn-search" onclick="javascript:btnSearchClick()"><i class="mu-icon search"></i>검색</button>
+					    </div>
+					</div>
+					<p class="txtGuide">subtitleWrap)H4) + gridWrap(기본그리드)</p>
+					<div class="subtitleWrap">
+						<h4 class="mu-title">H4</h4>
+						<div class="hdRight"><button type="button" class="mu-btn mu-btn-icon green"><i class="mu-icon excel"></i>엑셀 저장</button></div>
+					</div>					
+					<div class="subtitleWrap">
+						<h4 class="mu-title">사용자리스트</h4>
+						<div class="hdRight">
+							<button type="button" class="mu-btn mu-btn-icon"><i class="mu-icon add"></i>등록</button>
+							<button type="button" class="mu-btn mu-btn-icon"><i class="mu-icon edit"></i>수정</button>
+							<button type="button" class="mu-btn mu-btn-icon"><i class="mu-icon del"></i>삭제</button>
+							<div class="mu-selectbox">
+								<button class="mu-value">20개씩 보기</button>
+								<ul class="mu-list">
+									<li data-id="10">10개씩 보기</li>
+									<li data-id="20">20개씩 보기</li>
+									<li data-id="50">50개씩 보기</li>
+								</ul>
+							</div>
+						</div>
+					</div>			
+					<div class="gridWrap">
+						<table class="mu-grid">
+							<thead>
+								<tr>
+									<th></th>
+									<th>mu-grid</th>
+									<th></th>
+									<th></th>
+									<th>Disk Used</th>
+									<th>Load Avg</th>
+									<th>Network I/O</th>
+									<th>Etc.</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>1</td>
+									<td>2015-03-27</td>
+									<td>디자인 테스트용 그리드입니다.</td>
+									<td>-</td>
+									<td>-</td>
+									<td>디자인 테스트용 그리드입니다.디자인 테스트용 그리드입니다.</td>
+									<td>-</td>
+									<td>-</td>
+								</tr>
+								<tr>
+									<td>2</td>
+									<td>2015-03-27</td>
+									<td>mu-gridmu-gridmu-gridmu-gridmu-gridmu-grid mu-gridmu-gridmu-grid</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+								</tr>
+								<tr>
+									<td>3</td>
+									<td>2015-03-27</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>				
+					<div class="gridWrap mt10">
+						<table class="mu-grid mu-grid-border">
+							<thead>
+								<tr>
+									<th></th>
+									<th>mu-grid</th>
+									<th>mu-grid-border</th>
+									<th></th>
+									<th>Disk Used</th>
+									<th>Load Avg</th>
+									<th>Network I/O</th>
+									<th>Etc.</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>1</td>
+									<td>2015-03-27</td>
+									<td>디자인 테스트용 그리드입니다.</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+								</tr>
+								<tr>
+									<td>2</td>
+									<td>2015-03-27</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+								</tr>
+								<tr>
+									<td>3</td>
+									<td>2015-03-27</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>				
+					<div class="gridWrap mt10">
+						<table class="mu-grid mu-grid-border mu-grid-strip">
+							<thead>
+								<tr>
+									<th></th>
+									<th>mu-grid</th>
+									<th>mu-grid-border</th>
+									<th>mu-grid-strip</th>
+									<th>LTE-M기본</th>
+									<th>Load Avg</th>
+									<th>Network I/O</th>
+									<th>Etc.</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>1</td>
+									<td>2015-03-27</td>
+									<td>LTE-M기본 디자인 그리드입니다.</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+								</tr>
+								<tr>
+									<td>2</td>
+									<td>2015-03-27</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+								</tr>
+								<tr>
+									<td>3</td>
+									<td>2015-03-27</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+									<td>-</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>				
+					<div class="gridWrap mt10">
+						<table class="mu-grid mu-grid-border mu-grid-strip">
+							<thead>
+								<tr>
+									<th></th>
+									<th>mu-grid</th>
+									<th>mu-grid-border thead theadthead</th>
+									<th>mu-grid-strip</th>
+									<th colspan="4">Disk(%)</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>1</td>
+									<td>2015-03-27</td>
+									<td>LTE-M기본 디자인 그리드입니다.</td>
+									<td>-</td>
+									<td>
+										<div class="mu-progress"><div class="mu-pbar" style="width:66.12%; background-color:#ffff00"><span style="color: black">/DATA:66.12%</span></div></div>
+										<div class="mu-progress"><div class="mu-pbar" style="width:92.11%; background-color:#ff0000"><span style="color: black">/DATA3/data/data_data:92.11%</span></div></div>
+									</td>
+									<td><div class="mu-progress"><div class="mu-pbar" style="width:88%; background-color:#ff0000"><span style="color: black">/lter/dev:88%</span></div></div></td>
+									<td><div class="mu-progress"><div class="mu-pbar" style="width:10.2%; ><span style=" color:="" black"="">/DATA2/sound:10.2%</div></div></td>
+									<td><div class="mu-progress"><div class="mu-pbar" style="width:13.2%; ><span style=" color:="" black"="">/usr/local/:13.2%</div></div></td>
+								</tr>
+								<tr>
+									<td>2</td>
+									<td>2015-03-27</td>
+									<td>-</td>
+									<td>-</td>
+									<td>
+										<div class="mu-progress"><div class="mu-pbar" style="width:66.12%; background-color:#ffff00"><span style="color: black">/DATA:66.12%</span></div></div>
+										<div class="mu-progress"><div class="mu-pbar" style="width:92.11%; background-color:#ff0000"><span style="color: black">/DATA3/data/data_data:92.11%</span></div></div>
+									</td>
+									<td><div class="mu-progress"><div class="mu-pbar" style="width:88%; background-color:#ff0000"><span style="color: black">/lter/dev:88%</span></div></div></td>
+									<td><div class="mu-progress"><div class="mu-pbar" style="width:10.2%; ><span style=" color:="" black"="">/DATA2/sound:10.2%</div></div></td>
+									<td><div class="mu-progress"><div class="mu-pbar" style="width:13.2%; ><span style=" color:="" black"="">/usr/local/:13.2%</div></div></td>
+								</tr>
+								<tr>
+									<td>3</td>
+									<td>2015-03-27</td>
+									<td>-</td>
+									<td>-</td>
+									<td><div class="mu-progress"><div class="mu-pbar" style="width:66.12%; background-color:#ffff00"><span style="color: black">/DATA:66.12%</span></div></div></td>
+									<td><div class="mu-progress"><div class="mu-pbar" style="width:88%; background-color:#ff0000"><span style="color: black">/lter/dev:88%</span></div></div></td>
+									<td><div class="mu-progress"><div class="mu-pbar" style="width:10.2%; ><span style=" color:="" black"="">/DATA2/sound:10.2%</div></div></td>
+									<td><div class="mu-progress"><div class="mu-pbar" style="width:13.2%; ><span style=" color:="" black"="">/usr/local/:13.2%</div></div></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<p class="txtGuide">좌우배치용(ex 고장감시)</p>
+					<div class="mu-boxWrap">
+						<div class="mu-boxRow">
+							<div class="mu-boxCell wp35">
+								<div class="subtitleWrap">
+									<h4 class="mu-title">중요고장 목록</h4>
+									<div class="hdRight">
+										<button type="button" class="mu-btn mu-btn-icon">중요고장 필터</button>
+										<button type="button" class="mu-btn mu-btn-icon">중요고장 상세</button>
+									</div>
+								</div>
+								<div class="gridWrap mu-scroll-v">
+									<table class="mu-grid mu-grid-border mu-grid-hover mu-grid-strip">
+										<thead>
+											<tr>
+												<th></th>
+												<th>mu-grid</th>
+												<th>mu-grid-border</th>
+												<th>mu-grid-strip</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td>1</td>
+												<td>2015-03-27</td>
+												<td>LTE-M기본 디자인 그리드입니다. LTE-M기본 디자인 그리드입니다LTE-M기본 디자인 그리드입니다</td>
+												<td>-</td>
+											</tr>
+											<tr>
+												<td>2</td>
+												<td>2015-03-27</td>
+												<td>-</td>
+												<td>-</td>
+											</tr>
+											<tr>
+												<td>3</td>
+												<td>2015-03-27</td>
+												<td>-</td>
+												<td>-</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>							
+							</div>
+							<div class="mu-boxCell">								
+								<div class="subtitleWrap">
+									<h4 class="mu-title">고장 목록</h4>
+									<div class="hdRight">
+										<button type="button" class="mu-btn mu-btn-icon green"><i class="mu-icon excel"></i>엑셀 저장</button>
+									</div>
+								</div>
+								<div class="gridWrap mu-scroll-v">
+									<table class="mu-grid mu-grid-border mu-grid-hover mu-grid-strip">
+										<thead>
+											<tr>
+												<th></th>
+												<th>mu-grid</th>
+												<th>mu-grid-border</th>
+												<th>mu-grid-strip</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td>1</td>
+												<td>2015-03-27</td>
+												<td>LTE-M기본 디자인 그리드입니다. LTE-M기본 디자인 그리드입니다LTE-M기본 디자인 그리드입니다</td>
+												<td>-</td>
+											</tr>
+											<tr>
+												<td>2</td>
+												<td>2015-03-27</td>
+												<td>-</td>
+												<td>-</td>
+											</tr>
+											<tr>
+												<td>3</td>
+												<td>2015-03-27</td>
+												<td>-</td>
+												<td>-</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>	
+							</div>
+						</div>
+					</div>
+					<div class="mu-boxWrap">
+						<div class="mu-boxRow">
+							<div class="mu-boxCell wp70">
+								<div class="subtitleWrap">
+									<h4 class="mu-title">고장이력 목록</h4>
+								</div>
+								<div class="gridWrap mu-scroll-v">
+									<table class="mu-grid mu-grid-border mu-grid-hover mu-grid-strip">
+										<thead>
+											<tr>
+												<th></th>
+												<th>mu-grid</th>
+												<th>mu-grid-border</th>
+												<th>mu-grid-strip</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td>1</td>
+												<td>2015-03-27</td>
+												<td>LTE-M기본 디자인 그리드입니다. LTE-M기본 디자인 그리드입니다LTE-M기본 디자인 그리드입니다</td>
+												<td>-</td>
+											</tr>
+											<tr>
+												<td>2</td>
+												<td>2015-03-27</td>
+												<td>-</td>
+												<td>-</td>
+											</tr>
+											<tr>
+												<td>3</td>
+												<td>2015-03-27</td>
+												<td>-</td>
+												<td>-</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>							
+							</div>
+							<div class="mu-boxCell">								
+								<div class="subtitleWrap">
+									<h4 class="mu-title">Alarm Message</h4>
+								</div>
+								<textarea id="alarmMsg" style="width: 100%;height: 350px;resize: none;" readonly=""></textarea>	
+							</div>
+						</div>
+					</div>
+					<div class="subtitleWrap">
+						<h4 class="mu-title">H4</h4>
+					</div>				
+					<div class="chartWrap" style="height:280px">
+						<img src="../images/common/@chart1.jpg" alt="">
+					</div>
+				</section>
+			</div>
+			<h2>Basic Medium Button 23px</h2>
+			<p class="txtGuide">Icon이 있는 기본 버튼 mu-btn mu-btn-icon > mu-icon(Name)</p>
+			mu-btn mu-btn-icon mu-btn-search <button type="button" class="mu-btn mu-btn-icon mu-btn-search"><i class="mu-icon search"></i>조회</button>
+			mu-btn mu-btn-icon green <button type="button" class="mu-btn mu-btn-icon green"><i class="mu-icon excel"></i>엑셀저장</button>
+			mu-btn mu-btn-icon gray <button type="button" class="mu-btn mu-btn-icon gray"><i class="mu-icon cancel"></i>취소</button>
+			mu-btn mu-btn-icon <button type="button" class="mu-btn mu-btn-icon"><i class="mu-icon down"></i>상세조건</button>
+			<button type="button" class="mu-btn mu-btn-icon"><i class="mu-icon add"></i>추가</button>
+			<button type="button" class="mu-btn mu-btn-icon"><i class="mu-icon edit"></i>수정</button>
+			<button type="button" class="mu-btn mu-pop-btn mu-btn-icon"><i class="mu-icon save"></i>저장</button>
+			<p class="txtGuide">Icon이 없는 기본 버튼 mu-btn</p>
+			mu-btn <button type="button" class="mu-btn">저장</button>
+			mu-btn gray <button type="button" class="mu-btn gray">취소</button>
+			<p class="txtGuide">Icon만 있는 버튼</p>
+			mu-btn mu-btn-icon mu-btn-icon-only <button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon download"></i></button>
+			<button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon refresh"></i></button>
+			<button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon pause"></i></button>
+			<button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon trash"></i></button>
+
+			<h2>고장정보</h2>
+			<p class="txtGuide">gridListWrap > gridTopContent + mu-grid mu-grid-border mu-grid-strip</p>
+			<div class="gridListWrap">
+				<div class="gridTopContent">
+					<h4 class="mu-title fl">고장정보</h4>
+					<div class="troubleAlram fl">
+						<div class="tit"><i></i>고장알람</div>
+						<ul>
+							<li><i class="mu-icon alram critical"></i><span id="cntLevel1" class="num">0</span></li>
+							<li><i class="mu-icon alram major"></i><span id="cntLevel2" class="num">0</span></li>
+							<li><i class="mu-icon alram minor"></i><span id="cntLevel3" class="num">0</span></li>
+							<li><i class="mu-icon alram warning"></i><span id="cntLevel4" class="num">120</span></li>
+						</ul>
+					</div>
+					<div class="btnWrap fr">
+						<button type="button" class="mu-btn mu-btn-img"><i class="mu-icon excel2"></i></button>
+						<button type="button" class="mu-btn mu-btn-img"><i class="mu-icon filter"></i></button>
+					</div>
+				</div>
+				<div>
+					<table class="mu-grid mu-grid-border mu-grid-strip">
+						<colgroup>
+							<col width="57px">
+							<col width="auto">
+							<col width="15%">
+							<col width="15%">
+							<col width="15%">
+							<col width="15%">
+							<col width="20%">
+							<col width="7%">
+						</colgroup>
+						<thead>
+						<tr>
+							<th></th>
+							<th>알람코드</th>
+							<th>장비타입</th>
+							<th>장비ID</th>
+							<th>장비명</th>
+							<th>발생시간</th>
+							<th>발생위치</th>
+							<th>해제</th>
+						</tr>
+						</thead>
+					</table>
+				</div>
+				<div class="mu-scroll-v" style="height:225px;">
+					<table id="tb_failure_alarm" class="mu-grid mu-grid-border mu-grid-strip">
+						<colgroup>
+							<col width="57px">
+							<col width="auto">
+							<col width="15%">
+							<col width="15%">
+							<col width="15%">
+							<col width="15%">
+							<col width="20%">
+							<col width="7%">
+						</colgroup>
+						<tbody>
+							<tr>
+								<td class="tc"><i class="mu-icon alram normal"></i></td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td class="tc"><button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon trash"></i></button></td>
+							</tr>
+							<tr>
+								<td class="tc"><i class="mu-icon alram normal"></i></td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td class="tc"><button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon trash"></i></button></td>
+							</tr>
+							<tr>
+								<td class="tc"><i class="mu-icon alram normal"></i></td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td class="tc"><button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon trash"></i></button></td>
+							</tr>
+							<tr>
+								<td class="tc"><i class="mu-icon alram normal"></i></td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td class="tc"><button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon trash"></i></button></td>
+							</tr>
+							<tr>
+								<td class="tc">tc</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td class="tc"><button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon trash"></i></button></td>
+							</tr>
+							<tr>
+								<td class="tc">1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td class="tc"><button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon trash"></i></button></td>
+							</tr>
+							<tr>
+								<td class="tc">1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td class="tc"><button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon trash"></i></button></td>
+							</tr>
+							<tr>
+								<td class="tc">1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td class="tc"><button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon trash"></i></button></td>
+							</tr>
+							<tr>
+								<td class="tc">1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td class="tc"><button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon trash"></i></button></td>
+							</tr>
+							<tr>
+								<td class="tc">1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td>1</td>
+								<td class="tc"><button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon trash"></i></button></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>				
+			</div>
+			<h2>mu-dialog Popup</h2>
+			<p class="txtGuide">mu-dialog mu-fix-foot</p>
+			<div class="boxArea">
+				<div class="mu-dialog mu-fix-foot" style="width:800px;height:300px">
+					<div class="mu-dialog-head">
+						<h2><span class="title">h2 title</span></h2>
+						<button id="mmeAddClose" type="button" class="mu-btn mu-btn-icon"><i class="mu-icon-img cancel"></i></button>
+					</div>
+					<div class="mu-dialog-body">
+						<h3 class="mu-title">h3 mu-title</h3>
+						<table class="mu-formbox">
+							<tbody>
+								<tr>
+									<th>mu-formbox</th>
+									<td>
+									   <input id="du_Detail_du_nm" type="text" class="mu-input">
+									</td>
+									<th>mu-formbox</th>
+									<td>
+										<div class="mu-selectbox">
+											<button id="du_Detail_team_nm" class="mu-value" value="1">ES개발팀</button>
+											<ul id="du_Detail_team_ul" class="mu-list"><li data-id="1">ES개발팀</li></ul>
+										</div>
+									</td>
+									<th>SWITCH INFO</th>
+									<td>
+									   <input id="du_Detail_sw_info" type="text" class="mu-input">
+									</td>
+								</tr>
+								<tr>
+									<th>VLAN INFO</th>
+									<td>
+										<input id="du_Detail_vlan_info" type="text" class="mu-input">
+									</td>
+									<th>제작사명</th>
+									<td>
+										<div class="mu-selectbox">
+											<button id="du_Detail_vendor_nm" class="mu-value" value="1">삼성</button>
+											<ul id="du_Detail_vendor_ul" class="mu-list"><li data-id="1">삼성</li></ul>
+										</div>
+									</td>
+									
+									<th>SWITCH INFO2</th>
+									<td>
+										<input id="du_Detail_sw_info2" type="text" class="mu-input">
+									</td>
+								</tr>
+							</tbody>
+						</table>
+						<h3 class="mu-title">h3 mu-title</h3>
+						<table class="mu-formbox">
+							<tbody>
+								<tr>
+									<th>mu-formbox</th>
+									<td>
+									   <input id="du_Detail_du_nm" type="text" class="mu-input">
+									</td>
+									<th>mu-formbox</th>
+									<td>
+										<div class="mu-selectbox">
+											<button id="du_Detail_team_nm" class="mu-value" value="1">ES개발팀</button>
+											<ul id="du_Detail_team_ul" class="mu-list"><li data-id="1">ES개발팀</li></ul>
+										</div>
+									</td>
+									<th>SWITCH INFO</th>
+									<td>
+									   <input id="du_Detail_sw_info" type="text" class="mu-input">
+									</td>
+								</tr>
+								<tr>
+									<th>VLAN INFO</th>
+									<td>
+										<input id="du_Detail_vlan_info" type="text" class="mu-input">
+									</td>
+									<th>제작사명</th>
+									<td>
+										<div class="mu-selectbox">
+											<button id="du_Detail_vendor_nm" class="mu-value" value="1">삼성</button>
+											<ul id="du_Detail_vendor_ul" class="mu-list"><li data-id="1">삼성</li></ul>
+										</div>
+									</td>
+									
+									<th>SWITCH INFO2</th>
+									<td>
+										<input id="du_Detail_sw_info2" type="text" class="mu-input">
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div class="mu-dialog-foot">
+						<button type="button" class="mu-btn mu-pop-btn mu-btn-icon">저장</button>
+						<button type="button" class="mu-btn mu-pop-btn mu-btn-icon gray">취소</button>
+					</div>
+				</div>
+			</div>		
+	</div>
+</div>
+<!-- //guideWrap2 -->
+
+</body>
+</html>

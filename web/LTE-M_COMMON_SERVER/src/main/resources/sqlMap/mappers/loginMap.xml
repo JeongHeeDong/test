@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.LoginDAO">
+	<select id="getloginCheck" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			USER_ID,USER_NAME,TEAM_ID,USER_MOBILE,USER_PHONE,EMAIL,AUTH,USE_FLAG
+		FROM
+			TB_SE_USER
+		WHERE
+			USER_ID = #{ID}
+			AND USER_PASSWORD = #{PW}
+	</select>
+	
+	<select id="getloginIDCheck" parameterType="java.util.HashMap" resultType="java.lang.Integer">
+		SELECT 
+			COUNT(1) AS CHECK_CNT
+		FROM
+			TB_SE_USER
+		WHERE
+			USER_ID = #{ID}
+	</select>
+
+	<select id="chechMenuAuth" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT CASE
+			   WHEN TSM.MENU_AUTH <![CDATA[>=]]> (SELECT AUTH
+									  FROM TB_SE_USER
+									  WHERE USER_ID = #{userId})
+				   THEN "1"
+			   ELSE "0"
+			   END AS MENU_AUTH_CHECKED
+		FROM TB_SE_MENU AS TSM
+		WHERE
+			TSM.MENU_URI = #{uri}
+	</select>
+	
+	<select id="upDateLoginTime" parameterType="java.util.HashMap">
+		UPDATE
+			TB_SE_USER
+		SET
+			<if test="LOGIN_FLAG eq 'Y'.toString()">
+				LOGIN_TIME = DATE_FORMAT(#{DATE},'%Y-%m-%d %H:%i:%s')
+			</if>
+			<if test="LOGOUT_FLAG eq 'Y'.toString()">
+				LOGOUT_TIME = DATE_FORMAT(#{DATE},'%Y-%m-%d %H:%i:%s')
+			</if>
+		WHERE
+			USER_ID = #{USER_ID}
+	</select>
+
+	<select id="getNotice" resultType="java.util.HashMap">
+		SELECT
+			DATE_FORMAT(EVENT_TIME, '%Y-%m-%d %T') AS EVENT_TIME,
+			USER_ID,
+			NOTICE_TITLE,
+			NOTICE_DESC,
+			FILE_NAME,
+			FILE_PATH
+		FROM
+			TB_SM_NOTICE_BOARD AS TSNB
+		ORDER BY EVENT_TIME DESC
+		LIMIT 5
+	</select>
+
+	<select id="getNoticeContents" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+			DATE_FORMAT(EVENT_TIME, '%Y-%m-%d %T') AS EVENT_TIME,
+			USER_ID,
+			NOTICE_TITLE,
+			NOTICE_DESC,
+			FILE_NAME,
+			FILE_PATH
+		FROM
+			TB_SM_NOTICE_BOARD AS TSNB
+		WHERE
+			NOTICE_TITLE = #{title}
+			AND USER_ID = #{userId}
+			AND TSNB.EVENT_TIME = #{eventTime}
+	</select>
+
+	<select id="getMenuList" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			TSM.MENU_ID                     AS MENU_ID,
+			TSM.MENU_NAME                   AS MENU_NAME,
+			TSM.MENU_DESC                   AS MENU_DESC,
+			TSM.PARENT_ID                   AS PARENT_ID,
+			TSM.LEVEL                       AS LEVEL,
+			TSM.MENU_SEQ                    AS MENU_SEQ,
+			TSM.CHILD_YN                    AS CHILD_YN,
+			TSM.MENU_URI                    AS MENU_URI,
+			TSM.MENU_ICON                   AS MENU_ICON,
+			(SELECT ROLL_NAME
+			 FROM TB_SE_ROLL
+			 WHERE TSM.MENU_AUTH = ROLL_ID) AS MENU_AUTH_NM
+		FROM
+			TB_SE_MENU TSM,
+			TB_SE_USER AS TSU
+		WHERE
+			TSU.USER_ID = #{userId}
+			AND TSU.AUTH <![CDATA[<=]]> TSM.MENU_AUTH
+			AND TSM.SHOW_YN = 'Y'
+		ORDER BY PARENT_ID, LEVEL, MENU_SEQ
+	</select>
+	
+	<select id="permitIpCnt" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT 
+			COUNT(1) AS CNT
+		FROM
+			TB_SE_PERMIT_IP
+		WHERE
+			FROM_IP <![CDATA[<=]]> INET_ATON(#{user_ip})
+		    AND INET_ATON(#{user_ip}) <![CDATA[<=]]> TO_IP
+	</select>
+</mapper>

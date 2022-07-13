@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.SystemCollectManagerDAO">
+	<update id="updateTHD" parameterType="java.util.HashMap">
+			UPDATE TB_SM_COLLECT_THD
+			SET 
+				COLLECT_THD  = #{colThd},
+				MODIFY_USER_ID = #{userId}	
+			WHERE 
+				COLLECT_TYPE = #{colType}		
+	</update>
+
+	<select id="getTHD" resultType="java.util.HashMap">
+		SELECT COLLECT_TYPE,
+			   COLLECT_THD
+		FROM TB_SM_COLLECT_THD
+	</select>
+	
+	<select id="getColData" parameterType="string" resultType="java.util.HashMap">
+		SELECT 
+			B.EQUIP_NAME AS SYSTEM_ID,
+			DATA_NAME,
+			DATA_TYPE,
+			COLLECT_DATE,
+			COLLECT_TYPE
+		FROM
+			TB_SM_COLLECT_LOG C
+			LEFT OUTER JOIN
+            (SELECT EQUIP_TYPE,EQUIP_NAME FROM VW_SYSTEM GROUP BY EQUIP_TYPE) AS B
+            ON C.EQUIP_TYPE = B.EQUIP_TYPE
+		WHERE
+			DATA_TYPE != 3
+	<if test="value != null">
+		AND  DATA_TYPE = #{value}
+	</if>
+		ORDER BY COLLECT_DATE DESC
+	</select>
+	
+	<select id="getColFailureData" resultType="java.util.HashMap">
+		SELECT 
+			B.EQUIP_NAME AS SYSTEM_ID,
+			DATA_NAME,
+			DATA_TYPE,
+			COLLECT_DATE,
+			COLLECT_TYPE
+		FROM
+			TB_SM_COLLECT_LOG C
+			LEFT OUTER JOIN
+            (SELECT EQUIP_TYPE,EQUIP_NAME FROM VW_SYSTEM GROUP BY EQUIP_TYPE) AS B
+            ON C.EQUIP_TYPE = B.EQUIP_TYPE
+		WHERE
+			DATA_TYPE = 3
+		ORDER BY COLLECT_DATE DESC
+	</select>
+</mapper>

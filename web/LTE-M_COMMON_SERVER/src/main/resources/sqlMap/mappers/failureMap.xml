@@ -1,0 +1,1527 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.FailureDAO">
+
+	<!--<select id="selectFailureData" parameterType="java.util.HashMap" resultType="java.util.HashMap">-->
+		<!--SELECT ALARM_CODE, EQUIP_TYPE, SEVERITY, UPDATE_COUNT, PROBABLE_CAUSE, FDN, EVENT_TIME, UPDATE_TIME, SYSTEM_ID, al.TEAM_ID, SYSTEM_NAME, tm.TEAM_NAME -->
+		<!--FROM TB_FM_ALARM_CUR al left join TB_CO_TEAM tm-->
+		<!--ON al.TEAM_ID = tm.TEAM_ID-->
+		<!--WHERE ALARM_ID = #{alarmId}-->
+	<!--</select>-->
+
+	<select id="selectFailureData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			ALARM_CODE,
+			AL.EQUIP_TYPE,
+			EQUIP_NAME,
+			SEVERITY,
+			CASE SEVERITY
+				WHEN 1 THEN 'CRITICAL'
+				WHEN 2 THEN 'MAJOR'
+				WHEN 3 THEN 'MINOR'
+				ELSE 'NORMAL'
+				END AS SEVERITY_TXT,
+			UPDATE_COUNT,
+			PROBABLE_CAUSE,
+			FDN,
+			EVENT_TIME,
+			IFNULL(UPDATE_TIME, '') AS UPDATE_TIME,
+			SYSTEM_ID,
+			AL.TEAM_ID,
+			SYSTEM_NAME,
+			TM.TEAM_NAME,
+			<if test='majorFailure != null and majorFailure != ""'>
+			#{majorFailure} AS MAJOR_FAILURE,
+			</if>
+			ROP_MESSAGE
+		FROM
+			TB_FM_ALARM_CUR AS AL
+			LEFT JOIN TB_CO_TEAM AS TM
+				ON AL.TEAM_ID = TM.TEAM_ID
+			LEFT JOIN TB_CO_EQUIP AS TCE
+				ON AL.EQUIP_TYPE = TCE.EQUIP_TYPE
+		WHERE ALARM_ID = #{alarmId}
+	</select>
+
+	<select id="selectMajorFailureData" parameterType="java.lang.String" resultType="java.util.HashMap">
+		<!-- 등급:SEVERITY / 서비스:없앰 / 중요고장명:PROBABLE_CAUSE / FDN:발생위치  -->
+		SELECT
+			SEVERITY, ALARM_CODE, eq.EQUIP_NAME, SYSTEM_NAME, PROBABLE_CAUSE, IFNULL(EVENT_TIME,'') AS EVENT_TIME, FDN
+			,IFNULL(UPDATE_TIME,'') AS UPDATE_TIME, UPDATE_COUNT,IFNULL(RECOVER_TIME,'') AS RECOVER_TIME, RECOVER_ID, IFNULL(INSERT_TIME,'') AS INSERT_TIME
+			, SYSTEM_ID, al.TEAM_ID, tm.TEAM_NAME, al.ALARM_ID , al.EQUIP_TYPE
+		FROM
+			TB_FM_ALARM_CUR al
+			left join TB_CO_TEAM tm
+			ON al.TEAM_ID = tm.TEAM_ID
+			left join TB_CO_EQUIP eq
+			ON al.EQUIP_TYPE = eq.EQUIP_TYPE
+		WHERE
+			ALARM_CODE IN(${value})
+		ORDER BY
+			EVENT_TIME desc, ALARM_CODE, al.EQUIP_TYPE, SEVERITY
+	</select>
+
+	<select id="selectActionCaseData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT ac.ALARM_CODE, ac.ALARM_TYPE, eq.EQUIP_NAME, ac.SYSTEM_ID, ac.ACTION_CASE, ac.INSERT_USER, ac.INSERT_DATE
+		FROM TB_FM_ALARM_ACTION_CASE ac
+		LEFT JOIN TB_CO_EQUIP eq
+			ON ac.EQUIP_TYPE = eq.EQUIP_TYPE
+		WHERE ac.ALARM_CODE = #{ALARM_CODE}
+			AND ac.SYSTEM_ID = #{SYSTEM_ID}
+			AND ac.EQUIP_TYPE = #{EQUIP_TYPE}
+	</select>
+
+	<select id="selectUnrecoveredData" resultType="java.util.HashMap">
+		SELECT ac.ALARM_CODE, ac.SEVERITY, eq.EQUIP_NAME, ac.SYSTEM_NAME, MIN(ac.EVENT_TIME) AS EVENT_TIME, ac.FDN, ac.PROBABLE_CAUSE
+		FROM TB_FM_ALARM_CUR ac
+		left join TB_CO_EQUIP eq
+		ON ac.EQUIP_TYPE = eq.EQUIP_TYPE
+		WHERE
+			ALARM_STATE = 1
+			AND ALARM_TYPE = 1
+			<if test='SETFLAG == "Y"'>
+			AND (
+				<if test='USE_FLAG_CRITICAL == "Y"'>
+					(ac.SEVERITY = 1 AND ac.EVENT_TIME <![CDATA[<=]]> DATE_FORMAT(now(), '%Y%m%d%H%i%s') - INTERVAL ${CRITICAL_TIME} MINUTE)
+				</if>
+				<if test='USE_FLAG_MAJOR == "Y"'>
+					OR (ac.SEVERITY = 2 AND ac.EVENT_TIME <![CDATA[<=]]> DATE_FORMAT(now(), '%Y%m%d%H%i%s') - INTERVAL ${MAJOR_TIME} MINUTE)
+				</if>
+				<if test='USE_FLAG_MINOR == "Y"'>
+					OR (ac.SEVERITY = 3 AND ac.EVENT_TIME <![CDATA[<=]]> DATE_FORMAT(now(), '%Y%m%d%H%i%s') - INTERVAL ${MINOR_TIME} MINUTE)
+				</if>
+			)
+			</if>
+		GROUP BY ac.ALARM_CODE, ac.SEVERITY, eq.EQUIP_NAME, ac.SYSTEM_NAME, ac.FDN, ac.PROBABLE_CAUSE
+		ORDER BY ac.EVENT_TIME
+	</select>
+
+	<select id="selectRopMsgData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT ROP_MESSAGE
+		FROM TB_FM_ALARM_CUR
+		WHERE ALARM_ID = #{alarmId}
+	</select>
+
+
+	<delete id="deleteAlarmGradeFilter" parameterType="java.lang.String" >
+		DELETE
+		FROM TB_FM_ALARM_FILTER_SEVERITY
+		WHERE USER_ID = #{userId}
+	</delete>
+
+	<insert id="insertAlarmGradeFilter" parameterType="java.util.HashMap">
+		INSERT INTO TB_FM_ALARM_FILTER_SEVERITY(USER_ID, EQUIP_TYPE, SEVERITY, UPDATE_DATE)
+		VALUES (#{USER_ID}, #{EQUIP_TYPE}, #{SEVERITY}, now())
+	</insert>
+
+	<select id="selectAlarmGradeFilter" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT EQUIP_TYPE, SEVERITY
+		FROM TB_FM_ALARM_FILTER_SEVERITY
+		WHERE USER_ID = #{userId}
+	</select>
+
+	<select id="selectEquipAct" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT EQUIP_TYPE, EQUIP_NAME FROM TB_CO_EQUIP WHERE EQUIP_FM ='Y'
+	</select>
+
+	<select id="selectAlarmCodeTree" resultType="java.util.HashMap">
+		SELECT DISTINCT 
+		if(eq.EQUIP_DESC = 'EMS' ,'APP', eq.EQUIP_DESC) EQUIP_DESC 
+		, eq.EQUIP_TYPE, eq.EQUIP_NAME, cd.ALARM_CODE, cd.PROBABLE_CAUSE
+		FROM (SELECT * FROM TB_CO_EQUIP WHERE EQUIP_FM = 'Y') eq left join TB_FM_ALARM_CODE cd
+		ON eq.EQUIP_TYPE = cd.EQUIP_TYPE
+		WHERE 1=1 
+		AND cd.ALARM_CODE is not null
+		AND cd.ALARM_CODE <![CDATA[<>]]> '-'
+		AND EQUIP_DESC IN ('EPC','ACCESS','APP','EMS')
+		ORDER BY eq.EQUIP_DESC, eq.EQUIP_TYPE, cd.ALARM_CODE
+	</select>
+
+	<delete id="deleteAlarmCodeFilter" parameterType="java.lang.String" >
+		DELETE
+		FROM TB_FM_ALARM_FILTER_CODE
+		WHERE USER_ID = #{userId}
+	</delete>
+
+	<insert id="insertAlarmCodeFilter" parameterType="java.util.HashMap">
+		INSERT INTO TB_FM_ALARM_FILTER_CODE(USER_ID, EQUIP_TYPE, ALARM_CODE, VIEW_FLAG, UPDATE_DATE)
+		VALUES (#{USER_ID}, #{EQUIP_TYPE}, #{ALARM_CODE}, #{VIEW_FLAG}, now())
+	</insert>
+
+	<select id="selectAlarmCodeFilter" resultType="java.util.HashMap">
+		SELECT eq.EQUIP_DESC, eq.EQUIP_NAME, cd.EQUIP_TYPE, cd.ALARM_CODE, cd.VIEW_FLAG, ac.PROBABLE_CAUSE
+		FROM TB_FM_ALARM_FILTER_CODE cd
+		LEFT JOIN (SELECT * FROM TB_CO_EQUIP WHERE EQUIP_FM = 'Y') eq
+		ON cd.EQUIP_TYPE = eq.EQUIP_TYPE
+		LEFT JOIN TB_FM_ALARM_CODE ac
+		ON cd.EQUIP_TYPE = ac.EQUIP_TYPE
+		AND cd.ALARM_CODE = ac.ALARM_CODE 
+		WHERE USER_ID = #{userId}
+	</select>
+
+	<select id="selectSystemTree" resultType="java.util.HashMap">
+		<!-- 노선추가안한 과거쿼리 
+		SELECT eq.EQUIP_DESC, eq.EQUIP_NAME, eq.EQUIP_TYPE, vs.SYSTEM_ID, vs.SYSTEM_NAME
+		FROM (SELECT * FROM TB_CO_EQUIP WHERE EQUIP_FM = 'Y') eq
+		LEFT JOIN VW_SYSTEM vs
+		ON eq.EQUIP_TYPE = vs.EQUIP_TYPE
+		WHERE eq.EQUIP_TYPE <![CDATA[<>]]> 0
+		AND eq.EQUIP_NAME <![CDATA[<>]]> 'RU'
+		AND EQUIP_DESC IN ('EPC','ACCESS','APP')
+		ORDER BY eq.EQUIP_DESC, eq.EQUIP_TYPE, vs.SYSTEM_ID -->
+		
+		select 
+		if(q2.EQUIP_DESC = 'EMS' ,'APP', q2.EQUIP_DESC) EQUIP_DESC
+		, q2.EQUIP_NAME
+		, q2.EQUIP_TYPE
+		, q2.SYSTEM_ID
+		, q2.SYSTEM_NAME
+		, q2.LINE_ID 
+		, TCL.LINE_NAME
+		from 
+		(
+		select
+		    q1.EQUIP_DESC AS EQUIP_DESC
+		    , q1.EQUIP_NAME AS EQUIP_NAME
+		    , q1.EQUIP_TYPE AS EQUIP_TYPE
+		    , q1.SYSTEM_ID AS SYSTEM_ID
+		    , q1.SYSTEM_NAME AS SYSTEM_NAME
+		    , SUBSTRING_INDEX (SUBSTRING_INDEX(q1.LINE_ID,',',numbers.n),',',-1) LINE_ID 
+			from
+			(select  1 n union  all  select 2  
+			) numbers
+			INNER  JOIN
+			( 
+			  SELECT eq.EQUIP_DESC, eq.EQUIP_NAME, eq.EQUIP_TYPE, vs.SYSTEM_ID, vs.SYSTEM_NAME, EQUIPLINE.LINE_ID
+					FROM (SELECT * FROM TB_CO_EQUIP WHERE EQUIP_FM = 'Y') eq
+					LEFT JOIN VW_SYSTEM vs
+					ON eq.EQUIP_TYPE = vs.EQUIP_TYPE
+			    LEFT OUTER JOIN 
+		  				(
+		  					SELECT
+								TB_CO_MME.MME_ID AS SYSTEM_ID
+								,'1' AS EQUIP_TYPE
+								,TB_CO_MME.STATION_ID AS STATION_ID 
+								,TB_CO_STATION.STATION_NAME AS STATION_NAME
+								,TB_CO_STATION.LINE_ID AS LINE_ID
+							FROM
+								TB_CO_MME
+									LEFT JOIN
+								TB_CO_STATION
+									ON TB_CO_MME.STATION_ID = TB_CO_STATION.STATION_ID
+					        
+							UNION ALL
+					    
+							SELECT
+								TB_CO_PGW.PGW_ID AS SYSTEM_ID
+								,'4' AS EQUIP_TYPE
+								,TB_CO_PGW.STATION_ID AS STATION_ID
+								,TB_CO_STATION.STATION_NAME AS STATION_NAME
+								,TB_CO_STATION.LINE_ID AS LINE_ID
+							FROM
+								TB_CO_PGW
+									LEFT JOIN
+								TB_CO_STATION
+									ON TB_CO_PGW.STATION_ID = TB_CO_STATION.STATION_ID
+					        
+							UNION ALL 
+					    
+							SELECT
+								TB_CO_PCRF.PCRF_ID AS SYSTEM_ID
+								,'7' AS EQUIP_TYPE
+								,TB_CO_STATION.STATION_ID AS STATION_ID
+								,TB_CO_STATION.STATION_NAME AS STATION_NAME
+								,TB_CO_STATION.LINE_ID AS LINE_ID
+							FROM
+								TB_CO_PCRF
+									LEFT JOIN
+								TB_CO_STATION
+									ON TB_CO_PCRF.STATION_ID = TB_CO_STATION.STATION_ID
+					        
+					    UNION ALL    
+					    
+					    SELECT
+							TCSE.SYSTEM_ID AS SYSTEM_ID
+					      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE
+					      	,TCS.STATION_ID AS STATION_ID
+							,TCS.STATION_NAME AS STATION_NAME
+							,TCS.LINE_ID AS LINE_ID
+							FROM
+							  TB_CO_SYSTEM_ETC AS TCSE
+							  LEFT JOIN TB_CO_STATION AS TCS
+							  ON TCSE.LAREA_ID = TCS.STATION_ID
+					      
+							UNION ALL
+							
+							SELECT
+								TCE.EMS_ID AS SYSTEM_ID
+					      ,TCE.EQUIP_TYPE AS EQUIP_TYPE
+								,TCS.STATION_ID AS STATION_ID
+								,TCS.STATION_NAME AS STATION_NAME
+								,TCS.LINE_ID AS LINE_ID
+							FROM
+								TB_CO_EMS TCE
+								LEFT JOIN TB_CO_STATION AS TCS
+								ON TCE.STATION_ID = TCS.STATION_ID
+					
+					    UNION ALL
+					    
+					    SELECT
+					      TCD.DU_ID AS SYSTEM_ID
+					      ,'2' AS EQUIP_TYPE
+								,TCS.STATION_ID AS STATION_ID
+								,TCS.STATION_NAME AS STATION_NAME
+								,TCS.LINE_ID AS LINE_ID
+								
+							FROM
+								TB_CO_DU TCD
+								LEFT JOIN TB_CO_STATION AS TCS
+								ON TCD.STATION_ID = TCS.STATION_ID
+    
+		  				) EQUIPLINE 
+		  				ON vs.SYSTEM_ID = EQUIPLINE.SYSTEM_ID
+		  				AND vs.EQUIP_TYPE = EQUIPLINE.EQUIP_TYPE 
+		WHERE eq.EQUIP_TYPE  <![CDATA[<>]]>  0 
+		AND eq.EQUIP_NAME  <![CDATA[<>]]>  'RU'
+		AND EQUIP_DESC IN ('EPC','ACCESS','APP','EMS')
+		ORDER BY eq.EQUIP_DESC, eq.EQUIP_TYPE, vs.SYSTEM_ID
+	    ) q1
+	    on CHAR_LENGTH ( q1.LINE_ID ) 
+	      - CHAR_LENGTH ( REPLACE ( q1.LINE_ID ,  ',' ,  '' ))<![CDATA[>=]]> numbers.n-1 
+      ) q2  
+      LEFT JOIN TB_CO_LINE AS TCL
+      ON q2.LINE_ID = TCL.LINE_ID
+      ORDER BY q2.LINE_ID
+	</select>
+
+	<delete id="deleteSystemFilter" parameterType="java.lang.String" >
+		DELETE
+		FROM TB_FM_ALARM_FILTER_SYSTEM
+		WHERE USER_ID = #{userId}
+	</delete>
+
+	<insert id="insertSystemFilter" parameterType="java.util.HashMap">
+		<!-- INSERT INTO TB_FM_ALARM_FILTER_SYSTEM(USER_ID, EQUIP_TYPE, SYSTEM_ID, UPDATE_DATE)
+			SELECT DISTINCT #{USER_ID}, eq.EQUIP_TYPE, al.SYSTEM_ID, now()
+			FROM TB_CO_EQUIP eq left join TB_FM_ALARM al
+			ON eq.EQUIP_TYPE = al.EQUIP_TYPE
+			WHERE eq.EQUIP_TYPE = #{EQUIP_TYPE}
+			AND al.SYSTEM_ID is not NULL -->
+		INSERT INTO TB_FM_ALARM_FILTER_SYSTEM(USER_ID, EQUIP_TYPE, SYSTEM_ID, UPDATE_DATE)
+		VALUES (#{USER_ID}, #{EQUIP_TYPE}, #{SYSTEM_ID}, now())
+	</insert>
+
+	<select id="selectSystemFilter" resultType="java.util.HashMap">
+		SELECT st.EQUIP_TYPE, vs.EQUIP_NAME, vs.SYSTEM_ID, vs.SYSTEM_NAME
+		FROM TB_FM_ALARM_FILTER_SYSTEM st
+		LEFT JOIN VW_SYSTEM vs
+		ON st.EQUIP_TYPE = vs.EQUIP_TYPE
+		AND st.SYSTEM_ID = vs.SYSTEM_ID
+		WHERE st.USER_ID = #{userId}
+	</select>
+
+
+	<select id="selectMajorAlarmTree" resultType="java.util.HashMap">
+		SELECT DISTINCT eq.EQUIP_DESC, eq.EQUIP_TYPE, eq.EQUIP_NAME, cd.ALARM_CODE, cd.PROBABLE_CAUSE
+		FROM TB_CO_EQUIP eq
+		LEFT JOIN TB_FM_ALARM_CODE cd
+		ON eq.EQUIP_TYPE = cd.EQUIP_TYPE
+		WHERE 1=1
+		AND cd.ALARM_CODE is not null
+		AND cd.ALARM_CODE <![CDATA[<>]]> '-'
+		AND EQUIP_DESC IN ('EPC','ACCESS','APP')
+		ORDER BY eq.EQUIP_DESC, eq.EQUIP_TYPE, cd.ALARM_CODE
+	</select>
+
+	<delete id="deleteMajorAlarmFilter" parameterType="java.lang.String" >
+		DELETE
+		FROM TB_FM_ALARM_FILTER_CODE_KPI
+		WHERE USER_ID = #{userId}
+	</delete>
+
+	<insert id="insertMajorAlarmFilter" parameterType="java.util.HashMap">
+		INSERT INTO TB_FM_ALARM_FILTER_CODE_KPI(USER_ID, EQUIP_TYPE, ALARM_CODE, UPDATE_DATE)
+		VALUES (#{USER_ID}, #{EQUIP_TYPE}, #{ALARM_CODE}, now())
+	</insert>
+  
+	<select id="selectMajorAlarmFilter" resultType="java.util.HashMap">
+		SELECT 
+			 IFNULL(eq.EQUIP_DESC, '') as EQUIP_DESC,  
+			 IFNULL(eq.EQUIP_NAME, '') as EQUIP_NAME, 
+			 IFNULL(cd.EQUIP_TYPE, '') as EQUIP_TYPE,  
+			 IFNULL(cd.ALARM_CODE, '') as ALARM_CODE,  
+			 IFNULL(ac.PROBABLE_CAUSE, '') as PROBABLE_CAUSE  
+		FROM TB_FM_ALARM_FILTER_CODE_KPI cd
+		LEFT JOIN TB_CO_EQUIP eq
+		ON cd.EQUIP_TYPE = eq.EQUIP_TYPE  
+		LEFT JOIN TB_FM_ALARM_CODE ac
+		ON cd.EQUIP_TYPE = ac.EQUIP_TYPE
+		AND cd.ALARM_CODE = ac.ALARM_CODE  
+		WHERE USER_ID = #{userId}
+	</select>
+
+	<select id="selectStationTree" resultType="java.util.HashMap">
+		<!-- select 
+			t1.STATION_ID AS STATION_ID
+			, t1.STATION_NAME AS STATION_NAME
+			, t1.LINE_ID AS LINE_ID
+			, t1.LINE_NAME AS LINE_NAME
+			, t2.LINE_ID AS LINE_ID_ORG
+			from
+			(select 
+				  q1.STATION_ID AS STATION_ID
+				  ,q1.STATION_NAME AS STATION_NAME
+				  ,q1.LINE_ID AS LINE_ID
+				  ,q2.LINE_NAME AS LINE_NAME
+				FROM 
+				
+					 (select
+				   STATION_ID
+				   , STATION_NAME
+				   ,SUBSTRING_INDEX (SUBSTRING_INDEX(TB_CO_STATION.LINE_ID,',',numbers.n),',',-1) LINE_ID
+				from 
+		 			(select  1 n union  all  select 2  
+				    ) numbers INNER  JOIN TB_CO_STATION
+				    on CHAR_LENGTH ( TB_CO_STATION.LINE_ID ) 
+				      - CHAR_LENGTH ( REPLACE ( TB_CO_STATION.LINE_ID ,  ',' ,  '' ))>= numbers . n-1
+				) AS q1
+			LEFT OUTER JOIN TB_CO_LINE AS q2
+		  	ON q1.LINE_ID = q2.LINE_ID) AS t1
+		LEFT OUTER JOIN TB_CO_STATION AS t2
+		ON t1.STATION_NAME = t2.STATION_NAME -->
+		SELECT
+			T1.STATION_ID     AS STATION_ID
+     	  , T1.STATION_NUM  AS STATION_NUM
+		  , T1.STATION_NAME AS STATION_NAME
+		  , T1.LINE_ID      AS LINE_ID
+		  , T2.LINE_NAME    AS LINE_NAME
+		FROM TB_CO_STATION  AS T1
+		LEFT JOIN TB_CO_LINE AS T2
+			ON T1.LINE_ID = T2.LINE_ID
+		ORDER BY T1.STATION_NUM
+	</select>
+
+	<delete id="deleteStationFilter" parameterType="java.lang.String" >
+		DELETE
+		FROM TB_FM_STATION_FILTER
+		WHERE USER_ID = #{userId}
+	</delete>
+
+	<insert id="insertStationFilter" parameterType="java.util.HashMap">
+		INSERT INTO TB_FM_STATION_FILTER(USER_ID, STATION_ID, UPDATE_DATE)
+		VALUES (#{USER_ID}, #{STATION_ID}, now())
+	</insert>
+
+	<select id="selectStationFilter" resultType="java.util.HashMap">
+		SELECT 
+			st.STATION_ID, sts.STATION_NAME, sts.LINE_ID
+		FROM 
+			TB_FM_STATION_FILTER st
+			LEFT JOIN TB_CO_STATION sts
+			ON st.STATION_ID = sts.STATION_ID
+		WHERE 
+			USER_ID = #{userId}
+	</select>
+
+	<select id="selectFailureSpecAlarm" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			CASE WHEN TFA.SEVERITY = 1 THEN 'CRITICAL' WHEN TFA.SEVERITY = 2 THEN 'MAJOR' WHEN TFA.SEVERITY = 3 THEN 'MINOR' ELSE 'NOMAL' END AS SEVERITY,
+			TFA.SEVERITY AS SEVERITY_NO,
+			TFA.ALARM_CODE,
+			TFA.PROBABLE_CAUSE,
+			 CASE WHEN TFA.ALARM_STATE = 0 THEN '해제' WHEN TFA.ALARM_STATE = 1 THEN '발생' WHEN TFA.ALARM_STATE = 2 THEN '인지' WHEN TFA.ALARM_STATE = 3 THEN '운영자해제' END AS ALARM_STATE,
+			TCE.EQUIP_NAME,
+			TFA.SYSTEM_ID,
+			TFA.SYSTEM_NAME,
+			DATE_FORMAT(TFA.EVENT_TIME, '%Y-%m-%d %H:%i:%s') AS EVENT_TIME,
+			TFA.FDN,
+			TFA.ROP_MESSAGE,
+			TFA.ALARM_TYPE
+		FROM
+			TB_FM_ALARM AS TFA
+			LEFT JOIN TB_CO_EQUIP AS TCE
+			ON TFA.EQUIP_TYPE = TCE.EQUIP_TYPE
+		WHERE
+			TFA.EVENT_TIME
+					BETWEEN DATE_FORMAT(#{fromTime}, '%Y-%m-%d %H:%i')
+					AND DATE_FORMAT(#{toTime}, '%Y-%m-%d %H:%i')
+			AND CONCAT(TFA.SYSTEM_ID, '-', TFA.EQUIP_TYPE) IN (${systemIds})
+			<!-- AND TFA.SEVERITY IN ('1', '2', '3') -->
+			<if test='severity != "0"'>
+				AND TFA.SEVERITY = #{severity}
+			</if>
+			<if test='faultAlarmFilter != null and faultAlarmFilter.size() > 0'>
+				AND TFA.ALARM_TYPE IN (
+					<foreach collection="faultAlarmFilter" item="val" separator=",">
+						#{val}
+					</foreach>
+				)
+			</if>
+		ORDER BY
+		<if test = 'sortOption.size() > 0'>
+			<foreach collection="sortOption" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test = 'sortOption.size() == 0'>
+			TFA.EVENT_TIME DESC, TFA.SEVERITY ASC
+		</if>
+	</select>
+
+	<select id="selectFailureSpecGraphByDatetime" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+		<if test="isDay == true">
+			CONCAT(DATE_FORMAT(TFA.EVENT_TIME, '%Y%m%d%H'), '00') AS EVENT_TIME
+		</if>
+		<if test="isDay == false">
+			DATE_FORMAT(TFA.EVENT_TIME, '%Y%m%d%H%i') AS EVENT_TIME
+		</if>
+			, sum(CASE WHEN TFA.SEVERITY = 1 THEN 1 ELSE 0 END) AS CRITICAL
+			, sum(CASE WHEN TFA.SEVERITY = 2 THEN 1 ELSE 0 END) AS MAJOR
+			, sum(CASE WHEN TFA.SEVERITY = 3 THEN 1 ELSE 0 END) AS MINOR
+			, sum(CASE WHEN TFA.SEVERITY > 3 THEN 1 ELSE 0 END) AS NORMAL
+		FROM TB_FM_ALARM AS TFA
+		WHERE
+			TFA.EVENT_TIME
+					BETWEEN DATE_FORMAT(#{fromTime}, '%Y-%m-%d %H:%i')
+					AND DATE_FORMAT(#{toTime}, '%Y-%m-%d %H:%i')
+			AND CONCAT(SYSTEM_ID, '-', EQUIP_TYPE) IN (${systemIds})
+			AND ALARM_STATE = 1
+			<if test='severity != "0"'>
+				AND TFA.SEVERITY = #{severity}
+			</if>
+			<if test='faultAlarmFilter != null and faultAlarmFilter.size() > 0'>
+				AND TFA.ALARM_TYPE IN (
+					<foreach collection="faultAlarmFilter" item="val" separator=",">
+						#{val}
+					</foreach>
+				)
+			</if>
+		<if test="isDay == true">
+			GROUP BY DATE_FORMAT(TFA.EVENT_TIME, '%Y%m%d%H')
+		</if>
+		<if test="isDay == false">
+			GROUP BY DATE_FORMAT(TFA.EVENT_TIME, '%Y%m%d%H%i')
+		</if>
+		ORDER BY TFA.EVENT_TIME
+	</select>
+
+	<select id="selectFailureSpecGraphByAlarmcode" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			ALARM_CODE, COUNT(1) AS CNT
+		FROM TB_FM_ALARM AS TFA
+		WHERE
+			TFA.EVENT_TIME
+					BETWEEN DATE_FORMAT(#{fromTime}, '%Y-%m-%d %H:%i')
+					AND DATE_FORMAT(#{toTime}, '%Y-%m-%d %H:%i')
+		AND CONCAT(SYSTEM_ID, '-', EQUIP_TYPE) IN (${systemIds})
+		AND ALARM_STATE = 1
+		<if test='severity != "0"'>
+			AND TFA.SEVERITY = #{severity}
+		</if>
+		<if test='faultAlarmFilter != null and faultAlarmFilter.size() > 0'>
+			AND TFA.ALARM_TYPE IN (
+				<foreach collection="faultAlarmFilter" item="val" separator=",">
+					#{val}
+				</foreach>
+			)
+		</if>
+		GROUP BY ALARM_CODE
+		ORDER BY ALARM_CODE
+	</select>
+
+	<select id="selectSearchBunchAlarms" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+		  DISTINCT TFAB.EQUIP_TYPE,
+		  IF(TCE.EQUIP_NAME = 'PGW', 'GW', TCE.EQUIP_NAME) AS EQUIP_NAME,
+		  TFAB.BUNCH_CODE,
+		  TFAB.ALARM_CODE,
+		  TFA.PROBABLE_CAUSE
+		FROM
+			TB_FM_ALARM_BUNCH TFAB
+			LEFT JOIN TB_FM_ALARM_CODE AS TFA
+			  ON TFAB.ALARM_CODE = TFA.ALARM_CODE
+			  AND TFAB.EQUIP_TYPE = TFA.EQUIP_TYPE
+			LEFT JOIN TB_CO_EQUIP AS TCE
+			  ON TFAB.EQUIP_TYPE = TCE.EQUIP_TYPE
+		WHERE TFAB.EQUIP_TYPE = #{equipType}
+		<choose>
+			<when test='searchAlarmValue != null and searchAlarmValue != ""'>
+				<if test='searchAlarmName == "code"'>
+					AND TFA.ALARM_CODE = #{searchAlarmValue}
+				</if>
+				<if test='searchAlarmName == "cause"'>
+					AND TFA.PROBABLE_CAUSE = #{searchAlarmValue}
+				</if>
+			</when>
+		</choose>
+		ORDER BY TFAB.BUNCH_CODE, TFAB.ALARM_CODE, TFA.PROBABLE_CAUSE
+	</select>
+
+	<select id="selectFailureBunchSpecAlarm" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+		  CASE WHEN TFA.SEVERITY = 1 THEN 'CRITICAL' WHEN TFA.SEVERITY = 2 THEN 'MAJOR' WHEN TFA.SEVERITY = 3 THEN 'MINOR' ELSE 'NOMAL' END AS SEVERITY,
+		  TFA.SEVERITY AS SEVERITY_NO,
+		  TFAB.BUNCH_CODE,
+		  TFA.ALARM_CODE,
+		  TFA.PROBABLE_CAUSE,
+		  CASE WHEN TFA.ALARM_STATE = 0 THEN '해제' WHEN TFA.ALARM_STATE = 1 THEN '발생' WHEN TFA.ALARM_STATE = 2 THEN '인지' WHEN TFA.ALARM_STATE = 3 THEN '운영자해제' END AS ALARM_STATE,
+		  TCE.EQUIP_NAME,
+		  TFA.FDN,
+		  TFA.SYSTEM_ID,
+		  TFA.SYSTEM_NAME,
+		  DATE_FORMAT(TFA.EVENT_TIME, '%Y-%m-%d %H:%i:%s') AS EVENT_TIME,
+		  TFA.ROP_MESSAGE,
+		  TFA.EQUIP_TYPE
+		FROM
+			TB_FM_ALARM AS TFA
+			RIGHT JOIN TB_FM_ALARM_BUNCH TFAB
+				ON TFA.ALARM_CODE = TFAB.ALARM_CODE
+				AND TFA.EQUIP_TYPE = TFAB.EQUIP_TYPE
+			LEFT JOIN TB_CO_EQUIP TCE
+				ON TFAB.EQUIP_TYPE = TCE.EQUIP_TYPE
+		WHERE
+			TFA.EVENT_TIME
+				BETWEEN DATE_FORMAT(#{fromTime}, '%Y-%m-%d %H:%i:%s')
+				AND DATE_FORMAT(#{toTime}, '%Y-%m-%d %H:%i:%s')
+			AND CONCAT(TFA.SYSTEM_ID, '-', TFA.EQUIP_TYPE) IN (${systemIds})
+			<if test='bunchAlarms != null and bunchAlarms != ""'>
+			AND CONCAT(TFAB.BUNCH_CODE, '-', TFA.ALARM_CODE,'-', TFA.EQUIP_TYPE) IN (${bunchAlarms})
+			</if>
+			<if test='severity != "0"'>
+				AND TFA.SEVERITY = #{severity}
+			</if>
+		ORDER BY
+		<if test = 'sortOption.size() > 0'>
+			<foreach collection="sortOption" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test = 'sortOption.size() == 0'>
+			TFA.EVENT_TIME DESC
+		</if>
+	</select>
+
+	<select id="selectFailureBunchSpecGraphByDatetime" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			DATE_FORMAT(TFA.EVENT_TIME, '%Y%m%d%H%i') AS EVENT_TIME
+			, sum(CASE WHEN TFA.SEVERITY = 1 THEN 1 ELSE 0 END) AS CRITICAL
+			, sum(CASE WHEN TFA.SEVERITY = 2 THEN 1 ELSE 0 END) AS MAJOR
+			, sum(CASE WHEN TFA.SEVERITY = 3 THEN 1 ELSE 0 END) AS MINOR
+		FROM TB_FM_ALARM AS TFA
+			 RIGHT JOIN TB_FM_ALARM_BUNCH TFAB
+				ON TFA.ALARM_CODE = TFAB.ALARM_CODE
+				AND TFA.EQUIP_TYPE = TFAB.EQUIP_TYPE
+		WHERE
+			TFA.EVENT_TIME
+					BETWEEN DATE_FORMAT(#{fromTime}, '%Y-%m-%d %H:%i:%s')
+					AND DATE_FORMAT(#{toTime}, '%Y-%m-%d %H:%i:%s')
+			AND CONCAT(TFA.SYSTEM_ID, '-', TFA.EQUIP_TYPE) IN (${systemIds})
+			<if test='bunchAlarms != null and bunchAlarms != ""'>
+				AND CONCAT(TFAB.BUNCH_CODE, '-', TFA.ALARM_CODE,'-', TFA.EQUIP_TYPE) IN (${bunchAlarms})
+			</if>
+			<if test='severity != "0"'>
+				AND TFA.SEVERITY = #{severity}
+			</if>
+		GROUP BY DATE_FORMAT(TFA.EVENT_TIME, '%Y%m%d%H%i')
+		ORDER BY TFA.EVENT_TIME
+	</select>
+
+	<select id="selectFailureBunchSpecGraphByAlarmcode" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			TFAB.BUNCH_CODE, COUNT(1) AS CNT
+		FROM TB_FM_ALARM AS TFA
+			 RIGHT JOIN TB_FM_ALARM_BUNCH TFAB
+				ON TFA.ALARM_CODE = TFAB.ALARM_CODE
+				AND TFA.EQUIP_TYPE = TFAB.EQUIP_TYPE
+		WHERE
+			TFA.EVENT_TIME
+					BETWEEN DATE_FORMAT(#{fromTime}, '%Y-%m-%d %H:%i:%s')
+					AND DATE_FORMAT(#{toTime}, '%Y-%m-%d %H:%i:%s')
+		AND CONCAT(TFA.SYSTEM_ID, '-', TFA.EQUIP_TYPE) IN (${systemIds})
+		<if test='bunchAlarms != null and bunchAlarms != ""'>
+			AND CONCAT(TFAB.BUNCH_CODE, '-', TFA.ALARM_CODE,'-', TFA.EQUIP_TYPE) IN (${bunchAlarms})
+		</if>
+		<if test='severity != "0"'>
+			AND TFA.SEVERITY = #{severity}
+		</if>
+		GROUP BY BUNCH_CODE
+		ORDER BY BUNCH_CODE
+	</select>
+
+	<select id="selectBunchFailureSettingData" resultType="java.util.HashMap">
+		SELECT eq.EQUIP_NAME, bc.EQUIP_TYPE, bc.VENDOR_ID, bc.ALARM_CODE, bc.BUNCH_CODE, bc.SEVERITY, bc.BUNCH_COUNT
+		FROM TB_FM_ALARM_BUNCH bc
+		LEFT JOIN TB_CO_EQUIP eq
+		ON bc.EQUIP_TYPE = eq.EQUIP_TYPE
+		ORDER BY bc.EQUIP_TYPE, bc.ALARM_CODE, bc.BUNCH_CODE, bc.SEVERITY, bc.BUNCH_COUNT
+	</select>
+
+	<select id="selectBunchCodeMax" resultType="java.util.HashMap">
+		SELECT MAX(CAST(SUBSTRING(BUNCH_CODE, 4) AS UNSIGNED) + 0) as bunchCodeMax
+		FROM TB_FM_ALARM_BUNCH
+	</select>
+
+	<select id="selectVendorData" resultType="java.util.HashMap">
+		SELECT DISTINCT VENDOR_ID, VENDOR_NAME
+		FROM TB_CO_VENDOR
+	</select>
+
+	<select id="selectEquipData" resultType="java.util.HashMap">
+		SELECT EQUIP_TYPE, EQUIP_NAME FROM TB_CO_EQUIP WHERE EQUIP_FM ='Y' 
+	</select>
+
+	<select id="selectAlarmCodeData" resultType="java.util.HashMap">
+		SELECT
+			ALARM_CODE,
+			EQUIP_TYPE,
+			PROBABLE_CAUSE,
+			CASE
+				WHEN ORG_SEVERITY = 1 THEN 'CRITICAL'
+				WHEN ORG_SEVERITY = 2 THEN 'MAJOR'
+				WHEN ORG_SEVERITY = 3 THEN 'MINOR'
+				WHEN ORG_SEVERITY = 9 THEN 'CRITICAL/MAJOR/MINOR'
+			ELSE IFNULL(ORG_SEVERITY, '')
+			END AS GRADE_TXT
+		FROM TB_FM_ALARM_CODE
+		WHERE
+			EQUIP_TYPE IN (1, 2, 4, 6, 7, 8, 9, 10, 11, 12, 17)
+			AND TB_FM_ALARM_CODE.ORG_SEVERITY NOT IN (4, 5)
+		GROUP BY ALARM_CODE, EQUIP_TYPE
+	</select>
+
+	<select id="selectEquipVendorData" resultType="java.util.HashMap">
+		SELECT TCE.EQUIP_NAME, VS.EQUIP_TYPE, VS.VENDOR_ID, TCV.VENDOR_NAME
+		FROM
+			VW_SYSTEM AS VS
+			LEFT JOIN TB_CO_EQUIP AS TCE
+				ON VS.EQUIP_TYPE = TCE.EQUIP_TYPE
+			LEFT JOIN TB_CO_VENDOR AS TCV
+				ON VS.VENDOR_ID = TCV.VENDOR_ID
+		WHERE VS.EQUIP_TYPE IN (1, 2, 4, 6, 7, 8, 9, 10, 11, 12, 17)
+		GROUP BY VS.VENDOR_ID, VS.EQUIP_TYPE ORDER BY VS.EQUIP_TYPE * 1 ASC
+	</select>
+
+	<select id="selectSystemData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<!--<choose>-->
+			<!--<when test='equipType == "1"'>-->
+				<!--SELECT MME_ID AS SYSTEM_ID, MME_NAME AS SYSTEM_NAME, 'MME' AS CATEGORY FROM TB_CO_MME-->
+			<!--</when>-->
+			<!--<when test='equipType == "2"'>-->
+				<!--SELECT DU_ID AS SYSTEM_ID, DU_NAME AS SYSTEM_NAME, 'DU' AS CATEGORY FROM TB_CO_DU-->
+			<!--</when>-->
+			<!--<when test='equipType == "4"'>-->
+				<!--SELECT PGW_ID AS SYSTEM_ID, PGW_NAME AS SYSTEM_NAME, 'PGW' AS CATEGORY FROM TB_CO_PGW-->
+			<!--</when>-->
+			<!--<when test='equipType == "5"'>-->
+				<!--SELECT SGW_ID AS SYSTEM_ID, SGW_NAME AS SYSTEM_NAME, 'SGW' AS CATEGORY FROM TB_CO_SGW-->
+			<!--</when>-->
+			<!--<otherwise>-->
+				<!--SELECT SYSTEM_ID, SYSTEM_NAME FROM TB_CO_SYSTEM_ETC WHERE EQUIP_TYPE = #{equipType}-->
+			<!--</otherwise>-->
+		<!--</choose>-->
+		
+		
+		
+		<!--  20191014
+		SELECT MME_ID AS SYSTEM_ID, MME_NAME AS SYSTEM_NAME, '1' AS CATEGORY FROM TB_CO_MME
+		UNION ALL
+		SELECT DU_ID AS SYSTEM_ID, DU_NAME AS SYSTEM_NAME, '2' AS CATEGORY FROM TB_CO_DU
+		UNION ALL
+		SELECT PGW_ID AS SYSTEM_ID, PGW_NAME AS SYSTEM_NAME, '4' AS CATEGORY FROM TB_CO_PGW
+		UNION ALL
+		SELECT SGW_ID AS SYSTEM_ID, SGW_NAME AS SYSTEM_NAME, '5' AS CATEGORY FROM TB_CO_SGW
+		UNION ALL
+		SELECT PCRF_ID AS SYSTEM_ID, PCRF_NAME AS SYSTEM_NAME, '7' AS CATEGORY FROM TB_CO_PCRF
+		UNION ALL
+		SELECT
+			TCSE.SYSTEM_ID,
+			TCSE.SYSTEM_NAME,
+			TCE.EQUIP_TYPE AS CATEGORY
+		FROM
+			TB_CO_SYSTEM_ETC AS TCSE
+			LEFT JOIN TB_CO_EQUIP AS TCE
+			  ON TCE.EQUIP_TYPE = TCSE.EQUIP_TYPE
+		WHERE
+		  TCE.EQUIP_TYPE >= '6'
+		  AND TCE.EQUIP_TYPE != '7' -->
+		  SELECT 
+			SYSTEM_ID
+			, SYSTEM_NAME
+			, EQUIP_TYPE
+			, LINE_ID
+			, LINE_NAME
+			, STATION_ID
+			FROM
+			(
+			SELECT 
+			SYSTEM_ID
+			, SYSTEM_NAME
+			, EQUIP_TYPE
+			, LINE.LINE_ID
+			, LINE.LINE_NAME
+			, EQUIP.STATION_ID
+			FROM
+			(
+			SELECT
+					VW.SYSTEM_ID
+					,VW.SYSTEM_NAME
+					,VW.EQUIP_TYPE
+       			   ,EQUIPLINE.STATION_ID
+				FROM
+					VW_SYSTEM VW
+
+		  			LEFT OUTER JOIN 
+		  				(
+		  					SELECT
+								MME_ID AS SYSTEM_ID
+								,'1' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_MME
+					        
+							UNION ALL
+					    
+							SELECT
+								PGW_ID AS SYSTEM_ID
+								,'4' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_PGW 
+					        
+							UNION ALL
+					    
+							SELECT
+								PCRF_ID AS SYSTEM_ID
+								,'7' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_PCRF
+					        
+					    UNION ALL    
+					    
+					    SELECT
+							SYSTEM_ID AS SYSTEM_ID
+					      	,EQUIP_TYPE AS EQUIP_TYPE
+					      	,LAREA_ID AS STATION_ID
+							FROM
+							  TB_CO_SYSTEM_ETC AS TCSE
+							  
+							UNION ALL
+							
+							SELECT
+								EMS_ID AS SYSTEM_ID
+					      ,EQUIP_TYPE AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_EMS TCE
+					
+					    UNION ALL
+					    
+					    SELECT
+					      DU_ID AS SYSTEM_ID
+					      ,'2' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+								
+							FROM
+								TB_CO_DU TCD
+    
+		  				) EQUIPLINE
+		  				ON VW.SYSTEM_ID = EQUIPLINE.SYSTEM_ID
+		  				AND VW.EQUIP_TYPE = EQUIPLINE.EQUIP_TYPE
+			  WHERE VW.EQUIP_TYPE != '3'
+				) EQUIP  
+				LEFT OUTER JOIN
+				(
+				SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID 
+				) LINE
+				ON EQUIP.STATION_ID = LINE.STATION_ID
+				) EQUIP_LINE      
+		  
+	</select>
+
+	<select id="selectAlarmCodeTableData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			ac.ORG_SEVERITY,
+			ac.ALARM_CODE,
+			ac.EQUIP_TYPE,
+			if(eq.EQUIP_NAME = 'PGW', 'GW', eq.EQUIP_NAME) as EQUIP_NAME,
+			ac.PROBABLE_CAUSE,
+			CASE
+				WHEN ac.ORG_SEVERITY = 1 THEN 'CRITICAL'
+				WHEN ac.ORG_SEVERITY = 2 THEN 'MAJOR'
+				WHEN ac.ORG_SEVERITY = 3 THEN 'MINOR'
+				WHEN ac.ORG_SEVERITY = 9 THEN 'CRITICAL/MAJOR/MINOR'
+				ELSE IFNULL(ac.ORG_SEVERITY, '')
+			END AS GRADE_TXT
+		FROM TB_FM_ALARM_CODE ac
+		LEFT JOIN TB_CO_EQUIP eq
+		ON ac.EQUIP_TYPE = eq.EQUIP_TYPE
+		WHERE ac.EQUIP_TYPE = #{equipType} AND ac.ORG_SEVERITY NOT IN (4, 5)
+	</select>
+
+	<delete id="deleteBunchFailure" parameterType="java.util.HashMap" >
+		DELETE
+		FROM TB_FM_ALARM_BUNCH
+		WHERE BUNCH_CODE = #{prev_bunchCode}
+		AND SEVERITY = #{prev_severity}
+		AND VENDOR_ID = #{prev_vendorId}
+		AND EQUIP_TYPE = #{prev_equipType}
+		AND ALARM_CODE = #{prev_alarmCode}
+		AND BUNCH_COUNT = #{prev_bunchCnt}
+	</delete>
+
+	<insert id="insertBunchFailure" parameterType="java.util.HashMap">
+		INSERT INTO TB_FM_ALARM_BUNCH(BUNCH_CODE, SEVERITY, VENDOR_ID, EQUIP_TYPE, ALARM_CODE, BUNCH_COUNT, UPDATE_DATE)
+		VALUES (#{BUNCH_CODE}, #{SEVERITY}, #{VENDOR_ID}, #{EQUIP_TYPE}, #{ALARM_CODE}, #{BUNCH_COUNT}, now())
+	</insert>
+
+	<select id="selectActionCaseSettingData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<!-- SELECT
+			IFNULL(ac.ORG_SEVERITY, -1) AS ORG_SEVERITY,
+			CASE
+				WHEN ac.ORG_SEVERITY = 1 THEN 'CRITICAL'
+				WHEN ac.ORG_SEVERITY = 2 THEN 'MAJOR'
+				WHEN ac.ORG_SEVERITY = 3 THEN 'MINOR'
+				WHEN ac.ORG_SEVERITY = 9 THEN 'CRITICAL/MAJOR/MINOR'
+				WHEN ac.ORG_SEVERITY = 4 THEN 'NORMAL'
+				WHEN ac.ORG_SEVERITY = 5 THEN 'NORMAL'
+				ELSE IFNULL(ac.ORG_SEVERITY, '')
+			END AS GRADE_TXT,
+			aa.EQUIP_TYPE,
+							IF(eq.EQUIP_NAME = 'PGW', 'GW', eq.EQUIP_NAME) as EQUIP_NAME,
+			aa.SYSTEM_ID, 
+			aa.ALARM_CODE,
+			aa.ACTION_CASE, 
+			DATE_FORMAT(aa.INSERT_DATE, '%Y-%m-%d %H:%i:%s') as INSERT_DATE,
+			aa.INSERT_USER,
+			EQUIP_LINE.LINE_ID,
+      		EQUIP_LINE.LINE_NAME
+		FROM
+			TB_FM_ALARM_ACTION_CASE aa
+			LEFT JOIN TB_CO_EQUIP eq
+				ON aa.EQUIP_TYPE = eq.EQUIP_TYPE
+			LEFT JOIN TB_FM_ALARM_CODE ac
+				ON aa.EQUIP_TYPE = ac.EQUIP_TYPE
+				   AND aa.ALARM_CODE = ac.ALARM_CODE
+			LEFT JOIN (
+				SELECT 
+				SYSTEM_ID
+				, SYSTEM_NAME
+				, EQUIP_TYPE
+				, LINE.LINE_ID
+				, LINE.LINE_NAME
+				, EQUIP.STATION_ID
+				FROM
+				(
+				SELECT
+					VW.SYSTEM_ID
+					,VW.SYSTEM_NAME
+					,VW.EQUIP_TYPE
+					,EQUIPLINE.LINE_ID
+          ,EQUIPLINE.STATION_ID
+				FROM
+					VW_SYSTEM VW
+
+		  			LEFT OUTER JOIN 
+		  				(
+		  					SELECT
+								TB_CO_MME.MME_ID AS SYSTEM_ID
+								,'1' AS EQUIP_TYPE
+								,TB_CO_MME.STATION_ID AS STATION_ID
+								,TB_CO_STATION.STATION_NAME AS STATION_NAME
+								,TB_CO_STATION.LINE_ID AS LINE_ID
+							FROM
+								TB_CO_MME
+									LEFT JOIN
+								TB_CO_STATION
+									ON TB_CO_MME.STATION_ID = TB_CO_STATION.STATION_ID
+					        
+							UNION ALL
+					    
+							SELECT
+								TB_CO_PGW.PGW_ID AS SYSTEM_ID
+								,'4' AS EQUIP_TYPE
+								,TB_CO_PGW.STATION_ID AS STATION_ID
+								,TB_CO_STATION.STATION_NAME AS STATION_NAME
+								,TB_CO_STATION.LINE_ID AS LINE_ID
+							FROM
+								TB_CO_PGW 
+									LEFT JOIN
+								TB_CO_STATION
+									ON TB_CO_PGW.STATION_ID = TB_CO_STATION.STATION_ID
+					        
+							UNION ALL
+					    
+							SELECT
+								TB_CO_PCRF.PCRF_ID AS SYSTEM_ID
+								,'7' AS EQUIP_TYPE
+								,TB_CO_STATION.STATION_ID AS STATION_ID
+								,TB_CO_STATION.STATION_NAME AS STATION_NAME
+								,TB_CO_STATION.LINE_ID AS LINE_ID
+							FROM
+								TB_CO_PCRF
+									LEFT JOIN
+								TB_CO_STATION
+									ON TB_CO_PCRF.STATION_ID = TB_CO_STATION.STATION_ID
+					        
+					    UNION ALL    
+					    
+					    SELECT
+							TCSE.SYSTEM_ID AS SYSTEM_ID
+					      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE
+					      	,TCS.STATION_ID AS STATION_ID
+							,TCS.STATION_NAME AS STATION_NAME
+							,TCS.LINE_ID AS LINE_ID
+							FROM
+							  TB_CO_SYSTEM_ETC AS TCSE
+							  LEFT JOIN TB_CO_STATION AS TCS
+							  ON TCSE.LAREA_ID = TCS.STATION_ID
+					      
+							UNION ALL
+							
+							SELECT
+								TCE.EMS_ID AS SYSTEM_ID
+					      ,TCE.EQUIP_TYPE AS EQUIP_TYPE
+								,TCS.STATION_ID AS STATION_ID
+								,TCS.STATION_NAME AS STATION_NAME
+								,TCS.LINE_ID AS LINE_ID
+							FROM
+								TB_CO_EMS TCE
+								LEFT JOIN TB_CO_STATION AS TCS
+								ON TCE.STATION_ID = TCS.STATION_ID
+					
+					    UNION ALL
+					    
+					    SELECT
+					      TCD.DU_ID AS SYSTEM_ID
+					      ,'2' AS EQUIP_TYPE
+								,TCS.STATION_ID AS STATION_ID
+								,TCS.STATION_NAME AS STATION_NAME
+								,TCS.LINE_ID AS LINE_ID
+								
+							FROM
+								TB_CO_DU TCD
+								LEFT JOIN TB_CO_STATION AS TCS
+								ON TCD.STATION_ID = TCS.STATION_ID
+    
+		  				) EQUIPLINE
+		  				ON VW.SYSTEM_ID = EQUIPLINE.SYSTEM_ID
+		  				AND VW.EQUIP_TYPE = EQUIPLINE.EQUIP_TYPE
+			  WHERE VW.EQUIP_TYPE != '3'
+				) EQUIP  
+				LEFT OUTER JOIN
+				(
+				SELECT GROUP_CONCAT(TCL.LINE_NAME ORDER BY TCL.LINE_NAME) LINE_NAME
+						, STATION_NAME
+						, STATION_ID 
+						, GROUP_CONCAT(STATION.LINE_ID ORDER BY STATION.LINE_ID)  LINE_ID
+						FROM
+				    (SELECT
+						  STATION_NAME
+						  , STATION_ID 
+						  , SUBSTRING_INDEX (SUBSTRING_INDEX(TB_CO_STATION.LINE_ID,',',NUMBERS.N),',',-1) LINE_ID
+						   
+						FROM 
+							
+						   (SELECT  1 N UNION  ALL  SELECT 2  
+						) NUMBERS INNER  JOIN TB_CO_STATION
+						    ON CHAR_LENGTH ( TB_CO_STATION.LINE_ID ) 
+						     - CHAR_LENGTH ( REPLACE ( TB_CO_STATION.LINE_ID ,  ',' ,  '' )) >= NUMBERS.N-1
+						      ) STATION
+						LEFT OUTER JOIN TB_CO_LINE TCL
+						  ON STATION.LINE_ID = TCL.LINE_ID
+				      GROUP BY STATION.STATION_NAME 
+				) LINE
+				ON EQUIP.STATION_ID = LINE.STATION_ID
+				) EQUIP_LINE      
+				ON aa.EQUIP_TYPE = EQUIP_LINE.EQUIP_TYPE
+				AND aa.SYSTEM_ID = EQUIP_LINE.SYSTEM_ID
+		ORDER BY
+		<if test = 'sortOption.size() > 0'>
+			<foreach collection="sortOption" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test = 'sortOption.size() == 0'>
+			aa.INSERT_DATE DESC
+		</if> -->
+		
+		
+		SELECT
+			IFNULL(ac.ORG_SEVERITY, -1) AS ORG_SEVERITY,
+			CASE
+				WHEN ac.ORG_SEVERITY = 1 THEN 'CRITICAL'
+				WHEN ac.ORG_SEVERITY = 2 THEN 'MAJOR'
+				WHEN ac.ORG_SEVERITY = 3 THEN 'MINOR'
+				WHEN ac.ORG_SEVERITY = 9 THEN 'CRITICAL/MAJOR/MINOR'
+				WHEN ac.ORG_SEVERITY = 4 THEN 'NORMAL'
+				WHEN ac.ORG_SEVERITY = 5 THEN 'NORMAL'
+				ELSE IFNULL(ac.ORG_SEVERITY, '')
+			END AS GRADE_TXT,
+			aa.EQUIP_TYPE,
+							IF(eq.EQUIP_NAME = 'PGW', 'GW', eq.EQUIP_NAME) as EQUIP_NAME,
+			aa.SYSTEM_ID, 
+			aa.ALARM_CODE,
+			aa.ACTION_CASE, 
+			DATE_FORMAT(aa.INSERT_DATE, '%Y-%m-%d %H:%i:%s') as INSERT_DATE,
+			aa.INSERT_USER,
+			EQUIP_LINE.LINE_ID,
+      		EQUIP_LINE.LINE_NAME
+		FROM
+			TB_FM_ALARM_ACTION_CASE aa
+			LEFT JOIN TB_CO_EQUIP eq
+				ON aa.EQUIP_TYPE = eq.EQUIP_TYPE
+			LEFT JOIN TB_FM_ALARM_CODE ac
+				ON aa.EQUIP_TYPE = ac.EQUIP_TYPE
+				   AND aa.ALARM_CODE = ac.ALARM_CODE
+			LEFT JOIN (
+				SELECT 
+				SYSTEM_ID
+				, SYSTEM_NAME
+				, EQUIP_TYPE
+				, LINE.LINE_ID
+				, LINE.LINE_NAME
+				, EQUIP.STATION_ID
+				FROM
+				(
+				SELECT
+					VW.SYSTEM_ID
+					,VW.SYSTEM_NAME
+					,VW.EQUIP_TYPE
+          ,EQUIPLINE.STATION_ID
+				FROM
+					VW_SYSTEM VW
+
+		  			LEFT OUTER JOIN 
+		  				(
+		  					SELECT
+								MME_ID AS SYSTEM_ID
+								,'1' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_MME
+					        
+							UNION ALL
+					    
+							SELECT
+								PGW_ID AS SYSTEM_ID
+								,'4' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_PGW 
+					        
+							UNION ALL
+					    
+							SELECT
+								PCRF_ID AS SYSTEM_ID
+								,'7' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_PCRF
+					        
+					    UNION ALL    
+					    
+					    SELECT
+							SYSTEM_ID AS SYSTEM_ID
+					      	,EQUIP_TYPE AS EQUIP_TYPE
+					      	,LAREA_ID AS STATION_ID
+							FROM
+							  TB_CO_SYSTEM_ETC AS TCSE
+							  
+							UNION ALL
+							
+							SELECT
+								EMS_ID AS SYSTEM_ID
+					      ,EQUIP_TYPE AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_EMS TCE
+					
+					    UNION ALL
+					    
+					    SELECT
+					      DU_ID AS SYSTEM_ID
+					      ,'2' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+								
+							FROM
+								TB_CO_DU TCD
+    
+		  				) EQUIPLINE
+		  				ON VW.SYSTEM_ID = EQUIPLINE.SYSTEM_ID
+		  				AND VW.EQUIP_TYPE = EQUIPLINE.EQUIP_TYPE
+			  WHERE VW.EQUIP_TYPE != '3'
+				) EQUIP  
+				LEFT OUTER JOIN
+				(
+				SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID 
+				) LINE
+				ON EQUIP.STATION_ID = LINE.STATION_ID
+				) EQUIP_LINE      
+				ON aa.EQUIP_TYPE = EQUIP_LINE.EQUIP_TYPE
+				AND aa.SYSTEM_ID = EQUIP_LINE.SYSTEM_ID
+		ORDER BY
+		<if test = 'sortOption.size() > 0'>
+			<foreach collection="sortOption" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test = 'sortOption.size() == 0'>
+			aa.INSERT_DATE DESC
+		</if>
+		
+		
+	</select>
+
+	<delete id="deleteFailureActionCase" parameterType="java.util.HashMap">
+		DELETE
+		FROM TB_FM_ALARM_ACTION_CASE
+		WHERE EQUIP_TYPE = #{prev_equipType}
+		AND	  SYSTEM_ID = #{prev_systemId}
+		AND   ALARM_CODE = #{prev_alarmCode}
+		AND   ALARM_TYPE = #{prev_alarmType}
+		AND   ACTION_CASE = #{prev_actionCase}
+	</delete>
+
+	<update id="modifyFailureActionCase" parameterType="java.util.HashMap">
+		UPDATE TB_FM_ALARM_ACTION_CASE
+		SET ACTION_CASE = #{actionCase}
+		WHERE EQUIP_TYPE = #{equipType}
+		AND	  SYSTEM_ID = #{systemId}
+		AND   ALARM_CODE = #{alarmCode}
+		AND   ALARM_TYPE = #{alarmType}
+		AND   ACTION_CASE = #{originActionCase}
+	</update>
+
+	<insert id="insertFailureActionCase" parameterType="java.util.HashMap">
+		INSERT INTO TB_FM_ALARM_ACTION_CASE(ACTION_CASE, ALARM_CODE, ALARM_TYPE, EQUIP_TYPE, INSERT_DATE, INSERT_USER, SYSTEM_ID)
+		VALUES (#{ACTION_CASE}, #{ALARM_CODE}, #{ALARM_TYPE}, #{EQUIP_TYPE}, now(), #{INSERT_USER}, #{SYSTEM_ID})
+	</insert>
+
+	<select id="selectAudioSettingData" parameterType="java.util.HashMap"  resultType="java.util.HashMap">
+		SELECT MONITOR_TYPE, SEVERITY, SUBSTRING_INDEX(FILE_PATH, '/', -1) as FILE_PATH, VOLUME
+		FROM TB_CO_ALARM_SOUND
+		WHERE MONITOR_TYPE = #{monitorType}
+	</select>
+
+	<delete id="deleteAudioSettingData" parameterType="java.util.HashMap">
+		DELETE
+		FROM TB_CO_ALARM_SOUND
+		WHERE MONITOR_TYPE  = #{MONITOR_TYPE}
+		AND	  SEVERITY = #{SEVERITY}
+	</delete>
+
+	<insert id="insertAudioSettingData" parameterType="java.util.HashMap">
+		INSERT INTO TB_CO_ALARM_SOUND(MONITOR_TYPE, SEVERITY, FILE_PATH, VOLUME)
+		VALUES (#{MONITOR_TYPE}, #{SEVERITY}, #{FILE_PATH}, #{VOLUME})
+	</insert>
+
+	<update id="updateAudioSettingData" parameterType="java.util.HashMap">
+		UPDATE TB_CO_ALARM_SOUND SET VOLUME = #{VOLUME}
+		<if test='FILE_PATH != null and FILE_PATH != ""'>
+			, FILE_PATH = #{FILE_PATH}
+		</if>
+		WHERE MONITOR_TYPE = #{MONITOR_TYPE}
+		AND SEVERITY = #{SEVERITY}
+	</update>
+
+	<select id="selectUnrecoveredAlarmSettingData" resultType="java.util.HashMap">
+		SELECT CRITICAL_TIME, MAJOR_TIME, MINOR_TIME, WARNING_TIME, USE_FLAG_CRITICAL, USE_FLAG_MAJOR, USE_FLAG_MINOR, USE_FLAG_WARNING
+		FROM TB_FM_ALARM_RECOVER_TIME
+	</select>
+
+	<delete id="deleteUnrecoveredAlarmTime">
+		DELETE
+		FROM TB_FM_ALARM_RECOVER_TIME
+	</delete>
+
+	<insert id="insertUnrecoveredAlarmTime" parameterType="java.util.HashMap">
+		<if test='grade == "1"'>
+			UPDATE
+				TB_FM_ALARM_RECOVER_TIME
+			SET
+				CRITICAL_TIME = #{time},
+				USE_FLAG_CRITICAL = #{flag},
+				UPDATE_DATE = now()
+		</if>
+		<if test='grade == "2"'>
+			UPDATE
+				TB_FM_ALARM_RECOVER_TIME
+			SET
+				MAJOR_TIME = #{time},
+				USE_FLAG_MAJOR = #{flag},
+				UPDATE_DATE = now()
+		</if>
+		<if test='grade == "3"'>
+			UPDATE
+				TB_FM_ALARM_RECOVER_TIME
+			SET
+				MINOR_TIME = #{time},
+				USE_FLAG_MINOR = #{flag},
+				UPDATE_DATE = now()
+		</if>
+	</insert>
+
+	<select id="selectUnrecoveredAlarmCode" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT DISTINCT ALARM_CODE
+		FROM TB_FM_ALARM_CODE
+		WHERE EQUIP_TYPE = #{equipType}
+		AND VENDOR_ID = #{vendorId}
+	</select>
+
+		<!-- 알람코드별 설정(미복구알람설정) 기능 개발 중단 -->
+	<delete id="deleteUnrecoveredAlarmCode" parameterType="java.util.HashMap">
+	</delete>
+	<insert id="insertUnrecoveredAlarmCode" parameterType="java.util.HashMap">
+	</insert>
+
+	<select id="getDuStationInfo" resultType = "java.util.HashMap">
+		SELECT
+			DU_ID, DU.STATION_ID, LINE_NAME.STATION_NAME, LINE_NAME.LINE_ID, LINE_NAME.LINE_NAME
+		FROM
+			TB_CO_DU AS DU
+			LEFT OUTER JOIN 
+	          ( SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID) LINE_NAME
+			 ON DU.STATION_ID = LINE_NAME.STATION_ID
+	</select>
+
+	<select id="getRuStationInfo" resultType = "java.util.HashMap">
+		SELECT
+			TCR.DU_ID,
+			TCR.C_UID,
+			REPLACE(TCR.RU_NAME, 'RRU-', '') AS RU_NAME,
+			IFNULL(TCR.STATION_ID, '') AS STATION_ID,
+			IFNULL(LINE_NAME.STATION_NAME, '') AS STATION_NAME,
+			CONCAT_WS('_', TCR.SECTOR, TCR.PORT_ID, TCR.SEQUENCE_ID) AS RRH,
+			CONCAT_WS('_', TCR.DU_ID, TCR.SECTOR, TCR.PORT_ID, TCR.SEQUENCE_ID) AS RU_ID,
+			LINE_NAME.LINE_ID AS LINE_ID,
+			LINE_NAME.LINE_NAME AS LINE_NAME
+		FROM
+			TB_CO_RU AS TCR
+			LEFT OUTER JOIN 
+	          ( SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID) LINE_NAME
+			 ON TCR.STATION_ID = LINE_NAME.STATION_ID
+		WHERE TCR.OPR_STATUS = '1'
+	</select>
+
+	<select id="getSwitchStationInfo" resultType = "java.util.HashMap">
+		SELECT
+			TCSE.SYSTEM_ID AS SWITCH_ID,
+			TCSE.LAREA_ID AS STATION_ID,
+			LINE_NAME.STATION_NAME,
+			LINE_NAME.LINE_ID,
+			LINE_NAME.LINE_NAME
+		FROM
+		  TB_CO_SYSTEM_ETC AS TCSE
+		  LEFT OUTER JOIN 
+	          ( SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID) LINE_NAME
+   		    ON TCSE.LAREA_ID = LINE_NAME.STATION_ID
+		WHERE TCSE.EQUIP_TYPE = '11'
+	</select>
+
+	<select id="getJrgStationInfo" resultType = "java.util.HashMap">
+		/* getJrgStationInfo */
+		SELECT
+			TCSE.SYSTEM_ID AS JRG_ID,
+			TCSE.LAREA_ID AS STATION_ID,
+			LINE_NAME.STATION_NAME,
+			LINE_NAME.LINE_ID,
+			LINE_NAME.LINE_NAME
+		FROM
+		  TB_CO_SYSTEM_ETC AS TCSE
+		  LEFT OUTER JOIN 
+		        ( SELECT 
+		  			STATION.STATION_ID AS STATION_ID  
+		  			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID) LINE_NAME
+			    ON TCSE.LAREA_ID = LINE_NAME.STATION_ID
+		WHERE TCSE.EQUIP_TYPE = '36';
+	</select>
+	
+	<select id="getEquipStationInfo" resultType = "java.util.HashMap">
+		SELECT
+			TCSE.SYSTEM_ID AS SWITCH_ID,
+			TCSE.LAREA_ID AS STATION_ID,
+			LINE_NAME.STATION_NAME,
+			TCSE.EQUIP_TYPE,
+			LINE_NAME.LINE_ID
+		FROM
+		  TB_CO_SYSTEM_ETC AS TCSE
+		  LEFT OUTER JOIN  
+	          ( SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID) LINE_NAME
+   		    ON TCSE.LAREA_ID = LINE_NAME.STATION_ID
+		WHERE TCSE.EQUIP_TYPE NOT IN('11','2','0')
+		
+		UNION
+		
+		SELECT
+			TCE.EMS_ID
+			,TCE.STATION_ID
+			,LINE_NAME.STATION_NAME
+			,TCE.EQUIP_TYPE
+			,LINE_NAME.LINE_ID
+		FROM
+			TB_CO_EMS TCE
+			LEFT OUTER JOIN 
+	          ( SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID) LINE_NAME
+   		    ON TCE.STATION_ID = LINE_NAME.STATION_ID
+	</select>
+	
+	<select id="getEpcStationInfo" resultType = "java.util.HashMap">
+		SELECT
+			TB_CO_MME.MME_ID AS NE_ID,
+			'1' AS EQUIP_TYPE,
+			TB_CO_MME.STATION_ID,
+			LINE_NAME.STATION_NAME,
+			LINE_NAME.LINE_ID
+		FROM
+			TB_CO_MME
+			LEFT OUTER JOIN 
+	          ( SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID) LINE_NAME
+			 ON TB_CO_MME.STATION_ID = LINE_NAME.STATION_ID
+		UNION ALL
+		SELECT
+			TB_CO_PGW.PGW_ID AS NE_ID,
+			'4' AS EQUIP_TYPE,
+			TB_CO_PGW.STATION_ID,
+			LINE_NAME.STATION_NAME,
+			LINE_NAME.LINE_ID
+		FROM
+			TB_CO_PGW 
+			LEFT OUTER JOIN 
+	          ( SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID) LINE_NAME
+			 ON TB_CO_PGW.STATION_ID = LINE_NAME.STATION_ID
+		UNION ALL
+		SELECT
+			TB_CO_PCRF.PCRF_ID AS NE_ID, 
+			'7' AS EQUIP_TYPE,
+			TB_CO_PCRF.STATION_ID,
+			LINE_NAME.STATION_NAME,
+			LINE_NAME.LINE_ID
+		FROM
+			TB_CO_PCRF
+			LEFT OUTER JOIN 
+	          ( SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID) LINE_NAME
+			 ON TB_CO_PCRF.STATION_ID = LINE_NAME.STATION_ID
+	</select>
+
+	<select id="getEquipInfo" resultType = "java.util.HashMap">
+		SELECT
+			EQUIP_TYPE
+			,CASE
+				WHEN EQUIP_NAME = 'PGW' THEN 'GW'
+				WHEN EQUIP_TYPE = 14 THEN 'EMS'
+				ELSE EQUIP_NAME
+			END AS EQUIP_NAME
+		FROM
+			TB_CO_EQUIP
+	</select>
+
+	<insert id="insertDelMsg" parameterType="java.util.HashMap">
+		INSERT INTO TB_FM_ALARM_DELETE
+		  (ALARM_ID, EVENT_TIME, SYSTEM_ID, ALARM_CODE, SEVERITY, SYSTEM_NAME, ALARM_TYPE, FDN, PROBABLE_CAUSE, RECOVER_ID, EQUIP_TYPE, VENDOR_ID, TEAM_ID, ALARM_STATE)
+		VALUES
+		  (#{ALARM_ID}, #{EVENT_TIME}, #{SYSTEM_ID}, #{ALARM_CODE}, #{GRADE}, #{SYSTEM_NAME}, #{ALARM_TYPE}, #{LOCATION}, #{ALARM_NAME}, #{USER}, #{EVENT_TYPE}, #{VENDOR_ID}, #{TEAM_ID}, #{MESSAGE_TYPE})
+	</insert>
+
+</mapper>

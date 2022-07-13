@@ -1,0 +1,1942 @@
+@charset "utf-8";
+
+/****** common수정 ******/
+.mu-search-group{display:block;}
+.mu-datepicker input{vertical-align:middle;}
+.mu-btn{vertical-align:middle;line-height:100%;}
+.mu-selectbox .mu-list{max-height:206px;}
+.mu-list > li{line-height:34px;}
+.mu-list > li + li{line-height:33px;}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+    @font-face {font-family: 'FontAwesome';
+    src: url('../fonts/fontawesome-webfont.svg?v=4.4.0#fontawesomeregular') format('svg');
+    }
+}
+
+@font-face{
+    font-family:"Nanum Gothic";
+    src:url('../fonts/NanumGothic.eot');
+    src:url('../fonts/NanumGothic.eot?#iefix') format('embedded-opentype'), url('../fonts/NanumGothic.woff') format('woff'), url('../fonts/NanumGothic.ttf') format('truetype');
+    src:local(※), url('../fonts/NanumGothic.woff') format('woff');
+    font-style:normal;
+    font-weight:normal;
+}
+
+@font-face{
+    font-family:"Nanum Gothic";
+    src:url('../fonts/NanumGothicBold.eot');
+    src:url('../fonts/NanumGothicBold.eot?#iefix') format('embedded-opentype'), url('../fonts/NanumGothicBold.woff') format('woff'), url('../fonts/NanumGothicBold.ttf') format('truetype');
+    src:local(※), url('../fonts/NanumGothicBold.woff') format('woff');
+    font-style:normal;
+    font-weight:bold;
+}
+
+@font-face{
+    font-family:"Nanum Gothic Bold";
+    src:url('../fonts/NanumGothicExtraBold.eot');
+    src:url('../fonts/NanumGothicExtraBold.eot?#iefix') format('embedded-opentype'), url('../fonts/NanumGothicExtraBold.woff') format('woff'), url('../fonts/NanumGothicExtraBold.ttf') format('truetype');
+    src:local(※), url('../fonts/NanumGothicExtraBold.woff') format('woff');
+    font-style:normal;
+    font-weight:normal;
+}
+
+body, body *, .mu-title, .mu-dialog-head .title, .mu-datepicker input, .mu-pagination li a, .mu-alert-body{font-family:"맑은고딕", Malgun Gothic, Nanum Gothic, sans-serif}
+body, h1, h2, h3, h4, h5, h6, input, button, textarea, select, a{font-size:14px;font-weight:normal;color:#3d3d3f;line-height:1;}
+a:hover{color:#3d3d3f;}
+body{min-width:1900px;min-height:1080px;background:#e6eaee;}
+.mu-list,.mu-prompt,.mu-confirm,.mu-progress,.mu-popup-menu,.mu-popup-menu > li > ul,.mu-popup-menu > li > ul > li > ul,.mu-area,.mu-search-group,.mu-round,.mu-input,.mu-btn,.mu-selectbox > .mu-value,.mu-selectbox > .mu-list,.mu-pagination > button,.mu-pagination a,.mu-tab-vertical > li > a,.mu-alert,.mu-paging > a,.mu-paging > button,.mu-panel,.mu-datepicker input, .mu-selectbox .mu-list > li{border-radius:0;}
+.mu-icon-img{display:inline-block;vertical-align:middle;}
+fieldset {border:0 none}
+legend {position:absolute; visibility:hidden; overflow:hidden; width:0; height:0; margin:0; padding:0; font-size:0; line-height:0;}
+
+/* 크롬브라우저 */
+*:focus, input:focus, button:focus, textarea:focus{outline:none;}
+
+/* Common Placeholder */
+::-webkit-input-placeholder{color:#7e7ca5;}
+:-moz-placeholder{/* Firefox 18- */color:#7e7ca5;}
+::-moz-placeholder{/* Firefox 19+ */color:#7e7ca5;}
+:-ms-input-placeholder{color:#7e7ca5;}
+
+/* 크롬브라우저 자동완성 */
+.loginBox input:-webkit-autofill{-webkit-box-shadow:0 0 0 1000px #3e445b inset;-webkit-text-fill-color:#9cb5c6;}
+
+/* radio */
+.mu-radio{line-height:100%;display:inline-block;}
+.mu-radio label{padding-left:25px;}
+.mu-radio label:before{content:"";width:20px;height:20px;background:url("../images/common/radio.png") no-repeat 0 0;}
+.mu-radio input:checked + label:before{content:"";width:20px;height:20px;background-position:0 -20px;}
+.mu-radio label:hover:before{background-position:-20px 0;}
+.mu-radio input[disabled] + label:before{content:"";width:20px;height:20px;background-position:-60px 0;}
+.mu-radio input[disabled]:checked + label:before{content:"";width:20px;height:20px;background-position:-60px -20px;}
+
+/* checkbox */
+.mu-checkbox{line-height:100%;display:inline-block;}
+.mu-checkbox label{padding-left:25px;}
+.mu-checkbox label:before{content:"";width:20px;height:20px;background:url("../images/common/check.png") no-repeat 0 0;}
+.mu-checkbox input:checked + label:before{content:"";width:20px;height:20px;background-position:0 -20px;}
+.mu-checkbox label:hover:before{background-position:-20px 0;}
+.mu-checkbox input[disabled] + label:before{content:"";width:20px;height:20px;background-position:-60px 0;}
+.mu-checkbox input[disabled]:checked + label:before{content:"";width:20px;height:20px;background-position:-60px -20px;}
+
+/* input */
+.mu-input{padding:0 8px;background:#f8f8f8;border:1px solid #c6c6c6;height:23px;/* line-height:100%; */line-height:23px;vertical-align:middle;color:#3d3d3f;}
+.mu-input:hover, .mu-input:focus{border-color:#7ba1ba;}
+.mu-input[disabled]{background:#c3c3c3;border-color:#bfbfbf;color:#e3e2e2;}
+.mu-input[readonly]{background:#e9e9e9;border-color:#bfbfbf;cursor:default;}
+
+/* textarea */
+.mu-area{padding:2px 8px;background:#f8f8f8;border:1px solid #c6c6c6;line-height:20px;color:#3d3d3f;}
+.mu-area[disabled]{background:#c3c3c3;border-color:#bfbfbf;color:#e3e2e2;}
+.mu-area[readonly]{color:#3d3d3f;background:#e9e9e9;border-color:#bfbfbf;cursor:default;}
+
+/* datepicker */
+.mu-datepicker{font-size:0;}
+.mu-datepicker input{height:23px;border-color:#bfbfbf;border-right:none;background:#e9e9e9;/* line-height:100%; */line-height:23px;color:#484848;}
+.mu-datepicker .mu-btn{width:34px;height:23px;background:#e9e9e9;border:1px solid #bfbfbf;box-shadow:none;}
+.mu-datepicker .mu-btn:hover{border:1px solid #7dbad9;background:#c0ecff;}
+.mu-datepicker .mu-btn:active{border:1px solid #7dbad9;background:#b1dff2;}
+.mu-icon.calendar:before{color:#434343;}
+
+/* selectbox */
+.mu-selectbox{vertical-align:middle;}
+.mu-selectbox .mu-value, .mu-selectbox .mu-value:focus{background:#f8f8f8;border:1px solid #c6c6c6;color:#484848;min-width:50px;height:23px;line-height:100%;}
+.mu-selectbox .mu-value{padding:0 20px 0 5px;}
+.mu-selectbox .mu-value:hover{border-color:#7ba1ba;}
+.mu-selectbox .mu-value:active{background:#b1dff2;}
+.mu-selectbox.on .mu-value{background:#b1dff2;border-color:#7ba1ba;color:#484848;}
+.mu-selectbox .mu-value:after, .mu-selectbox .mu-value:hover:after, .mu-selectbox .mu-value:active:after, .mu-selectbox .mu-value:focus:after, .mu-selectbox.on .mu-value:after{border-top-color:#1e7ab3;}
+.mu-selectbox .mu-value:after{border-top:6px solid #1e7ab3;}
+.mu-selectbox .mu-list{border:1px solid #cbcbcb;border-top:none;box-shadow:0 1px 0 rgba(0, 0, 0, 0.1);min-width:100%;width:auto;max-height:120px;z-index:11;}
+.mu-selectbox .mu-list > li{height:27px;line-height:27px;background:#f3f3f3;color:#484848;}
+.mu-selectbox .mu-list > li + li{line-height:27px;border:none;}
+.mu-selectbox .mu-list > li:nth-child(2n){background:#ececec;}
+.mu-selectbox .mu-list > li:hover{background:#c0ecff;}
+.mu-selectbox .mu-list > li.active{background:#b1dff2;}
+
+/* 파일첨부 */
+.mu-file-attach .mu-input{width:calc(100% - 80px);}
+.mu-file-attach .mu-file-btn{width:80px;}
+.mu-file-attach .mu-file-btn .mu-btn{border:none;height:23px;border-radius:0;}
+
+/* btn */
+.mu-btn{height:23px;/* line-height:100%; */line-height:22px;padding-bottom:1px;color:#fefefe;font-size:13px;border-top:1px solid #4f96ce;box-shadow:0 1px 1px rgba(0, 0, 0, 0.25);background: #145c90; /* Old browsers */background: -moz-linear-gradient(top,  #145c90 0%, #2c71a4 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #145c90 0%,#2c71a4 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #145c90 0%,#2c71a4 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#145c90', endColorstr='#2c71a4',GradientType=0 ); /* IE6-9 */}
+.mu-btn:hover{border-top:1px solid #5ba8e4;background: #3986bd; /* Old browsers */background: -moz-linear-gradient(top,  #3986bd 0%, #174363 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #3986bd 0%,#174363 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #3986bd 0%,#174363 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3986bd', endColorstr='#174363',GradientType=0 ); /* IE6-9 */}
+.mu-btn:active{border-top:1px solid #163247;background: #133f5f; /* Old browsers */background: -moz-linear-gradient(top,  #133f5f 0%, #3a85ba 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #133f5f 0%,#3a85ba 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #133f5f 0%,#3a85ba 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#133f5f', endColorstr='#3a85ba',GradientType=0 ); /* IE6-9 */}
+.mu-btn-cancel{border-top:1px solid #aaaaaa;background: #7d7d7d; /* Old browsers */background: -moz-linear-gradient(top,  #7d7d7d 0%, #8b8b8b 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #7d7d7d 0%,#8b8b8b 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #7d7d7d 0%,#8b8b8b 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#7d7d7d', endColorstr='#8b8b8b',GradientType=0 ); /* IE6-9 */}
+.mu-btn-cancel:hover{border-top:1px solid #b7b7b7;background: #9c9c9c; /* Old browsers */background: -moz-linear-gradient(top,  #9c9c9c 0%, #6e6e6f 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #9c9c9c 0%,#6e6e6f 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #9c9c9c 0%,#6e6e6f 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#9c9c9c', endColorstr='#6e6e6f',GradientType=0 ); /* IE6-9 */}
+.mu-btn-cancel:active{border-top:1px solid #626262;background: #6c6c6d; /* Old browsers */background: -moz-linear-gradient(top,  #6c6c6d 0%, #9c9c9c 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #6c6c6d 0%,#9c9c9c 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #6c6c6d 0%,#9c9c9c 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#6c6c6d', endColorstr='#9c9c9c',GradientType=0 ); /* IE6-9 */}
+.mu-btn-search{border-top:1px solid #4f76ce;background: #143d90; /* Old browsers */background: -moz-linear-gradient(top,  #143d90 0%, #2a5da2 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #143d90 0%,#2a5da2 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #143d90 0%,#2a5da2 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#143d90', endColorstr='#2a5da2',GradientType=0 ); /* IE6-9 */}
+.mu-btn-search:hover{border-top:1px solid #6792f4;background: #3871bc; /* Old browsers */background: -moz-linear-gradient(top,  #3871bc 0%, #1a3467 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #3871bc 0%,#1a3467 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #3871bc 0%,#1a3467 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3871bc', endColorstr='#1a3467',GradientType=0 ); /* IE6-9 */}
+.mu-btn-search:active{border-top:1px solid #163247;background: #163063; /* Old browsers */background: -moz-linear-gradient(top,  #163063 0%, #3970ba 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #163063 0%,#3970ba 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #163063 0%,#3970ba 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#163063', endColorstr='#3970ba',GradientType=0 ); /* IE6-9 */}
+.mu-btn[disabled], .mu-btn[disabled]:hover{border-top:none;background:#c3c3c3;}
+/* btn color */
+.mu-btn.green{border-top:1px solid #98b75c;background: #487606; /* Old browsers */background: -moz-linear-gradient(top,  #487606 0%, #62900c 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #487606 0%,#62900c 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #487606 0%,#62900c 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#487606', endColorstr='#62900c',GradientType=0 ); /* IE6-9 */}
+.mu-btn.green:hover{border-top:1px solid #a6c25d;background: #719e0c; /* Old browsers */background: -moz-linear-gradient(top,  #719e0c 0%, #3d6707 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #719e0c 0%,#3d6707 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #719e0c 0%,#3d6707 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#719e0c', endColorstr='#3d6707',GradientType=0 ); /* IE6-9 */}
+.mu-btn.green:active{border-top:1px solid #263f05;background: #3a6404; /* Old browsers */background: -moz-linear-gradient(top,  #3a6404 0%, #719e0f 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #3a6404 0%,#719e0f 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #3a6404 0%,#719e0f 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3a6404', endColorstr='#719e0f',GradientType=0 ); /* IE6-9 */}
+.mu-btn.gray{border-top:1px solid #aaaaaa;background: #7d7d7d; /* Old browsers */background: -moz-linear-gradient(top,  #7d7d7d 0%, #8b8b8b 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #7d7d7d 0%,#8b8b8b 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #7d7d7d 0%,#8b8b8b 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#7d7d7d', endColorstr='#8b8b8b',GradientType=0 ); /* IE6-9 */}
+.mu-btn.gray:hover{border-top:1px solid #b7b7b7;background: #9c9c9c; /* Old browsers */background: -moz-linear-gradient(top,  #9c9c9c 0%, #6e6e6f 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #9c9c9c 0%,#6e6e6f 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #9c9c9c 0%,#6e6e6f 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#9c9c9c', endColorstr='#6e6e6f',GradientType=0 ); /* IE6-9 */}
+.mu-btn.gray:active{border-top:1px solid #626262;background: #6c6c6d; /* Old browsers */background: -moz-linear-gradient(top,  #6c6c6d 0%, #9c9c9c 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #6c6c6d 0%,#9c9c9c 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #6c6c6d 0%,#9c9c9c 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#6c6c6d', endColorstr='#9c9c9c',GradientType=0 ); /* IE6-9 */}
+.mu-btn.minor{border-top:1px solid #e8e659;background: #dbd900; /* Old browsers */background: -moz-linear-gradient(top,  #dbd900 0%, #cfcc00 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #dbd900 0%,#cfcc00 100%); /* Chrome10-25,Safari5.1-6 *background: linear-gradient(to bottom,  #dbd900 0%,#cfcc00 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#dbd900', endColorstr='#cfcc00',GradientType=0 ); /* IE6-9 */}
+.mu-btn.minor:hover{border-top:1px solid #eceb59;background: #e1df00; /* Old browsers */background: -moz-linear-gradient(top,  #e1df00 0%, #c5c100 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #e1df00 0%,#c5c100 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #e1df00 0%,#c5c100 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e1df00', endColorstr='#c5c100',GradientType=0 ); /* IE6-9 */}
+.mu-btn.minor:active{border-top:1px solid #d9d659;background: #c5c100; /* Old browsers */background: -moz-linear-gradient(top,  #c5c100 0%, #e1df00 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #c5c100 0%,#e1df00 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #c5c100 0%,#e1df00 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#c5c100', endColorstr='#e1df00',GradientType=0 ); /* IE6-9 */}
+.mu-btn.major{border-top:1px solid #f3b560;background: #ed8e0a; /* Old browsers */background: -moz-linear-gradient(top,  #ed8e0a 0%, #e77305 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #ed8e0a 0%,#e77305 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #ed8e0a 0%,#e77305 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ed8e0a', endColorstr='#e77305',GradientType=0 ); /* IE6-9 */}
+.mu-btn.major:hover{border-top:1px solid #f6c163;background: #f09e0f; /* Old browsers */background: -moz-linear-gradient(top,  #f09e0f 0%, #e15f03 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #f09e0f 0%,#e15f03 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #f09e0f 0%,#e15f03 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f09e0f', endColorstr='#e15f03',GradientType=0 ); /* IE6-9 */}
+.mu-btn.major:active{border-top:1px solid #eb965b;background: #e15f03; /* Old browsers */background: -moz-linear-gradient(top,  #e15f03 0%, #f09e0f 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #e15f03 0%,#f09e0f 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #e15f03 0%,#f09e0f 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e15f03', endColorstr='#f09e0f',GradientType=0 ); /* IE6-9 */}
+.mu-btn.critical{border-top:1px solid #dd5a5a;background: #cb0202; /* Old browsers */background: -moz-linear-gradient(top,  #cb0202 0%, #bb0101 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #cb0202 0%,#bb0101 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #cb0202 0%,#bb0101 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cb0202', endColorstr='#bb0101',GradientType=0 ); /* IE6-9 */}
+.mu-btn.critical:hover{border-top:1px solid #e35b5b;background: #d40303; /* Old browsers */background: -moz-linear-gradient(top,  #d40303 0%, #ad0000 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #d40303 0%,#ad0000 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #d40303 0%,#ad0000 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d40303', endColorstr='#ad0000',GradientType=0 ); /* IE6-9 */}
+.mu-btn.critical:active{border-top:1px solid #c85959; color:#000;background: #ad0000; /* Old browsers */background: -moz-linear-gradient(top,  #ad0000 0%, #d40303 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #ad0000 0%,#d40303 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #ad0000 0%,#d40303 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ad0000', endColorstr='#d40303',GradientType=0 ); /* IE6-9 */}
+
+/* 역사별 성능감시 탭버튼 */
+.station_tab .st_tapbutton{position: relative;top:-50px;left:-500px;z-index:3;}
+.st_tapbutton .mu-btn.tap > *{color:#000;}
+.st_tapbutton .mu-btn.tap[disabled] > *{color:#757575;}
+.st_tapbutton .mu-btn.tap[disabled], .st_tapbutton .mu-btn.tap[disabled]:hover{border-top:1px solid #b1b1b1;background:#979797;}
+.st_tapbutton .mu-btn.tap.active, .st_tapbutton .mu-btn.tap.active:hover{border:1px solid #6a6a6a;background:#fff;cursor:Default;}
+.st_tapbutton .mu-btn.tap{top:-10px;border-top:1px solid #b1b1b1; border-right:1px solid #b1b1b1;width:80px; height:37px; padding:0; line-height:37px; font-size:14px; box-shadow:3px 3px 5px rgba(0, 0, 0, 0.25) inset;background: #c1c8cd; /* Old browsers */background: -moz-linear-gradient(top,  #fff 0%, #b7b7b7 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #fff 0%,#b7b7b7 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #fff 0%,#b7b7b7 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fff', endColorstr='#b7b7b7',GradientType=0 ); /* IE6-9 */}
+.st_tapbutton .mu-btn.tap:hover{border-top:1px solid #dcdcdc;background: #fff; /* Old browsers */background: -moz-linear-gradient(top,  #fff 0%, #d3d3d3 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #fff 0%,#d3d3d3 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #fff 0%,#d3d3d3 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fff', endColorstr='#d3d3d3',GradientType=0 ); /* IE6-9 */}
+.st_tapbutton .mu-btn.tap:active{border-top:1px solid #b1b1b1;background: #d3d3d3; /* Old browsers */background: -moz-linear-gradient(top,  #d3d3d3 0%, #fff 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #d3d3d3 0%,#fff 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #d3d3d3 0%,#fff 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d3d3d3', endColorstr='#fff',GradientType=0 ); /* IE6-9 */}
+
+.st_tapbutton .mu-line_icon{width:20px;height:20px;display:inline-block;vertical-align:middle;background:url("../images/monitoring/icon_topology_linenumber.png") no-repeat 0 0;}
+.st_tapbutton .mu-line_icon.line5{background-position:0 0; ;margin-bottom:3px;}
+.st_tapbutton .mu-btn.tap[disabled] .mu-line_icon.line5{background-position:0 -20px;margin-bottom:3px;}
+.st_tapbutton .mu-line_icon.line6{background-position:0 -40px;margin-bottom:3px;}
+.st_tapbutton .mu-btn.tap[disabled] .mu-line_icon.line6{background-position:0 -60px;margin-bottom:3px;}
+.st_tapbutton .mu-line_icon.line7{background-position:0 -80px;margin-bottom:3px;}
+.st_tapbutton .mu-btn.tap[disabled] .mu-line_icon.line7{background-position:0 -100px;margin-bottom:3px;}
+.st_tapbutton .mu-line_icon.line8{background-position:0 -120px;margin-bottom:4px;}
+.st_tapbutton .mu-btn.tap[disabled] .mu-line_icon.line8{background-position:0 -140px;margin-bottom:3px;}
+
+/* 서비스장비 상태감시 탭버튼 */
+.sysstate_tab .syss_tapbutton{position:absolute;top:15px;left:265px;z-index:3;}
+.syss_tapbutton .mu-btn.tap > *{color:#000;}
+.syss_tapbutton .mu-btn.tap[disabled] > *{color:#757575;}
+.syss_tapbutton .mu-btn.tap[disabled], .syss_tapbutton .mu-btn.tap[disabled]:hover{border-top:1px solid #b1b1b1;background:#979797;}
+.syss_tapbutton .mu-btn.tap.active, .syss_tapbutton .mu-btn.tap.active:hover{border:1px solid #6a6a6a;background:#fff;cursor:Default;}
+.syss_tapbutton .mu-btn.tap{border-top:1px solid #b1b1b1; border-right:1px solid #b1b1b1;width:68px; height:37px; padding:0; line-height:37px; font-size:14px; box-shadow:3px 3px 5px rgba(0, 0, 0, 0.25) inset;background: #c1c8cd; /* Old browsers */background: -moz-linear-gradient(top,  #fff 0%, #b7b7b7 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #fff 0%,#b7b7b7 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #fff 0%,#b7b7b7 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fff', endColorstr='#b7b7b7',GradientType=0 ); /* IE6-9 */}
+.syss_tapbutton .mu-btn.tap:hover{border-top:1px solid #dcdcdc;background: #fff; /* Old browsers */background: -moz-linear-gradient(top,  #fff 0%, #d3d3d3 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #fff 0%,#d3d3d3 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #fff 0%,#d3d3d3 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fff', endColorstr='#d3d3d3',GradientType=0 ); /* IE6-9 */}
+.syss_tapbutton .mu-btn.tap:active{border-top:1px solid #b1b1b1;background: #d3d3d3; /* Old browsers */background: -moz-linear-gradient(top,  #d3d3d3 0%, #fff 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #d3d3d3 0%,#fff 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #d3d3d3 0%,#fff 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d3d3d3', endColorstr='#fff',GradientType=0 ); /* IE6-9 */}
+
+.syss_tapbutton .mu-line_icon{width:20px;height:20px;display:inline-block;vertical-align:middle;background:url("../images/monitoring/icon_topology_linenumber.png") no-repeat 0 0;}
+.syss_tapbutton .mu-line_icon.line5{background-position:0 0; ;margin-bottom:3px;}
+.syss_tapbutton .mu-btn.tap[disabled] .mu-line_icon.line5{background-position:0 -20px;margin-bottom:3px;}
+.syss_tapbutton .mu-line_icon.line6{background-position:0 -40px;margin-bottom:3px;}
+.syss_tapbutton .mu-btn.tap[disabled] .mu-line_icon.line6{background-position:0 -60px;margin-bottom:3px;}
+.syss_tapbutton .mu-line_icon.line7{background-position:0 -80px;margin-bottom:3px;}
+.syss_tapbutton .mu-btn.tap[disabled] .mu-line_icon.line7{background-position:0 -100px;margin-bottom:3px;}
+.syss_tapbutton .mu-line_icon.line8{background-position:0 -120px;margin-bottom:4px;}
+.syss_tapbutton .mu-btn.tap[disabled] .mu-line_icon.line8{background-position:0 -140px;margin-bottom:3px;}
+
+/* 너트워크 토폴로지 탭버튼 */
+.du_tapbutton .mu-btn.tap > *{color:#000;}
+.du_tapbutton .mu-btn.tap[disabled] > *{color:#757575;}
+.du_tapbutton .mu-btn.tap[disabled], .du_tapbutton .mu-btn.tap[disabled]:hover{border-top:1px solid #b1b1b1;background:#979797;}
+.duServer-all .du_tapbutton .mu-btn.tap.active, .duServer-all .du_tapbutton .mu-btn.tap.active:hover{border-top:1px solid #b4c3d7;border-right:1px solid #b4c3d7;background:#b4c3d7;cursor:Default;box-shadow:none;}
+.duServer-5 .du_tapbutton .mu-btn.tap.active, .duServer-5 .du_tapbutton .mu-btn.tap.active:hover{border-top:1px solid #b1b1b1;border-right:1px solid #d7cae8;background:#d7cae8;cursor:Default;box-shadow:none;}
+.duServer-6 .du_tapbutton .mu-btn.tap.active, .duServer-6 .du_tapbutton .mu-btn.tap.active:hover{border-top:1px solid #b1b1b1;border-right:1px solid #e6d8bf;background:#e6d8bf;cursor:Default;box-shadow:none;}
+.duServer-7 .du_tapbutton .mu-btn.tap.active, .duServer-7 .du_tapbutton .mu-btn.tap.active:hover{border-top:1px solid #b1b1b1;border-right:1px solid #cedaac;background:#cedaac;cursor:Default;box-shadow:none;}
+.duServer-8 .du_tapbutton .mu-btn.tap.active, .duServer-8 .du_tapbutton .mu-btn.tap.active:hover{border-top:1px solid #b1b1b1;border-right:1px solid #efccd2;background:#efccd2;cursor:Default;box-shadow:none;}
+.du_tapbutton .mu-btn.tap{border-top:1px solid #b1b1b1; border-right:1px solid #b1b1b1;width:80px; height:30px; padding-bottom:3px; line-height:30px; font-size:14px; box-shadow:-5px 1px 5px rgba(0, 0, 0, 0.25) inset;background: #e6e6e6; /* Old browsers */background: -moz-linear-gradient(top,  #fff 0%, #e6e6e6 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #fff 0%,#e6e6e6 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #fff 0%,#e6e6e6 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fff', endColorstr='#e6e6e6',GradientType=0 ); /* IE6-9 */}
+.du_tapbutton .mu-btn.tap:hover{border-top:1px solid #dcdcdc;background: #fff; /* Old browsers */background: -moz-linear-gradient(top,  #fff 0%, #d3d3d3 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #fff 0%,#d3d3d3 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #fff 0%,#d3d3d3 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fff', endColorstr='#d3d3d3',GradientType=0 ); /* IE6-9 */}
+.du_tapbutton .mu-btn.tap:active{border-top:1px solid #b1b1b1;background: #d3d3d3; /* Old browsers */background: -moz-linear-gradient(top,  #d3d3d3 0%, #fff 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #d3d3d3 0%,#fff 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #d3d3d3 0%,#fff 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d3d3d3', endColorstr='#fff',GradientType=0 ); /* IE6-9 */}
+
+.topologyWrap .server-wrap .du_tapbutton{position:absolute; top:40px; left:1px; width:80px;color:#000;}
+/*.mu-line_icon.line5:before{content:"";display:inline-block;width:19px;height:19px;background:url("../images/monitoring/icon_topology_linenumber.png") no-repeat 0 0;vertical-align:middle;}*/
+
+.du_tapbutton .mu-line_icon{width:20px;height:20px;display:inline-block;vertical-align:middle;background:url("../images/monitoring/icon_topology_linenumber.png") no-repeat 0 0;}
+.du_tapbutton .mu-line_icon.line5{background-position:0 0; ;margin-bottom:3px;}
+.du_tapbutton .mu-btn.tap[disabled] .mu-line_icon.line5{background-position:0 -20px;margin-bottom:3px;}
+.du_tapbutton .mu-line_icon.line6{background-position:0 -40px;margin-bottom:3px;}
+.du_tapbutton .mu-btn.tap[disabled] .mu-line_icon.line6{background-position:0 -60px;margin-bottom:3px;}
+.du_tapbutton .mu-line_icon.line7{background-position:0 -80px;margin-bottom:3px;}
+.du_tapbutton .mu-btn.tap[disabled] .mu-line_icon.line7{background-position:0 -100px;margin-bottom:3px;}
+.du_tapbutton .mu-line_icon.line8{background-position:0 -120px;margin-bottom:4px;}
+.du_tapbutton .mu-btn.tap[disabled] .mu-line_icon.line8{background-position:0 -140px;margin-bottom:3px;}
+
+
+/* pagination */
+.paginationWrap{text-align:center;padding:12px 0;}
+.mu-pagination, .mu-pagination ul{vertical-align:middle;}
+.mu-pagination li a{background:#fff;border:1px solid #fff;color:#000;border-radius:2px;min-width:22px;height:22px;line-height:20px;padding:0 4px;}
+.mu-pagination li.active a, .mu-pagination li.active:hover a, .mu-pagination li.active:active a{background:#3baadb;border:1px solid #3baadb;color:#fff;}
+.mu-pagination li:hover a{background:#3baadb;border:1px solid #3baadb; color:#fff;}
+.mu-pagination li a:active{background:#3baadb;border:1px solid #3baadb;color:#fff;}
+.mu-pagination button{border-radius:2px;border-top:1px solid #4f96ce;box-shadow:0 1px 1px rgba(0, 0, 0, 0.25);background: #145c90; /* Old browsers */background: -moz-linear-gradient(top,  #145c90 0%, #2c71a4 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #145c90 0%,#2c71a4 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #145c90 0%,#2c71a4 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#145c90', endColorstr='#2c71a4',GradientType=0 ); /* IE6-9 */}
+.mu-pagination button:hover{border-top:1px solid #5ba8e4;background: #3986bd; /* Old browsers */background: -moz-linear-gradient(top,  #3986bd 0%, #174363 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #3986bd 0%,#174363 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #3986bd 0%,#174363 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3986bd', endColorstr='#174363',GradientType=0 ); /* IE6-9 */}
+.mu-pagination button:active{border-top:1px solid #163247;background: #133f5f; /* Old browsers */background: -moz-linear-gradient(top,  #133f5f 0%, #3a85ba 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #133f5f 0%,#3a85ba 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #133f5f 0%,#3a85ba 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#133f5f', endColorstr='#3a85ba',GradientType=0 ); /* IE6-9 */}
+.mu-pagination button span{/* position:relative;top:0 */display:block;height:100%;line-height:21px;}
+.mu-pagination button span:after{content:'';display:inline-block;border:5px solid #fefefe;border-radius:3px}
+.mu-pagination .mu-first span:before{content:'';margin-right:1px;display:inline-block;border:5px solid #fefefe;border-left:0;border-top-color:transparent;border-bottom-color:transparent;border-radius:3px}
+.mu-pagination .mu-first span:after{content:"";border-left:0;border-top-color:transparent;border-bottom-color:transparent}
+.mu-pagination .mu-first:hover span:after,.mu-pagination .mu-first:hover span:before{border-right-color:#fefefe}
+.mu-pagination .mu-first[disabled] span:after,.mu-pagination .mu-first[disabled] span:before{border-right-color:#e3e2e2}
+.mu-pagination .mu-prev span:after{content:"";border-left:0;border-top-color:transparent;border-bottom-color:transparent}
+.mu-pagination .mu-prev:hover span:after{border-right-color:#fefefe}
+.mu-pagination .mu-prev[disabled] span:after{border-right-color:#e3e2e2}
+.mu-pagination .mu-next span:after{content:"";border-right:0;border-top-color:transparent;border-bottom-color:transparent}
+.mu-pagination .mu-next:hover span:after{border-left-color:#fefefe}
+.mu-pagination .mu-next[disabled] span:after{border-left-color:#e3e2e2}
+.mu-pagination .mu-last span:after{content:"";border-right:0;border-top-color:transparent;border-bottom-color:transparent}
+.mu-pagination .mu-last span:before{content:'';margin-right:1px;display:inline-block;border:5px solid #fefefe;border-right:0;border-top-color:transparent;border-bottom-color:transparent;border-radius:3px}
+.mu-pagination .mu-last:hover span:after,.mu-pagination .mu-last:hover span:before{border-left-color:#fefefe}
+.mu-pagination .mu-last[disabled] span:after,.mu-pagination .mu-last[disabled] span:before{border-left-color:#e3e2e2}
+.mu-pagination > * + *, .mu-pagination li + li{margin-left:8px;}
+.mu-pagination .mu-next, .mu-pagination ul{margin-left:13px;}
+.mu-pagination .mu-prev, .mu-pagination .mu-last{margin-left:6px;}
+.mu-pagination .mu-prev, .mu-pagination .mu-next{width:28px;height:22px;}
+.mu-pagination .mu-first, .mu-pagination .mu-last{width:28px;height:22px;padding:0 4px;}
+
+/* tab */
+.mu-tab{background:none;display:block;}
+.mu-tab > li > a{background:#373c3e;height:30px;line-height:30px;padding:0 6px;font-size:11px;color:#cbdfea;font-weight:bold;border-radius:0;min-width: 84px}
+.mu-tab > li > a:hover{background:#4f5355;}
+.mu-tab > li > a:active, .mu-tab > li.active > a{background:#cadee9;color:#232323;padding:0;}
+/* tab line */
+.mu-tab.line {height:32px;border-bottom:1px solid #d6d6d6;}
+.mu-tab.line > li{cursor:pointer;}
+.mu-tab.line > li > a{height:31px;line-height:31px;border:1px solid #d6d6d6;background:#f0f0f0;color:#232323;}
+.mu-tab.line > li > a:active, .mu-tab.line > li.active > a{padding:0 10px;border:1px solid #d6d6d6;border-bottom:none;height:32px;background:#373c3e;color:#cbdfea;}
+.mu-tab-body{padding:10px;background:#cadee9;}
+.mu-tab-body > div{display:none;}
+.mu-tab-body > .show{display:block;}
+.mu-tab-body.line {border:1px solid #d1d1d1;border-top:none;background:#fff;}/* tab line */
+
+/* grid */
+.mu-grid{table-layout:;min-width:100%;}
+.mu-grid thead > tr > th{height:32px;padding:0 8px;vertical-align:middle;background:#e8f6ff;border:none;}
+.mu-grid tbody > tr > td{height:32px;padding:0 8px;vertical-align:middle;background:#fff;}
+.mu-grid thead > tr > th, .mu-grid tbody > tr > th, .mu-grid tfoot > tr > th, .mu-grid thead > tr > td, .mu-grid tbody > tr > td, .mu-grid tfoot > tr > td{border-bottom:1px solid #c6c6c6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mu-grid-border thead > tr > th + th, .mu-grid-border tbody > tr > td + td{border-left:1px solid #c6c6c6;}
+.mu-grid-strip tbody > tr:nth-child(2n) th, .mu-grid-strip tbody > tr:nth-child(2n) td{background:#f0f0f0;}
+.mu-grid tbody > tr.selected > td {background:#abe5ff;}
+.mu-grid tbody > tr > td.selected{background:#abe5ff}
+.mu-grid thead > tr > th.stat + th, .mu-grid tbody > tr > td.stat + td{/*border-left:none;*/}
+.mu-grid thead > tr > th.stat{border-bottom:1px solid #c6c6c6;}
+.mu-grid tbody > tr > td.stat{text-align:center;}
+.mu-grid tbody > tr:nth-child(2n) > td.stat{/*background:#5c5c5c;*/}
+.mu-grid tbody > tr > td.stat .alram{width:14px;height:14px}
+.mu-grid tbody > tr > td .alram{width:14px;height:14px}
+.mu-grid-hover tbody > tr:hover th, .mu-grid-hover tbody > tr:hover td{background-color:#baf8ff;}
+.mu-grid-hover-pointer tbody > tr:hover td{background-color:#baf8ff;cursor:pointer;}
+
+.gridWrap{border-radius:0;box-shadow:none;overflow-x:auto;width:100%;}
+.gridWrap{background:#fff; /* border-left:1px solid #c6c6c6; border-right:1px solid #c6c6c6; border-bottom:1px solid #c6c6c6; */}
+/* .gridWrap .mu-grid-border {border-left:0;} */
+.gridScrollT .mu-grid, .mu-scroll-v .mu-grid{table-layout:fixed;}
+.gridScrollT{padding-right:17px;background:#d8f6ff;border:1px solid #c6c6c6;}
+.gridScrollT .mu-grid-border{border:0;border-right:1px solid #c6c6c6;}
+.gridScrollT .mu-grid-border thead > tr > th {border-bottom:0;}
+.gridScrollT .mu-grid-border thead > tr + tr > th{border-top:1px solid #c6c6c6;}
+.mu-scroll-v{border:1px solid #c6c6c6; border-top:none; background-color:#fff;}
+.mu-scroll-v .mu-grid{border-top:none;}
+.mu-scroll-v .mu-grid-border {border-left:0; border-top:0; border-bottom:0;margin-bottom:-1px;}
+.scrollY {overflow-y:scroll !important;}
+
+/* datepicker */
+.ui-datepicker{background:#f7f7f7;}
+.ui-datepicker .ui-datepicker-header{background:#f7f7f7;border-radius:0;margin-bottom:10px;}
+.ui-datepicker .ui-datepicker-calendar{border:1px solid #fff;}
+.ui-datepicker .ui-datepicker-buttonpane{padding:10px 0;border-top:1px solid #eeeeee;margin-top:10px;}
+.ui-datepicker .ui-datepicker-calendar .ui-state-default{border-radius:0;background:transparent;}
+.ui-datepicker .ui-datepicker-calendar thead th, .ui-datepicker .ui-datepicker-calendar tbody td{border-left:1px solid #fff;border-bottom:1px solid #fff;vertical-align:middle;}
+.ui-datepicker .ui-datepicker-calendar thead th, .ui-datepicker .ui-datepicker-calendar tbody td .ui-state-default{color:#757575;}
+.ui-datepicker .ui-datepicker-calendar thead th:first-child, .ui-datepicker .ui-datepicker-calendar tbody td:first-child .ui-state-default{color:#f04d0d;}
+.ui-datepicker .ui-datepicker-calendar thead th:last-child, .ui-datepicker .ui-datepicker-calendar tbody td:last-child .ui-state-default{color:#428fc5;}
+.ui-datepicker .ui-datepicker-calendar thead th{height:33px;}
+.ui-datepicker .ui-datepicker-calendar tbody td{padding:0;}
+.ui-datepicker .ui-datepicker-calendar .ui-datepicker-today .ui-state-default{background:#3baadb;border:2px solid #3baadb;}
+.ui-datepicker .ui-datepicker-calendar .ui-state-default{border:2px solid transparent;min-width:30px;height:30px;line-height:28px;}
+.ui-datepicker .ui-datepicker-calendar .ui-state-default:hover{border:2px solid #959595;}
+.ui-datepicker .ui-datepicker-calendar .ui-datepicker-current-day .ui-state-active{background:none;border:2px solid #3baadb;color:#757575 !important;}
+.ui-datepicker-title select{border:0;padding:0 5px;height:100%;}
+.ui-datepicker-title select + select{margin-left:5px;}
+.ui-datepicker-title select > *{padding:3px 5px;}
+.ui-datepicker .ui-widget-header .ui-datepicker-prev, .ui-datepicker .ui-widget-header .ui-datepicker-next{border-top:1px solid #4f96ce;box-shadow:0 1px 1px rgba(0, 0, 0, 0.25);border-radius:0;margin:0;height:24px;background: #145c90; /* Old browsers */background: -moz-linear-gradient(top,  #145c90 0%, #2c71a4 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #145c90 0%,#2c71a4 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #145c90 0%,#2c71a4 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#145c90', endColorstr='#2c71a4',GradientType=0 ); /* IE6-9 */}
+.ui-datepicker .ui-widget-header .ui-datepicker-prev:after, .ui-datepicker .ui-widget-header .ui-datepicker-next:after{font-size:14px;margin-top:5px;}
+.ui-datepicker .ui-datepicker-header .ui-datepicker-title{line-height:100%;height:24px;}
+.ui-datepicker-buttonpane button{width:100px;height:23px;line-height:22px;border:0;border-top:1px solid #4f96ce;box-shadow:0 1px 1px rgba(0, 0, 0, 0.25);font-size:13px;color:#fff;padding:0;background: #145c90; /* Old browsers */background: -moz-linear-gradient(top,  #145c90 0%, #2c71a4 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #145c90 0%,#2c71a4 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #145c90 0%,#2c71a4 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#145c90', endColorstr='#2c71a4',GradientType=0 ); /* IE6-9 */}
+.ui-datepicker-buttonpane button.ui-datepicker-close{border-top:1px solid #aaaaaa;background: #7d7d7d; /* Old browsers */background: -moz-linear-gradient(top,  #7d7d7d 0%, #8b8b8b 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #7d7d7d 0%,#8b8b8b 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #7d7d7d 0%,#8b8b8b 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#7d7d7d', endColorstr='#8b8b8b',GradientType=0 ); /* IE6-9 */}
+.ui-datepicker-buttonpane button + button{margin-left:5px;}
+
+/*progressbar*/
+.mu-progress{width:200px;margin:5px;border:1px solid #c4c4c4;background:#d8d8d8;}
+.mu-progress > .mu-pbar{text-align:left;text-indent:5px;}
+.mu-progress > .mu-pbar > span{font-family:inherit;font-size:11px;}
+
+/* Spinner jquery-ui용 소스 추출 정리 */
+.ui-spinner {display:inline-block; position:relative; overflow:hidden; width:50px; height:23px; padding:0 5px; border:1px solid #c6c6c6; background:#f8f8f8; line-height:100%; vertical-align:middle;}
+.ui-spinner-input {width:100%; height:21px; line-height:21px; border:none; background:transparent;}
+.ui-spinner-input:hover,
+.ui-spinner-input:focus {outline:0;}
+.ui-spinner .ui-icon {position:absolute; top:0; right:0;}
+.ui-spinner .ui-spinner-button {display:block; overflow:hidden; position:absolute; right:3px; width:16px; height:50%; margin:0; padding:0; text-align:center; cursor:pointer;}
+.ui-spinner .ui-spinner-button .ui-button-text {display:block;}
+.ui-spinner .ui-icon-triangle-1-n {overflow:hidden; width:16px; height:11px; background:url(../images/common/bg_ico_spinner.png) no-repeat 0 0; text-indent:-9999px;}
+.ui-spinner .ui-icon-triangle-1-s {overflow:hidden; width:16px; height:11px; background:url(../images/common/bg_ico_spinner.png) no-repeat 0 0; -moz-transform:rotate(-180deg); -webkit-transform:rotate(-180deg); -ms-transform:rotate(-180deg); transform:rotate(-180deg); text-indent:-999px;}
+.ui-spinner .ui-icon-triangle-1-n:hover,
+.ui-spinner .ui-icon-triangle-1-s:hover {background-position:0 -11px;}
+.ui-spinner-up {top:0;}
+.ui-spinner-down {bottom:0;}
+
+/* Tooltip */
+.mu-tooltip{position:relative;border-radius:5px;overflow:hidden;padding-bottom:10px;background:#4e4e4e;border:none;box-shadow:2px 2px 10px rgba(0, 0, 0, 0.7);}
+.mu-tooltip-header{background:#252525;height:36px;line-height:36px;font-family:"맑은고딕", Malgun Gothic, Nanum Gothic, sans-serif;font-weight:bold;font-size:18px;color:#fff;text-align:center;}
+.mu-tooltip > .mu-tooltip-inner{padding:0;}
+.mu-tooltip .tit{height:36px;line-height:36px;text-align:left;padding:0 8px;font-size:16px;color:#fff;font-weight:bold;}
+.mu-tooltip .mu-formbox{border:none;table-layout:initial;}
+.mu-tooltip .mu-formbox tbody > tr{height:auto;}
+.mu-tooltip .mu-formbox tbody > tr > th, .mu-tooltip .mu-formbox tbody > tr > td{font-size:12px;height:24px;text-align:left;background:#2f2f2f;color:#fff;padding:0 8px;}
+.mu-tooltip .mu-formbox tbody > tr.odd > th, .mu-tooltip .mu-formbox tbody > tr.odd > td{background:#3e3e3e;}
+.mu-tooltip .mu-formbox tbody > tr > td{text-align:right;}
+
+/* Dialog */
+.mu-dialog{background:#e6eaee;border-radius:0;border:none;box-shadow:2px 4px 10px rgba(0, 0, 0, 0.5)}
+.mu-dialog-head{background:#1a2330;text-align:center;height:32px;line-height:32px;padding-left:47px;border-bottom:none;}
+.mu-dialog-head > *{display:inline;}
+.mu-dialog-head .title{float:none;margin:0;font-size:16px;font-weight:bold;color:#fff;line-height:100%;}
+.mu-dialog-head .mu-btn, .mu-dialog-head .mu-btn:hover, .mu-dialog-head .mu-btn:active{width:47px;height:100%;background:inherit;margin-right:0;box-shadow:none;border:none;}
+.mu-dialog-head a.mu-btn, .mu-dialog-head a.mu-btn:hover, .mu-dialog-head a.mu-btn:active{line-height:30px;}
+.mu-dialog-head .mu-icon-img{width:23px;height:23px;}
+.mu-dialog-head .mu-icon-img:before{content:"";display:block;background:url("../images/common/icon_close.png") no-repeat 0 0;height:100%;width:100%;}
+.mu-dialog-body-top{border-bottom:1px solid #e1e1e1;padding:10px;}
+.mu-dialog-body-top + .mu-dialog-body{border-top:1px solid #fff;}
+.mu-dialog-body-top .mu-search-group{background:none;box-shadow:none;text-align:center;border:none;}
+/*.mu-dialog-body{border-bottom:1px solid #e1e1e1;}*/
+.mu-dialog-body:last-child{border-bottom:none;}
+.mu-dialog-body h3.mu-title{font-size:14px;padding-left:20px;margin:20px 0 8px;background:url("../images/common/bul_h3.png") no-repeat 0 1px;}
+.mu-dialog-body h3.mu-title:first-of-type{margin-top:12px;}
+.mu-dialog-body .mu-search-group{margin-bottom:20px;}
+.mu-dialog-body .mu-search-group th{font-weight:bold;text-align:right;width:100px;}
+.mu-fix-foot .mu-dialog-body{top:32px;height:calc(100% - 32px - 63px);}
+.mu-dialog-foot{height:63px;border-top:1px solid #fff;text-align:center;padding:15px;font-size:0;}
+.mu-dialog-foot .mu-btn{min-width:130px;height:32px;font-size:14px;font-weight:bold;}
+.mu-dialog-foot .mu-btn + .mu-btn{margin-left:5px;}
+
+/* width */
+.wp35{width:35% !important;}
+.wp70{width:70% !important;}
+
+/* padding */
+.pd05 {padding:5px !important;} 
+
+/* etc */
+.lineY{display:inline-block;margin-left:10px;padding-left:10px;border-left:1px solid #e5e5e5;line-height:100%;}
+.txtS{display:inline-block;padding:0 5px;min-width:20px;}
+
+/* icon */
+.mu-icon.excel{font-size:19px;}
+.volume-up:before{content:"\f028";}
+
+/* text color */
+.txt_org{color:#ff7200;}
+
+
+
+/* Login */
+body#login {overflow:hidden;min-width:1280px;min-height:768px;}
+#loginWrap {position:relative;min-width:1280px;height:100%;background:url("../images/login/bg_back.jpg") no-repeat center center;background-size:cover;}
+#loginContainer{position:fixed;top:40%;left:50%;/* width:1200px;min-width:1200px;height:587px; */margin:-200px 0 0 -233px;}/* 22-02-09 MOD */
+#loginFooter{position:fixed;bottom:0;left:0;right:0;height:40px;background:#262b3f;}
+#loginFooter address{padding-top:14px;text-align:center;font-size:11px;color:#898989;}
+#loginFooter address span {color:#b3b3b3;}
+#loginFooter address span.pointC{color:#73a4ce;}
+/* .loginLogo{position:absolute;top:0;left:-100px;width:566px;height:182px;background:url("../images/login/login_title.png") no-repeat 0 0;text-indent:-9999px;} *//* 22-02-09 logo text로 변경 */
+.loginLogo {background:none; text-align:left;}/* 22-02-09 logo text로 변경 */
+.loginLogo span {font-size:40px; color:#b3b3b3; font-weight:bold; letter-spacing:-5px;}/* 22-02-09 logo text로 변경 */
+.loginArea{margin:107px auto 0;width:466px;box-shadow:1px 1px 1px rgba(0, 0, 0, 0.1);}/* 22-02-09 MOD */
+.loginArea h3{height:24px;margin-bottom:15px;}
+.loginBox{position:relative;height:216px;padding:30px 50px;border-radius:3px;border-bottom-right-radius:0;border-bottom-left-radius:0;background:#587289;}
+.loginBox h3{width:106px;height:24px;background:url("../images/login/img_user.png") no-repeat 0 0;text-indent:-9999em;}
+.loginBox .loginInput{position:relative;width:230px;height:40px;margin-bottom:5px;}
+.loginBox .loginInput .mu-input{background:#3e445b;height:40px;padding:0 10px 0 48px;border-radius:2px;border:1px solid #3e445b;color:#9cb5c6;}
+.loginBox .loginInput .mu-input:hover{border-color:#90c3da;outline:0;}
+.loginBox .mu-input-id:after{content:"";position:absolute;top:0;left:0;width:40px;height:100%;background:url("../images/login/ico_id.png") no-repeat 9px 9px;}
+.loginBox .mu-input-pw:after{content:"";position:absolute;top:0;left:0;width:40px;height:100%;background:url("../images/login/ico_pw.png") no-repeat 9px 9px;}
+.loginBox .btnLogin{position:absolute;top:69px;right:50px;width:130px;height:85px;background:url(../images/login/btn_login.png) no-repeat 0 0;text-indent:-9999em;border:0 none;}
+.loginBox .btnLogin:hover{background-position:-130px 0;}
+.loginBox .btnLogin:active{background-position:-260px 0;}
+.loginBox .btnLogin:focus{outline:0;}
+.loginBox .joinGroup{color:#9cb5c6;font-size:0;}
+.loginBox .joinGroup .mu-checkbox{display:inline-block;vertical-align:middle;margin-right:10px;font-size:14px;}
+.loginBox .joinGroup .mu-checkbox label:before{background:url("../images/login/check2.png") no-repeat 0 0;}
+.loginBox .joinGroup .mu-checkbox input:checked + label:before{background-position: 0 -20px;}
+.loginBox .joinGroup .join{display:inline-block;vertical-align:middle;line-height:20px;font-size:14px;}
+.loginBox .joinGroup .join a{padding-left:10px;color:#9cb5c6;border-left:1px solid #9cb5c6;}
+.noticeBox{position:relative;height:216px;padding:30px 50px;border-radius:3px;border-top-right-radius:0;border-top-left-radius:0;background:#3e445b;}
+.noticeBox h3{width:66px;height:19px;background:url("../images/login/img_notice.png") no-repeat 0 0;text-indent:-9999em;}
+.noticeBox .noticeList li{position:relative;margin:8px 0 0 0;padding:0 0 0 10px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.noticeBox .noticeList li:before{content:"";position:absolute;top:7px;left:0;width:4px;height:4px;border-radius:100%;background:#fff;}
+.noticeBox .noticeList li a{display:block;overflow:hidden;width:366px;height:18px;line-height:18px;white-space:nowrap;text-overflow:ellipsis;color:#fff;}
+.noticeBox .iconMore{position:absolute;top:30px;right:50px;width:44px;height:15px;background:url("../images/login/btn_more.png") no-repeat 0 0;text-indent:-9999em;}
+/* Login - 계정등록 */
+.accountRegist .essential{color:#ff9600;font-weight:bold;}
+.accountRegist .messages, .accountRegist .modifyMessages{font-size:12px;color:#ff9600;margin-top:5px;}
+/* Login - 공지사항*/
+.noticeView .attachFile{color:#ff8d41;cursor:pointer;}
+.noticeView .noFile{color:#9cb5c6;}
+
+
+
+/* GNB */
+header{height:48px;}
+.headWrap{width:100%;height:100%;}
+h1{float:left;min-width:360px;height:100%;background:#3d6f8f; text-align:center;}/* 22-02-09 logo text로 변경 */
+h1 span{display:inline-block; line-height:48px; color:#d4ebff; font-size:18px; font-weight:bold;}/* 22-02-09 logo text로 변경 */
+nav{float:left;width:calc(100% - 360px);height:100%;background:#1e3c59;}
+/* GNB - depth1 */
+.mu-hMenu{border-left:1px solid #12202d;border-right:1px solid #4f7287;}
+.mu-hMenu > li > a{min-width:160px;background:#1e3c59;font-size:16px;color:#fefefe;font-weight:bold;border-left:1px solid #4f7287;border-right:1px solid #12202d;}
+.mu-hMenu > li.active > a, .mu-hMenu > li:hover > a{background:#122236;color:#fefefe;}
+.mu-hMenu > li > a span{display:inline-block;vertical-align:middle;text-align:left;}
+.mu-hMenu .mu-icon-img:before{content:"";display:block;background:url("../images/common/icon_gnb.png")0 0;background-size:100% auto;height:22px;width:22px;}
+.mu-hMenu .mu-icon-img.gnb01:before{background-position:0 0;}
+.mu-hMenu .mu-icon-img.gnb02:before{background-position:0 -22px;}
+.mu-hMenu .mu-icon-img.gnb03:before{background-position:0 -44px;}
+.mu-hMenu .mu-icon-img.gnb04:before{background-position:0 -68px;}
+.mu-hMenu .mu-icon-img.gnb05:before{background-position:0 -91px;}
+.mu-hMenu .mu-icon-img.gnb06:before{background-position:0 -114px;}
+.mu-hMenu .mu-icon-img.gnb07:before{background-position:0 -138px;}
+.mu-hMenu .mu-icon-img.gnb08:before{background-position:0 -159px;}
+.mu-hMenu li:hover .mu-icon-img.gnb01:before, .mu-hMenu li.active .mu-icon-img.gnb01:before{background-position:-22px 0;}
+.mu-hMenu li:hover .mu-icon-img.gnb02:before, .mu-hMenu li.active .mu-icon-img.gnb02:before{background-position:-44px -22px;}
+.mu-hMenu li:hover .mu-icon-img.gnb03:before, .mu-hMenu li.active .mu-icon-img.gnb03:before{background-position:-66px -44px;}
+.mu-hMenu li:hover .mu-icon-img.gnb04:before, .mu-hMenu li.active .mu-icon-img.gnb04:before{background-position:-88px -68px;}
+.mu-hMenu li:hover .mu-icon-img.gnb05:before, .mu-hMenu li.active .mu-icon-img.gnb05:before{background-position:-110px -91px;}
+.mu-hMenu li:hover .mu-icon-img.gnb06:before, .mu-hMenu li.active .mu-icon-img.gnb06:before{background-position:-132px -114px;}
+.mu-hMenu li:hover .mu-icon-img.gnb07:before, .mu-hMenu li.active .mu-icon-img.gnb07:before{background-position:-154px -138px;}
+.mu-hMenu li:hover .mu-icon-img.gnb08:before, .mu-hMenu li.active .mu-icon-img.gnb08:before{background-position:-176px -159px;}
+/* GNB - depth2 */
+.mu-hMenu .mu-list{background:#b8d5ff;border:none;border-radius:0;box-shadow:none;padding:0;margin-top:-1px;min-width:100%;overflow:visible;}
+.mu-hMenu .mu-list > li{height:34px;line-height:34px;text-align:left;text-indent:0;border:1px solid #325181;}
+.mu-hMenu .mu-list > li + li{margin-top:-1px;} 
+.mu-hMenu .mu-list > li:hover, .mu-hMenu .mu-list > li.active{background:none;}
+.mu-hMenu .mu-list > li > a{font-size:14px;color:#000;line-height:32px;letter-spacing:-1px;border-left:2px solid #fff;padding:0 15px;}
+.mu-hMenu .mu-list > li:hover > a, .mu-hMenu .mu-list > li.active > a{background:#e2eeff;color:#000;}
+.mu-hMenu .mu-list li > a:after{font-family:'FontAwesome';content:"\f0da";/*font-size:18px;*/color:#5974a9;display:inline-block;vertical-align:middle;float:right;}
+.mu-hMenu .mu-list li > a:only-child:after{content:"";}
+/* GNB - depth3 */
+.mu-hMenu ul ul{margin-left:100%;}
+/* GNB - topmenu */
+.mu-topMenu{font-size:0;line-height:48px;}
+.mu-topMenu > *{height:100%;line-height:100%;display:inline-block;vertical-align:middle;font-size:16px;color:#fff;margin:0;padding:0 10px;}
+.mu-topMenu .userInfo{border-right:1px solid #12202d;}
+.mu-topMenu .btnLogout, .mu-topMenu .btnLogout:hover{height:100%;border:none;border-left:1px solid #4f7287;border-radius:0;box-shadow:none;}
+.mu-topMenu .userName{font-size:14px;color:#fefefe;line-height:48px;}
+.mu-topMenu .mu-icon:before{color:#b4c3d7;}
+.mu-topMenu .btnSetting i:before, .mu-topMenu .btnLogout i:before, .mu-topMenu .btnSetting:hover > i:before, .mu-topMenu .btnLogout:hover > i:before, .mu-topMenu .btnSetting:active > i:before, .mu-topMenu .btnLogout:active > i:before{color:#b4c3d7;}
+
+
+
+/* layout */
+.mu-container{height:calc(100% - 48px);}
+.mu-container.sysState{height:auto;min-height:864px;}
+section{position:relative;padding:60px 20px 20px;}
+.mu-container.dashboard section, .mu-container.dbSubway section{padding:0;}
+.mu-container.dashboard.main {/* height:100%; */ /* background:rgba(0,0,0,0.8); */}
+.mu-container.dashboard, .mu-container.dbSubway{/* height:calc(100% - 76px); */}
+/* .mu-container.dashboard section, .mu-container.dbSubway section{padding:5px 0 0;} */
+.mu-container.dashboard section {padding-top:0;}
+.mu-container.basestation section {padding:0;}
+.mu-container.system section{padding:0 0 17px;}
+/* .mu-list,.mu-prompt,.mu-confirm,.mu-progress,.mu-popup-menu,.mu-popup-menu > li > ul,.mu-popup-menu > li > ul > li > ul,.mu-area,.mu-search-group,.mu-round,.mu-input,.mu-btn,.mu-selectbox > .mu-value,.mu-selectbox > .mu-list,.mu-pagination > button,.mu-pagination a,.mu-tab-vertical > li > a,.mu-alert,.mu-paging > a,.mu-paging > button,.mu-panel,.mu-datepicker input, .mu-selectbox .mu-list > li{border-radius:0;} */
+.mu-container.system .topologyWrap{/* padding:62px 0 0; */padding:48px 0 0;text-align:left;}
+
+/* Dashboard - Train Operation */
+/* 열차 운행 감시 검수용 하단 성능 트렌7드안보이도록 하는 css */
+/* 차량단말이 제대로 운영되면 원본으로 변경 */
+/* .mu-container.dbSubway-withoutTrend{height:calc(100% - 96px);}
+.mu-container.dbSubway-withoutTrend section{padding:5px 0 17px;} */
+
+
+
+/* 통합감시 - Top */
+.nwTopologyWrap{position:absolute;width:100%;height:5px;background:#11161a;border-bottom:1px solid #004986;z-index:1;}
+.nwTopology{height:52px;background:#11161a;border-bottom:1px solid #004986;font-size:0;padding:0 10px 0 0;}
+.nwTopology:before{content:"";display:inline-block;vertical-align:middle;margin-left:-82px;border-top:52px solid #11161a;border-left:82px solid transparent;}
+.nwTopology > *, .nwTopology .mu-toggle-btn{display:inline-block;vertical-align:middle;line-height:100%;font-size:12px;}
+.nwTopology .mu-toggle-btn {height:36px; margin:1px 0 2px;}
+.nwTopology .titleWrap{position:absolute;top:0;left:25px;height:52px;}
+.nwTopology .titleWrap h3.mu-title{background:url("../images/common/img_title.png") no-repeat 0 21px;height:100%;padding:21px 0 0 38px;font-size:22px;color:#000;}/* 22-02-08 MOD : 디자인아이콘변경 */
+.nwTopology .titleWrap .mu-path{display:none;}
+.nwTopology .timeWrap{background:url("../images/common/icon_time.png") no-repeat 0 50%;background-size:24px auto;margin-right:8px;font-size:18px;color:#fff;line-height:35px;padding:0 20px 0 36px;}
+.nwTopology .totalAlram{font-size:0;margin-right:8px;}
+.totalAlram .tit{background:url("../images/common/icon_totalalram.png") no-repeat 0 50%;background-size:28px auto;display:inline-block;font-size:14px;color:#fff;font-weight:normal;line-height:110%;vertical-align:middle;padding:4px 10px 4px 36px;}
+.totalAlram ul{background:#303030;height:100%;}
+.totalAlram ul li{display:inline-block;}
+.totalAlram > ul, .troubleAlram > ul{display:inline-block;height:100%;font-size:0;vertical-align:middle;padding:0 10px;}
+.totalAlram li{display:inline-block;line-height:36px;font-size:0;}
+.totalAlram li > span{display:inline-block;vertical-align:middle;font-size:18px;color:#fff;min-width:70px;text-align:left;padding:0 10px 0 5px;}
+.nwTopology .mu-toggle-btn{min-width:102px;height:36px;line-height:36px;border-radius:25px;background:#596b84;position:relative;padding:0 15px 0 40px;overflow:hidden;font-size:15px;color:#000;font-weight:bold;}
+.nwTopology .mu-toggle-btn, .nwTopology .mu-toggle-btn:hover, .nwTopology .mu-toggle-btn:active{border-top:none;}
+.nwTopology .mu-toggle-btn + .mu-toggle-btn{margin-left:4px}
+.nwTopology .mu-toggle-btn:before{content:"";display:block;border-radius:25px;width:100%;height:100%;box-shadow:0 2px 5px rgba(0, 0, 0, 0.5) inset;position:absolute;top:0;left:0;}
+.nwTopology .mu-toggle-btn .mu-icon{border-radius:50%;width:30px;height:30px;display:inline-block;background:#3d4550 url("../images/common/icon_switch.png") no-repeat 0 0;position:absolute;top:3px;left:3px;}
+.nwTopology .mu-toggle-btn .filter{background-position:0 0;}
+.nwTopology .mu-toggle-btn .sound{background-position:0 -30px;}
+.nwTopology .mu-toggle-btn .watch{background-position:0 -60px;}
+.nwTopology .mu-toggle-on .filter{background-position:-30px 0;}
+.nwTopology .mu-toggle-on .sound{background-position:-30px -30px;}
+.nwTopology .mu-toggle-on .watch{background-position:-30px -60px;}
+.nwTopology .mu-toggle-on{background:#7cd7ff;color:#000;padding:0 40px 0 15px;}
+.nwTopology .mu-toggle-on .mu-icon{left:auto;right:3px;background-color:#c2ecff;}
+.nwTopology .mu-toggle-on .mu-icon:before{box-shadow:0 1px 1px #f2eacb inset;}
+.nwTopology .mu-toggle-btn.mu-btn-icon{color:#fff;padding-left:30px;}
+.nwTopology .mu-toggle-btn.mu-btn-icon .mu-icon{box-shadow:none;border-radius:0;background:none;}
+.nwTopology .mu-toggle-btn.mu-btn-icon .mu-icon:before{box-shadow:none;border-radius:0;}
+.nwTopology .mu-toggle-btn.mu-btn-icon .mu-icon.threshold:before{content:"\f013";color:#e7d69c;font-size:20px;line-height:27px;}
+.alram{border-radius:15px;width:22px;height:22px;display:inline-block;box-shadow:1px 1px 1px rgba(0, 0, 0, 0.5) inset;background:#e9e9e9;position:relative;vertical-align:middle;}
+.alram:after{content:"";display:block;box-shadow:1px 1px 1px rgba(255, 255, 255, 0.3);border-radius:50%;width:100%;height:100%;position:absolute;top:0;left:0;}
+.alram.critical{background:#eb0606;}
+.alram.major{background:#eb8206;}
+.alram.minor{background:#ebe806;}
+.alram.normal_state{background:#7cd93d;}
+.alram.warning{background:#06a8eb;}
+.troubleAlram{box-shadow:1px 1px 5px rgba(0, 0, 0, 0.5) inset;}
+.troubleAlram > .tit{display:inline-block;line-height:31px;font-size:13px;color:#fff;font-weight:normal;vertical-align:middle;padding:0 18px 0 40px;background:url("../images/common/icon_alram.png") no-repeat 10px 50%;}
+.troubleAlram .alram{border-radius:8px;width:16px;height:16px;display:inline-block;box-shadow:1px 1px 1px rgba(0, 0, 0, 0.5) inset;position:relative;vertical-align:middle;}
+.troubleAlram li{display:inline-block;line-height:50px;font-size:0;}
+.troubleAlram li > span{display:inline-block;vertical-align:middle;font-size:13px;color:#fff;min-width:60px;text-align:left;padding:0 10px;}
+
+/* 통합감시 > 메인감시, 네트워크 토폴로지 */
+.topologyWrap{width:100%;text-align:center;padding:62px 10px 0;}
+.topologyWrap .mu-grid{table-layout:initial;}
+.topologyWrap .mu-row{margin:-5px;}
+.topologyWrap .mu-row .mu-col{height:100%;padding:5px;}
+.topologyWrap .mu-col .server-area {width:auto;margin-left:180px;}/* 22-02-09 ADD */
+.topologyWrap .server-wrap{position:relative; height:199px; background:#b4c3d7;}/* 22-02-09 ADD : height */
+.topologyWrap .mu-col.epc{width:33%;}
+.topologyWrap .mu-col.sw{width:33%;}
+.topologyWrap .mu-col.epc-re{width:34%;}
+.topologyWrap .mu-col.service{width:66%;}
+.topologyWrap .mu-col.ems{width:34%;}
+
+.topologyWrap .mu-col.epc .server-wrap, .topologyWrap .mu-col.sw .server-wrap, .topologyWrap .mu-col.epc-re .server-wrap{height:99px;}/* 22-02-09 DEL : height 통일되서 사용안함 */
+.topologyWrap .mu-col.service .server-wrap, .topologyWrap .mu-col.ems .server-wrap{height:189px;}/* 22-02-09 DEL : height 통일되서 사용안함 */
+.topologyWrap .server-wrap.duServer{width:100%;min-height:94px;height: expression( this.scrollHeight > 191 ? "192px" : "auto" );max-height: 192px;overflow-x:hidden;overflow-y:auto;display:inline-block;}
+.topologyWrap .server-wrap.duServer-all{background:#b4c3d7;}
+.topologyWrap .server-wrap.duServer-5{background:#d7cae8;}
+.topologyWrap .server-wrap.duServer-6{background:#e6d8bf;}
+.topologyWrap .server-wrap.duServer-7{background:#cedaac;}
+.topologyWrap .server-wrap.duServer-8{background:#efccd2;}
+.topologyWrap .server-wrap.ruServer{width:100%;min-height:94px;height: expression( this.scrollHeight > 173 ? "174px" : "auto" );max-height: 174px;overflow-x:hidden;overflow-y:auto;display:inline-block;background:#4b5471;}
+.topologyWrap .server-wrap div.tit{position:absolute;top:10px;left:20px;font-size:30px;color:#000;font-weight:bold;text-align:left;}/* 22-02-09 MOD : font-size */
+.topologyWrap .server-wrap.ruServer div.tit{color:#fff;}
+.topologyWrap .mu-col.epc .server-area{width:auto;margin-left:120px;}
+.topologyWrap .mu-col.epc-re .server-area{width:auto;margin-left:150px;}
+.topologyWrap .mu-col.service .server-area{width:auto;margin-left:110px;}
+.topologyWrap .mu-col.ems .server-area{width:auto;margin-left:80px;}
+.topologyWrap .mu-col.sw .server-area{width:auto;margin-left:120px;}
+.topologyWrap .mu-col .duServer .server-area{width:auto;margin-left:110px;padding:5px 0;}
+.topologyWrap .mu-col .ruServer .server-area{width:auto;margin-left:110px;}
+.topologyWrap .server-area{position:relative;height:100%;margin:0 auto;text-align:center;}
+
+.topologyWrap .serverGroup{position:absolute;width:87px;}
+.topologyWrap .serverGroup.mme{top:10px;left:1%;}/* 22-02-09 MOD : left */
+.topologyWrap .serverGroup.gw{top:10px;left:24%;}
+.topologyWrap .serverGroup.hss{top:10px;left:52%;}
+.topologyWrap .serverGroup.pcrf{top:10px;left:80%;}
+/*예비용 EPC*/
+.topologyWrap .serverGroup.epc-re01{top:10px;left:0%;}
+.topologyWrap .serverGroup.epc-re02{top:10px;left:38%;}
+.topologyWrap .serverGroup.epc-re03{top:10px;left:76%;}
+
+.topologyWrap .serverGroup.storage{top:10px;left:4.5%;}
+.topologyWrap .serverGroup.message{top:10px;left:17%;}
+.topologyWrap .serverGroup.ucms{top:10px;left:29.5%;}
+.topologyWrap .serverGroup.backup{top:10px;left:42%;}
+.topologyWrap .serverGroup.mdm{top:10px;left:54.5%;}
+.topologyWrap .serverGroup.positioning{top:10px;left:67%;}
+.topologyWrap .serverGroup.firewall{top:10px;left:79.5%;}
+.topologyWrap .serverGroup.iotcsgn{top:10px;left:92%;}
+.topologyWrap .serverGroup.ppt{top:100px;left:0.5%;}
+.topologyWrap .serverGroup.call{top:100px;left:13%;}
+.topologyWrap .serverGroup.order{top:100px;left:25.5%;}
+.topologyWrap .serverGroup.rectifier{top:100px;left:38%;}
+.topologyWrap .serverGroup.fota{top:100px;left:50.5%;}
+.topologyWrap .serverGroup.image{top:100px;left:63%;}
+.topologyWrap .serverGroup.mgw{top:100px;left:75.5%;}
+.topologyWrap .serverGroup.iothss{top:100px;left:88%;}
+
+/*
+.topologyWrap .serverGroup.ems-c{top:20px;left:0;}
+.topologyWrap .serverGroup.ems-r{top:20px;left:12.5%;}
+.topologyWrap .serverGroup.ems-hss{top:20px;left:25%;}
+.topologyWrap .serverGroup.ems-c-re{top:20px;left:37.5%;}
+.topologyWrap .serverGroup.ems-hss-re{top:20px;left:50%;}
+.topologyWrap .serverGroup.ems-nw{top:20px;left:62.5%;}
+.topologyWrap .serverGroup.ems-rectifier{top:20px;left:75%;}
+.topologyWrap .serverGroup.ems-message{top:20px;left:87.5%;}
+*/
+
+.topologyWrap .serverGroup.ems-c{top:10px;left:8.4%;}
+.topologyWrap .serverGroup.ems-r{top:10px;left:31.2%;}
+.topologyWrap .serverGroup.ems-hss{top:10px;left:54%;}
+.topologyWrap .serverGroup.ems-iothss{top:10px;left:76.8%;}
+.topologyWrap .serverGroup.ems-c-re{top:100px;left:0%;}
+.topologyWrap .serverGroup.ems-nw{top:100px;left:21.5%;}
+.topologyWrap .serverGroup.ems-rectifier{top:100px;left:43%;}
+.topologyWrap .serverGroup.ems-message{top:100px;left:64.5%;}
+.topologyWrap .serverGroup.ems-iotcsgn{top:100px;left:86%;}
+
+/*.topologyWrap .serverGroup.sw-base{top:10px;left:0;}
+.topologyWrap .serverGroup.sw-cotrol{top:10px;left:25%;}
+.topologyWrap .serverGroup.sw-station{top:10px;left:50%;}
+.topologyWrap .serverGroup.sw-du{top:10px;left:75%;}*/
+.topologyWrap .serverGroup.sw-base{top:10px;left:10%;}
+.topologyWrap .serverGroup.sw-station5{top:10px;left:40%;}
+.topologyWrap .serverGroup.sw-station7{top:10px;left:70%;}
+
+.topologyWrap .serverGroup.station{float:left;position:relative;width:115px;height:73px;border-radius:10px;margin:1px;}
+.topologyWrap .serverGroup.station.selected, .topologyWrap .serverGroup.station:hover{background:#4b5471;}
+.topologyWrap .ruServer .serverGroup.station{margin-right:30px;}
+.topologyWrap .ruServer .serverGroup.station.selected, .topologyWrap ruServer .serverGroup.station:hover{background:none;}
+
+.topologyWrap .engineer {display:inline-block; position:absolute; left:3px; top:30px; width:26px; height:59px; background:url("../images/monitoring/icon_engineer_m.png") no-repeat 0 0; cursor:pointer;}
+.topologyWrap .engineer.yellow {background:url("../images/monitoring/icon_engineer_m_minor.png") no-repeat 0 0;}
+.topologyWrap .engineer.orange {background:url("../images/monitoring/icon_engineer_m_major.png") no-repeat 0 0;}
+.topologyWrap .engineer.red {background:url("../images/monitoring/icon_engineer_m_critical.png") no-repeat 0 0;}
+
+.topologyWrap .server-wrap .engineer {display:inline-block; position:absolute; left:3px; top:30px; width:26px; height:59px; background:url("../images/monitoring/icon_engineer_ms.png") no-repeat 0 0; cursor:pointer;}
+.topologyWrap .server-wrap .engineer.yellow {background:url("../images/monitoring/icon_engineer_ms_minor.png") no-repeat 0 0;}
+.topologyWrap .server-wrap .engineer.orange {background:url("../images/monitoring/icon_engineer_ms_major.png") no-repeat 0 0;}
+.topologyWrap .server-wrap .engineer.red {background:url("../images/monitoring/icon_engineer_ms_critical.png") no-repeat 0 0;}
+
+.topologyWrap .serverBox {/* position:relative; */ display:inline-block; width:87px; height:85px; text-align:center; cursor:pointer;}
+.topologyWrap .serverBox .stage {display:block; width:44px; height:44px; position:absolute; right:20%; top:-20px; z-index:3; background:url("../images/monitoring/icon_switch_stage.png") no-repeat 0 0; text-indent:-999em;}
+.topologyWrap .serverBox .stage.yellow {background-position:0 0}
+.topologyWrap .serverBox .stage.orange {background-position:0 -44px}
+.topologyWrap .serverBox .stage.red {background-position:0 -88px}
+
+.topologyWrap .serverBox .state {display:block; height:85px; background:url("../images/monitoring/icon_topology_server.png") no-repeat 0 0; text-indent:-999em; font-size:0; cursor:pointer;}
+.topologyWrap .serverBox .state.normalgray{background-position:0 0;}
+.topologyWrap .serverBox .state.normalblue{background-position:0 -85px;}
+.topologyWrap .serverBox .state.yellow{background-position:0 -170px}
+.topologyWrap .serverBox .state.orange{background-position:0 -255px}
+.topologyWrap .serverBox .state.red{background-position:0 -340px}
+
+.topologyWrap .server-wrap .serverBox .state {display:block; height:57px; background:url("../images/monitoring/icon_topology_server_ms.png") no-repeat 0 0; text-indent:-999em; font-size:0; cursor:pointer;}
+.topologyWrap .server-wrap .serverBox .state.normalgray{background-position:0 0;}
+.topologyWrap .server-wrap .serverBox .state.normalblue{background-position:0 -57px;}
+.topologyWrap .server-wrap .serverBox .state.yellow{background-position:0 -114px}
+.topologyWrap .server-wrap .serverBox .state.orange{background-position:0 -171px}
+.topologyWrap .server-wrap .serverBox .state.red{background-position:0 -228px}
+
+.topologyWrap .double {/* position:relative; */ width:92px;}
+.topologyWrap .double .serverBox {position:absolute; top:0; cursor:pointer;}
+.topologyWrap .double .serverBox.server01 {left:0}
+.topologyWrap .double .serverBox.server02 {left:20px; top:8px;}
+.topologyWrap .server-area.lg-type .double .serverBox.server02 {left:40px; top:22px;}/* 22-02-09 ADD : lg-type 위치 */ 
+
+.topologyWrap .triple {/* position:relative; */ width:93px;}
+.topologyWrap .triple .serverBox {position:absolute; top:0; cursor:pointer;}
+.topologyWrap .triple .serverBox.server01 {left:0}
+.topologyWrap .triple .serverBox.server02 {left:16px; top:8px;}
+.topologyWrap .triple .serverBox.server03 {left:32px; top:16px;}
+
+.topologyWrap .quad {/* position:relative; */ width:109px;}
+.topologyWrap .quad .serverBox {position:absolute; top:0; cursor:pointer;}
+.topologyWrap .quad .serverBox.server01 {left:0}
+.topologyWrap .quad .serverBox.server02 {left:12px; top:6px;}
+.topologyWrap .quad .serverBox.server03 {left:24px; top:12px;}
+.topologyWrap .quad .serverBox.server04 {left:36px; top:18px;}
+
+.topologyWrap .serverGroup .stage {display:none; width:60px; height:60px; position:absolute; right:-18px; top:-6px; z-index:3; background:url("../images/monitoring/icon_switch_stage.png") no-repeat 0 0; text-indent:-999em; cursor:pointer;}
+.topologyWrap .serverGroup .stage.yellow {background-position:0 0}
+.topologyWrap .serverGroup .stage.orange {background-position:0 -60px}
+.topologyWrap .serverGroup .stage.red {background-position:0 -120px}
+
+.topologyWrap .server-wrap .serverGroup .stage {display:none; width:40px; height:40px; position:absolute; right:10px; top:-6px; z-index:3; background:url("../images/monitoring/icon_switch_stage_ms.png") no-repeat 0 0; text-indent:-999em; cursor:pointer;} 
+.topologyWrap .server-wrap .serverGroup .stage.yellow {background-position:0 0}
+.topologyWrap .server-wrap .serverGroup .stage.orange {background-position:0 -40px}
+.topologyWrap .server-wrap .serverGroup .stage.red {background-position:0 -80px}
+
+.topologyWrap .serverGroup.station .stage {display:none; width:32px; height:32px; position:absolute; right:15px; top:3px; z-index:3; background:url("../images/monitoring/icon_switch_stage_small.png") no-repeat 0 0; text-indent:-999em; cursor:pointer;}
+.topologyWrap .serverGroup.station .stage.yellow {background-position:0 0}
+.topologyWrap .serverGroup.station .stage.orange {background-position:0 -32px}
+.topologyWrap .serverGroup.station .stage.red {background-position:0 -64px}
+
+.topologyWrap .double .serverBox .state {width:51px; height:50px; background:url("../images/monitoring/icon_topology_server_double_01.png") no-repeat 0 0; cursor:pointer;}
+.topologyWrap .double .serverBox .state.normalgray {background-position:0 0;}
+.topologyWrap .double .serverBox .state.normalblue {background-position:0 -50px;}
+.topologyWrap .double .serverBox .state.yellow {background-position:0 -100px;}
+.topologyWrap .double .serverBox .state.orange {background-position:0 -150px;}
+.topologyWrap .double .serverBox .state.red {background-position:0 -200px;}
+
+.topologyWrap .triple .serverBox .state {width:61px; height:70px; background:url("../images/monitoring/icon_topology_server_quad.png") no-repeat 0 0; cursor:pointer;}
+.topologyWrap .triple .serverBox .state.normalgray {background-position:0 0;}
+.topologyWrap .triple .serverBox .state.normalblue {background-position:0 -70px;}
+.topologyWrap .triple .serverBox .state.yellow {background-position:0 -140px;}
+.topologyWrap .triple .serverBox .state.orange {background-position:0 -210px;}
+.topologyWrap .triple .serverBox .state.red {background-position:0 -280px;}
+
+.topologyWrap .quad .serverBox .state {width:45px; height:50px; background:url("../images/monitoring/icon_topology_server_quad_ms.png") no-repeat 0 0; cursor:pointer;}
+.topologyWrap .quad .serverBox .state.normalgray {background-position:0 0;}
+.topologyWrap .quad .serverBox .state.normalblue {background-position:0 -50px;}
+.topologyWrap .quad .serverBox .state.yellow {background-position:0 -100px;}
+.topologyWrap .quad .serverBox .state.orange {background-position:0 -150px;}
+.topologyWrap .quad .serverBox .state.red {background-position:0 -200px;}
+
+/* 네트워크 토폴로지 스위치 영역 22-02-24 ADD / 22-03-14 MOD */
+.topologyWrap .mu-row .mu-col-3 .server-wrap .server-area,
+.topologyWrap .mu-row .mu-col-4 .server-wrap .server-area,
+.topologyWrap .mu-row .mu-col-5 .server-wrap .server-area {margin-left:120px; padding-right:20px;}
+.topologyWrap .mu-row .mu-col-3 {width:25%;}
+.topologyWrap .mu-row .mu-col-4 {width:35%;}
+.topologyWrap .mu-row .mu-col-5 {width:40%;}
+
+/* 큰사이즈 추가 22-02-09 ADD ******************************************************/
+.topologyWrap .server-wrap {overflow-y:auto; max-height:199px;}
+.topologyWrap .server-wrap .server-area.lg-type {display:flex; flex-wrap:wrap; height:100%; padding:10px 60px 10px 0;}
+.topologyWrap .server-wrap .server-area.lg-type .serverGroup {position:relative; flex:none; width:87px; height:85px;}
+.topologyWrap .server-wrap .server-area.lg-type {display:flex; justify-content:space-between; align-items:center;}
+.topologyWrap .server-wrap .server-area.lg-type .serverGroup {position:relative; left:unset !important; top:unset !important; display:flex; align-items:center; width:134px; height:132px; top:calc(50% - 70px); margin-right:10px;}
+.topologyWrap .server-wrap .server-area.lg-type .serverGroup .serverBox {width:120px; height:132px;}/* 장비1 */
+.topologyWrap .server-wrap .server-area.lg-type .serverGroup.double .serverBox {width:93px; height:132px;}/* 장비1+1 */
+.topologyWrap .server-wrap .server-area.lg-type .serverGroup:not(.double) .serverBox .tit {right:unset; bottom:unset;}
+
+.topologyWrap .server-wrap .server-area.more-type {padding:10px 60px 10px 0;}
+.topologyWrap .server-wrap .server-area.more-type .serverGroup {float:left; position:relative; width:87px; height:85px; margin:5px 15px;}
+.topologyWrap .server-wrap .server-area.more-type .serverGroup .stage {top:-10px; right:-10px;}
+.topologyWrap .server-wrap .server-area.more-type .serverGroup .serverBox .state {background-position-x:center;}
+.topologyWrap .server-wrap .server-area.more-type .serverGroup .serverBox .tit {right:unset; bottom:unset;}
+
+/* P168함용 2022.05.13 (start) */
+.P168.topologyWrap .mu-row .mu-col-3 .server-wrap .server-area,
+.P168.topologyWrap .mu-row .mu-col-4 .server-wrap .server-area,
+.P168.topologyWrap .mu-row .mu-col-5 .server-wrap .server-area {margin-left:180px; padding-right:5px;}
+
+.P168.topologyWrap .mu-row .mu-col-3 {width:30%;}
+.P168.topologyWrap .mu-row .mu-col-4 {width:40%;}
+.P168.topologyWrap .mu-row .mu-col-5 {width:60%;}
+
+.P168.topologyWrap .server-wrap {overflow-y:hidden; max-height:110px;}
+.P168.topologyWrap .server-wrap.P168 {overflow-y:hidden; max-height:300px !important; height:300px !important;}
+
+.P168.topologyWrap .server-wrap .server-area.more-type {padding:15px 60px 10px 0;}
+.P168.topologyWrap .server-wrap .server-area.more-type .serverGroup {float:left; position:sticky; width:87px; height:85px; margin:5px 20px;}
+.P168.topologyWrap .server-wrap .server-area.more-type .serverGroup .stage {top:-10px; right:-10px;}
+.P168.topologyWrap .server-wrap .server-area.more-type .serverGroup .serverBox .state {background-position-x:center;}
+.P168.topologyWrap .server-wrap .server-area.more-type .serverGroup .serverBox .tit {right:unset; bottom:unset;}
+
+.P168.topologyWrap .server-wrap .server-area.more-type .serverGroup.mme {margin-right:90px;}
+.P168.topologyWrap .server-wrap .server-area.more-type .serverGroup.gw {margin-right:90px;}
+.P168.topologyWrap .server-wrap .server-area.more-type .serverGroup.hss {margin-right:10px;}
+
+.P168.topologyWrap .serverBox .tit {position:relative; right:12px; bottom:2px; width:100px;overflow:visible;font-size:12px; }
+.P168.topologyWrap .double .serverBox.server01 .tit {right:65px !important;; bottom:10px;text-align:right;}
+.P168.topologyWrap .double .serverBox.server02 .tit {right:20px !important;; bottom:0;text-align:right;}
+/* P168함용 2022.05.13 (end) */
+
+.topologyWrap .server-wrap .engineer {display:inline-block; position:absolute; left:3px; top:20px; width:26px; height:59px; background:url("../images/monitoring/icon_engineer_ms.png") no-repeat 0 0; cursor:pointer;}
+.topologyWrap .server-wrap .engineer.yellow {background:url("../images/monitoring/icon_engineer_ms_minor.png") no-repeat 0 0;}
+.topologyWrap .server-wrap .engineer.orange {background:url("../images/monitoring/icon_engineer_ms_major.png") no-repeat 0 0;}
+.topologyWrap .server-wrap .engineer.red {background:url("../images/monitoring/icon_engineer_ms_critical.png") no-repeat 0 0;}
+
+/* lg-type > stage 사이즈 */
+.topologyWrap .server-wrap .server-area.lg-type .serverGroup .stage {right:-4px; top:-12px; width:60px; height:60px; background:url(../images/monitoring/icon_switch_stage.png) no-repeat 0 0;}/* 22-02-09 MOD : 위치, 아이콘사이즈 */ 
+.topologyWrap .server-wrap .server-area.lg-type .serverGroup .stage.yellow {background-position:0 0}
+.topologyWrap .server-wrap .server-area.lg-type .serverGroup .stage.orange {background-position:0 -60px}
+.topologyWrap .server-wrap .server-area.lg-type .serverGroup .stage.red {background-position:0 -120px}
+
+/* lg-type > engineer 사이즈 */
+.topologyWrap .server-wrap .server-area.lg-type .engineer {top:60px; left:10px; width:26px; height:59px; background:url(../images/monitoring/icon_engineer_m.png) no-repeat 0 0;}/* 22-02-15 ADD : background engineer 기본 */
+.topologyWrap .server-wrap .server-area.lg-type .engineer.yellow {background:url(../images/monitoring/icon_engineer_m_minor.png) no-repeat 0 0;}
+.topologyWrap .server-wrap .server-area.lg-type .engineer.orange {background:url(../images/monitoring/icon_engineer_m_major.png) no-repeat 0 0;}
+.topologyWrap .server-wrap .server-area.lg-type .engineer.red {background:url(../images/monitoring/icon_engineer_m_critical.png) no-repeat 0 0;}
+
+/* large 장비1 */
+.topologyWrap .server-wrap .server-area.lg-type .serverBox .state {/* display:inline-block; */ width:120px; height:118px; background:url("../images/monitoring/icon_topology_server_lg.png") no-repeat 0 0; text-indent:-999em; font-size:0; cursor:pointer;}
+.topologyWrap .server-wrap .server-area.lg-type .serverBox .state.normalgray {background-position:0 0;}
+.topologyWrap .server-wrap .server-area.lg-type .serverBox .state.normalblue {background-position:0 -118px;}
+.topologyWrap .server-wrap .server-area.lg-type .serverBox .state.yellow {background-position:0 -236px}
+.topologyWrap .server-wrap .server-area.lg-type .serverBox .state.orange {background-position:0 -354px}
+.topologyWrap .server-wrap .server-area.lg-type .serverBox .state.red {background-position:0 -472px}
+
+/* large 장비1+1 */
+.topologyWrap .server-area.lg-type .double .serverBox .state {width:93px; height:109px; background:url("../images/monitoring/icon_topology_server_double_lg.png") no-repeat 0 0; cursor:pointer;}
+.topologyWrap .server-area.lg-type .double .serverBox .state.normalgray {background-position:0 0;}
+.topologyWrap .server-area.lg-type .double .serverBox .state.normalblue {background-position:0 -109px;}
+.topologyWrap .server-area.lg-type .double .serverBox .state.yellow {background-position:0 -218px;}
+.topologyWrap .server-area.lg-type .double .serverBox .state.orange {background-position:0 -327px;}
+.topologyWrap .server-area.lg-type .double .serverBox .state.red {background-position:0 -436px;}
+/*//*/
+
+.topologyWrap .serverBox .tit {position:relative; right:12px; bottom:2px; width:100px;overflow:visible;font-size:12px; }
+.topologyWrap .double .serverBox.server01 .tit {right:65px; bottom:10px;text-align:right;}
+.topologyWrap .double .serverBox.server02 .tit {right:20px; bottom:0;text-align:right;}
+/*   서버명 예외처리 위치조절*/
+.topologyWrap .double.message .serverBox.server01 .tit{right:70px}
+.topologyWrap .double.iotcsgn .serverBox.server01 .tit {right:80px}
+.topologyWrap .double.order .serverBox.server01 .tit, .topologyWrap .double.iothss .serverBox.server01 .tit {right:75px}
+
+.topologyWrap .quad .serverBox.server01 .tit {right:73px; bottom:20px;text-align:right;}
+.topologyWrap .quad .serverBox.server02 .tit {right:75px; bottom:12px;text-align:right;}
+.topologyWrap .quad .serverBox.server03 .tit {right:65px; bottom:5px;text-align:right;}
+.topologyWrap .quad .serverBox.server04 .tit {right:10px; bottom:0;text-align:right;}
+.topologyWrap .mu-col.ems .serverBox .tit {position:static;margin-left:-35px;}
+.topologyWrap .mu-col.sw .serverBox .tit {position:static;margin-left:-35px;}
+.topologyWrap .mu-col.epc-re .serverBox .tit {position:static;margin-left:-35px;}
+
+.topologyWrap .station .serverBox {width:100%; height:73px; vertical-align:top;}
+.topologyWrap .station .state {width:48px; height:42px; margin:7px auto 3px 23px; background:url("../images/monitoring/icon_topology_server_small.png") no-repeat 0 -42px;}
+.topologyWrap .station .state.normal {background-position:0 -42px}
+.topologyWrap .station .state.yellow {background-position:0 -84px}
+.topologyWrap .station .state.orange {background-position:0 -126px}
+.topologyWrap .station .state.red {background-position:0 -168px}
+
+.topologyWrap .ruServer .station .serverBox {width:100%; height:73px; vertical-align:top;}
+.topologyWrap .ruServer .station .state {width:48px; height:42px; margin:10px auto 3px 40px; background:url("../images/monitoring/icon_topology_server_small.png") no-repeat 0 -42px;}
+.topologyWrap .ruServer .station .state.normal {background-position:0 -42px}
+.topologyWrap .ruServer .station .state.yellow {background-position:0 -84px}
+.topologyWrap .ruServer .station .state.orange {background-position:0 -126px}
+.topologyWrap .ruServer .station .state.red {background-position:0 -168px}
+
+.topologyWrap .duServer .double .state {width:33px; height:38px; margin:10px 30px 7px 23px; background:url("../images/monitoring/icon_topology_server_double_small.png") no-repeat 0 -38px;}
+.topologyWrap .duServer .double .state.normalgray {background-position:0 0}
+.topologyWrap .duServer .double .state.normalblue {background-position:0 -38px}
+.topologyWrap .duServer .double .state.normal {background-position:0 -38px}
+.topologyWrap .duServer .double .state.yellow {background-position:0 -76px}
+.topologyWrap .duServer .double .state.orange {background-position:0 -114px}
+.topologyWrap .duServer .double .state.red {background-position:0 -152px}
+.topologyWrap .duServer .double .serverBox.server01 {left:15px;}
+.topologyWrap .duServer .double .serverBox.server02 {top:6px;left:27px;}
+.topologyWrap .duServer .double .tit{position:absolute;width:100%;left:0;bottom:10px;font-size:12px;}
+.topologyWrap .duServer .station.selected .double .tit, .topologyWrap .duServer .station:hover .double .tit{color:#fff;}
+
+.topologyWrap .station .serverBox .tit {position:static;width:auto;}
+.topologyWrap .station .serverBox .tit {position:static;width:auto;}
+.topologyWrap .ruServer .station .serverBox .tit {color:#fff;position:absolute;top:52px;left:-80px;width:160px;height:14px;margin-left:62px;text-align:center;white-space:nowrap;}
+.topologyWrap .station.selected .serverBox .tit, .topologyWrap .station:hover .serverBox .tit{color:#fff;}
+
+.topologyWrap .duServer .engineer,
+.topologyWrap .ruServer .engineer {display:inline-block;position:absolute;left:55%;top:30px;width:13px;height:30px;margin-left:-22px;background:url("../images/monitoring/icon_engineer_s.png") no-repeat 0 0}
+.topologyWrap .duServer .engineer.yellow,
+.topologyWrap .ruServer .engineer.yellow {background:url("../images/monitoring/icon_engineer_s_minor.png") no-repeat 0 0}
+.topologyWrap .duServer .engineer.orange,
+.topologyWrap .ruServer .engineer.orange {background:url("../images/monitoring/icon_engineer_s_major.png") no-repeat 0 0}
+.topologyWrap .duServer .engineer.red,
+.topologyWrap .ruServer .engineer.red {background:url("../images/monitoring/icon_engineer_s_critical.png") no-repeat 0 0}
+
+/* 통합감시 > 메인감시 */
+.monitoring{position:relative;width:100%;height:100%;background:#c1c8cd;padding:122px 0 60px;font-size:0;}
+.monitoring:after{content:"";display:block;clear:both;}
+.monitoring-server{position:relative;display:inline-block;vertical-align:top;width:1332px;}
+.monitoring-server:after{content:"";position:absolute;top:0;left:0;width:100%;height:100%;background:url("../images/monitoring/bg_servergroup_line.png") no-repeat 128px 30px;}
+.monitoring-server .server-area{width:1332px;height:150px;background:url("../images/monitoring/bg_servergroup.png") no-repeat 0 0;padding:0 50px;margin:0;}
+.monitoring-server .server-area .mu-row{height:100%;margin:0;}
+.monitoring-server .server-area .mu-col{height:100%;padding:0;}
+.monitoring-server .server-area .serverGroup{position:relative;margin:-27px auto 0;z-index:1;}
+.monitoring-server .server-area .serverGroup .serverBox .tit{position:absolute;left:-50%;right:auto;bottom:auto;width:200px;font-size:22px;color:#000;text-align:center;margin-left:-20px;}
+.monitoring-state{display:inline-block;vertical-align:top;width:500px;height:100%;margin-left:30px}
+.monitoring-state .mu-panel{background:#45484d;border:1px solid #547b9b;color:#fff;}
+.monitoring-state .mu-panel-head{background:#292b2c;border-bottom:1px solid #547b9b;height:27px;line-height:27px;font-size:18px;padding:0;}
+.monitoring-state .mu-panel-body{padding:10px 30px;}
+.monitoring-state .total-state{margin-bottom:8px;}
+.monitoring-state .total-state .mu-panel-head{height:58px;line-height:57px;font-size:24px}
+.monitoring-state .data-state{margin:-1px 0 8px}
+.monitoring-state .total-state li{background:#000;border-radius:16px;}
+.monitoring-state li{width:441px;height:31px;line-height:31px;color:#fff;text-align:left;}
+.monitoring-state li + li{margin-top:12px;}
+.monitoring-state li .tit{position:relative;display:inline-block;vertical-align:middle;font-size:18px;width:160px;height:22px;line-height:22px;padding-left:55px;}
+.monitoring-state .total-state li .tit:before{content:"";position:absolute;top:0;left:25px;width:22px;height:22px;background:url("../images/monitoring/icon_monitoring_state.png") no-repeat 0 0;}
+.monitoring-state li.state-work .tit:before{background-position:0 0;}
+.monitoring-state li.state-trouble .tit:before{background-position:-22px 0;}
+.monitoring-state li.state-performace .tit:before{background-position:-44px 0;}
+.monitoring-state li.state-server .tit:before{background-position:-66px 0;}
+.monitoring-state li .state{display:inline-block;vertical-align:middle;font-size:0;height:22px;line-height:22px;}
+.monitoring-state li .state span{position:relative;display:inline-block;vertical-align:middle;font-size:18px;width:90px;height:22px;line-height:22px;padding-left:35px;}
+.monitoring-state li .date{display:inline-block;vertical-align:middle;font-size:18px;height:22px;line-height:22px;}
+.monitoring-state .clear-state .mu-panel .mu-panel-head{height:58px;line-height:57px;font-size: 24px}
+.clear-state{scrollbar-3dLight-Color: #000; scrollbar-arrow-color: #3c3f43; scrollbar-base-color:#000; scrollbar-Face-Color:#3c3f43;scrollbar-Track-Color: #000;scrollbar-DarkShadow-Color: #000; scrollbar-Highlight-Color: #000;scrollbar-Shadow-Color: #3c3f43}
+.clear-state .mu-panel .mu-scroll-v.scrollY .clearmessage{color:#bac4cc;background-color:#3c3f43; font-size:14pt;font-weight:700;line-height:16px;margin:90px 0 0 12px;padding:22px;height:60px;width:460px}
+.monitoring-state .clear-state .mu-panel .mu-panel-body{padding:0;font-size:14px}
+.monitoring-state .clear-state .mu-panel .mu-panel-body .mu-scroll-v.scrollY{height:257px}
+.monitoring-state .clear-state .mu-panel .mu-panel-body .mu-scroll-v.scrollY .mu-grid, .monitoring-state .clear-state .mu-panel .mu-panel-body .gridScrollT .mu-grid{table-layout:fixed}
+.monitoring-state .clear-state .mu-panel .mu-panel-body .gridScrollT{background: #1e3d5b;border: 1px solid #000;border-left:0}
+.monitoring-state .clear-state .mu-panel .mu-panel-body .gridScrollT .mu-grid thead > tr > th {background: #1e3d5b;border: 1px solid #000}
+.monitoring-state .clear-state .mu-panel .mu-panel-body .mu-scroll-v.scrollY {border:0;background-color: #45484d}
+.monitoring-state .clear-state .mu-panel .mu-panel-body .mu-scroll-v.scrollY .mu-grid-border tbody > tr > td + td, .monitoring-state .clear-state .mu-panel .mu-panel-body .mu-scroll-v.scrollY .mu-grid tbody > tr > td{background:#5f6369;border: 1px solid #000}
+.monitoring-state .clear-state .mu-panel .mu-panel-body .mu-scroll-v.scrollY .mu-grid-strip tbody > tr:nth-child(2n) td{background:#45484d}
+.alarm{position:absolute;top:0;left:0;width:22px;height:22px;border-radius:50%;background-color:#000;}
+.alarm.critical{background:#eb0606}
+.alarm.major{background:#eb8206}
+.alarm.minor{background:#ebe806;}
+.alarm.normal{background:#00b1ff}
+.alarm.gray{background:#777777}
+
+/* 통합감시 > 네트워크 토폴로지 - GRID */
+.gridListWrap{padding:0 10px;/*max-width:1880px;*/margin:0 auto;height:100%;font-size:0;}
+.gridListWrap .mu-grid{/* border:0; */font-size:14px}
+.gridTopContent{padding:9px 0;}
+.gridTopContent:after{content:"";display:block;clear:both;}
+.gridTopContent .troubleAlram{height:31px;background:#7f7f76;border-radius:8px;margin-left:60px;}
+.gridTopContent .troubleAlram li{height:31px;line-height:31px;}
+.gridListWrap .btnWrap{box-shadow:0 1px 2px rgba(0, 0, 0, 0.5);font-size:0;}
+.gridListWrap .btnWrap .mu-btn{height:23px;padding-bottom:1px;color:#fefefe;font-size:13px;border-top:1px solid #72aed1;/*border-bottom:1px solid #9f9f9f;*/box-shadow:0 1px 1px rgba(0, 0, 0, 0.25);background: #2683b8; /* Old browsers */background: -moz-linear-gradient(top,  #2683b8 0%, #1567a3 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #2683b8 0%,#1567a3 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #2683b8 0%,#1567a3 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#2683b8', endColorstr='#1567a3',GradientType=0 ); /* IE6-9 */}
+.gridListWrap .btnWrap .mu-btn + .mu-btn{border-left:1px solid #3e6379;box-shadow:1px 0 0 #3a8fbf inset;}
+.gridListWrap .btnWrap .mu-btn:last-child{border-right:0;}
+.gridListWrap .btnWrap .mu-btn:hover{border-top:1px solid #7dbad9;background: #3694c4; /* Old browsers */background: -moz-linear-gradient(top,  #3694c4 0%, #0d5392 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #3694c4 0%,#0d5392 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #3694c4 0%,#0d5392 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3694c4', endColorstr='#0d5392',GradientType=0 ); /* IE6-9 */}
+.gridListWrap .btnWrap .mu-btn.green{border-top:1px solid #94b85b;background: #4c8602; /* Old browsers */background: -moz-linear-gradient(top,  #5a9103 0%, #407702 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #5a9103 0%,#407702 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #5a9103 0%,#407702 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#5a9103', endColorstr='#407702',GradientType=0 ); /* IE6-9 */}
+.gridListWrap .btnWrap .mu-btn.green:hover{border-top:1px solid #a2c35c;background: #4c8602; /* Old browsers */background: -moz-linear-gradient(top,  #6ca005 0%, #2f6301 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #6ca005 0%,#2f6301 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #6ca005 0%,#2f6301 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#6ca005', endColorstr='#2f6301',GradientType=0 ); /* IE6-9 */}
+.mu-btn-img .mu-icon{width:32px;height:31px;display:inline-block;vertical-align:middle;background:url("../images/common/icon_button.png") no-repeat 0 0;}
+.mu-btn-img .mu-icon.excel2{background-position:0 0;}
+.mu-btn-img .mu-icon.filter{background-position:0 -32px;}
+.clear24_icon{position:absolute;height:27px;width:27px; border: 3px solid #fff;border-radius: 50%;background-color:#4b5471;color:#fff;font-size:24px;font-weight:700;text-align:center;top:-10px;left:-6px;line-height:18px;cursor: pointer}
+.clear24_icon_sm{position:absolute;height:22px;width:22px; border: 2px solid #fff;border-radius: 50%;background-color:#4b5471;color:#fff;font-size:20px;font-weight:700;text-align:center;top:3px;left:28px;line-height:16px;cursor: pointer}
+
+/* 통합감시 > 역사별 성능감시 */
+.mu-container.dbSubway section{padding-bottom:0;}
+.subwayWrap{position:relative;background:#c1c8cd;padding:62px 10px 0;height:calc(100% - 380px);text-align:center;}
+.integrationQuality {position:absolute; left:calc(50% - 50px); bottom:10px; width:925px; height:auto; border:1px solid #787878; z-index:1;}
+.subwayCont.subway-all .integrationQuality{bottom:459px; left:-38px;}
+.subwayCont.subway-7 .integrationQuality{bottom:0px; left:650px;}
+.integrationQuality table thead tr th {height:31px; padding-left:44px; background:#88c7eb url("../images/monitoring/icon_integration_quality.png") no-repeat 0 0; font-size:16px; font-weight:bold; color:#0e6087; vertical-align:middle; text-align:left;}
+.integrationQuality table tbody tr td {height:31px; padding-right:10px; background-color:#fff; font-size:14px; color:#000; vertical-align:middle; text-align:right;}
+.integrationQuality table tbody tr:nth-child(1) td:nth-child(3),
+.integrationQuality table tbody tr:nth-child(1) td:nth-child(5),
+.integrationQuality table tbody tr:nth-child(1) td:nth-child(7),
+.integrationQuality table tbody tr:nth-child(1) td:nth-child(9) {padding-left:44px; background:#fff url("../images/monitoring/icon_integration_quality_arrow01.png") no-repeat 0 0; text-align:left;}
+.integrationQuality table tbody tr:nth-child(1) td:nth-child(1),
+.integrationQuality table tbody tr:nth-child(2) td:nth-child(1),
+.integrationQuality table tbody tr:nth-child(2) td:nth-child(3),
+.integrationQuality table tbody tr:nth-child(2) td:nth-child(5),
+.integrationQuality table tbody tr:nth-child(2) td:nth-child(7),
+.integrationQuality table tbody tr:nth-child(2) td:nth-child(9) {padding-left:44px; background:#dedede url("../images/monitoring/icon_integration_quality_arrow02.png") no-repeat 0 0; text-align:left;}
+.integrationQuality table tbody tr td:nth-child(3),
+.integrationQuality table tbody tr td:nth-child(5),
+.integrationQuality table tbody tr td:nth-child(7),
+.integrationQuality table tbody tr td:nth-child(9) {border-left:1px solid #787878;}
+.integrationQuality table tbody tr:nth-child(1) td:nth-child(2),
+.integrationQuality table tbody tr:nth-child(2) td:nth-child(2),
+.integrationQuality table tbody tr:nth-child(2) td:nth-child(4),
+.integrationQuality table tbody tr:nth-child(2) td:nth-child(6),
+.integrationQuality table tbody tr:nth-child(2) td:nth-child(8) {background-color:#efefef;}
+
+/* 역사별감시 노선도  */
+.subwayCont{position:relative;display:inline-block;z-index:0;}
+.subwayCont.subway-all .subway-line{position:relative;margin-top:-35px;width:1779px;height:556px;background:url("../images/monitoring/bg_subway_line-all.png") no-repeat 0 0;z-index:2;}
+.subwayCont.subway-5 .subway-line{position:relative;margin-top:35px;width:1724px;height:466px;background:url("../images/monitoring/bg_subway_line-5.png") no-repeat 0 0;z-index:2;}
+.subwayCont.subway-6 .subway-line{position:relative;margin-top:0px;width:1698px;height:504px;background:url("../images/monitoring/bg_subway_line-6.png") no-repeat 0 0;z-index:2;}
+.subwayCont.subway-7 .subway-line{position:relative;margin-top:20px;width:1698px;height:504px;background:url("../images/monitoring/bg_subway_line-7.png") no-repeat 0 0;z-index:2;}
+.subwayCont.subway-8 .subway-line{position:relative;margin-top:0px;width:1748px;height:445px;background:url("../images/monitoring/bg_subway_line-8.png") no-repeat 0 0;z-index:2;}
+
+/* 역사별감시 전체노선 역사 아이콤, 알람*/
+.subwayCont.subway-all .sybway-station .station{position:absolute;width:26px;height:26px;}
+.subwayCont.subway-all .subway-line-5 .sybway-station .station:before{content:"";position:absolute;top:0;left:0;width:26px;height:26px;border-radius:50%;border:5px solid #a25eb5;background:#fff;z-index:5;cursor:pointer;}
+.subwayCont.subway-all .subway-line-6 .sybway-station .station:before{content:"";position:absolute;top:0;left:0;width:26px;height:26px;border-radius:50%;border:5px solid #ac451e;background:#fff;z-index:5;cursor:pointer;}
+.subwayCont.subway-all .subway-line-7 .sybway-station .station:before{content:"";position:absolute;top:0;left:0;width:26px;height:26px;border-radius:50%;border:5px solid #6c702f;background:#fff;z-index:5;cursor:pointer;}
+.subwayCont.subway-all .subway-line-8 .sybway-station .station:before{content:"";position:absolute;top:0;left:0;width:26px;height:26px;border-radius:50%;border:5px solid #e92076;background:#fff;z-index:5;cursor:pointer;}
+
+/*환승역색상*/
+.subwayCont.subway-all .subway-line-5 .sybway-station .station.st-529:before{border:5px solid #000}
+.subwayCont.subway-all .subway-line-5 .sybway-station .station.st-537:before{border:5px solid #000}
+.subwayCont.subway-all .subway-line-5 .sybway-station .station.st-544:before{border:5px solid #000}
+.subwayCont.subway-all .subway-line-5 .sybway-station .station.st-547:before{border:5px solid #000}
+.subwayCont.subway-all .subway-line-7 .sybway-station .station.st-717:before{border:5px solid #000}
+
+
+/* 미계약 노선 disabled*/
+.subwayCont.subway-all .subway-line-disabled .sybway-station .station:before{content:"";position:absolute;top:0;left:0;width:26px;height:26px;border-radius:50%;border:5px solid #b2b2b2;background:#fff;z-index:3;cursor:default;}
+
+
+.subwayCont.subway-all .sybway-station .station.yellow:before{background-color:#ffde00;border-color:#201b16;}
+.subwayCont.subway-all .sybway-station .station.orange:before{background-color:#ff7800;border-color:#201b16;}
+.subwayCont.subway-all .sybway-station .station.red:before{background-color:#ff0000;border-color:#201b16;}
+.subwayCont.subway-all .sybway-station .station:after{content:"";position:absolute;top:calc(-32px + 17px);left:calc(-32px + 17px);width:55px;height:55px;border-radius:50%;background:none;z-index:1;}
+.subwayCont.subway-all .sybway-station .station.yellow:after{background-color:#fff9d1;}
+.subwayCont.subway-all .sybway-station .station.orange:after{background-color:#ffd6b1;}
+.subwayCont.subway-all .sybway-station .station.red:after{background-color:#ffcccc;}
+
+/* 역사별감시-노선별 역사 아이콤, 5호선 알람*/
+.sybway-station{position:absolute;top:0;left:0;width:100%;height:100%;}
+.sybway-station .station{position:absolute;width:36px;height:36px;}
+.sybway-station .station:before{content:"";position:absolute;top:0;left:0;width:36px;height:36px;border-radius:50%;border:5px solid #a25eb5;background:#fff;z-index:3;cursor:pointer;}
+.sybway-station .station.yellow:before{background-color:#ffde00;border-color:#201b16;}
+.sybway-station .station.orange:before{background-color:#ff7800;border-color:#201b16;}
+.sybway-station .station.red:before{background-color:#ff0000;border-color:#201b16;}
+.sybway-station .station:after{content:"";position:absolute;top:calc(-32px + 17px);left:calc(-32px + 17px);width:65px;height:65px;border-radius:50%;background:none;z-index:1;}
+.sybway-station .station.yellow:after{background-color:#fff9d1;}
+.sybway-station .station.orange:after{background-color:#ffd6b1;}
+.sybway-station .station.red:after{background-color:#ffcccc;}
+
+/* 역사별감시-노선별 역사 아이콤, 6호선 알람*/
+.subwayCont.subway-6 .sybway-station{position:absolute;top:0;left:0;width:100%;height:100%;}
+.subwayCont.subway-6 .sybway-station .station{position:absolute;width:36px;height:36px;}
+.subwayCont.subway-6 .sybway-station .station:before{content:"";position:absolute;top:0;left:0;width:36px;height:36px;border-radius:50%;border:5px solid #a25eb5;background:#fff;z-index:3;cursor:pointer;}
+.subwayCont.subway-6 .sybway-station .station.yellow:before{background-color:#ffde00;border-color:#201b16;}
+.subwayCont.subway-6 .sybway-station .station.orange:before{background-color:#ff7800;border-color:#201b16;}
+.subwayCont.subway-6 .sybway-station .station.red:before{background-color:#ff0000;border-color:#201b16;}
+.subwayCont.subway-6 .sybway-station .station:after{content:"";position:absolute;top:calc(-32px + 17px);left:calc(-32px + 17px);width:65px;height:65px;border-radius:50%;background:none;z-index:1;}
+.subwayCont.subway-6 .sybway-station .station.yellow:after{background-color:#fff9d1;}
+.subwayCont.subway-6 .sybway-station .station.orange:after{background-color:#ffd6b1;}
+.subwayCont.subway-6 .sybway-station .station.red:after{background-color:#ffcccc;}
+
+/* 역사별감시-노선별 역사 아이콤, 7호선 알람*/
+.subwayCont.subway-7 .sybway-station{position:absolute;top:0;left:0;width:100%;height:100%;}
+.subwayCont.subway-7 .sybway-station .station{position:absolute;width:36px;height:36px;}
+.subwayCont.subway-7 .sybway-station .station:before{content:"";position:absolute;top:0;left:0;width:36px;height:36px;border-radius:50%;border:5px solid #a25eb5;background:#fff;z-index:3;cursor:pointer;}
+.subwayCont.subway-7 .sybway-station .station.yellow:before{background-color:#ffde00;border-color:#201b16;}
+.subwayCont.subway-7 .sybway-station .station.orange:before{background-color:#ff7800;border-color:#201b16;}
+.subwayCont.subway-7 .sybway-station .station.red:before{background-color:#ff0000;border-color:#201b16;}
+.subwayCont.subway-7 .sybway-station .station:after{content:"";position:absolute;top:calc(-32px + 17px);left:calc(-32px + 17px);width:65px;height:65px;border-radius:50%;background:none;z-index:1;}
+.subwayCont.subway-7 .sybway-station .station.yellow:after{background-color:#fff9d1;}
+.subwayCont.subway-7 .sybway-station .station.orange:after{background-color:#ffd6b1;}
+.subwayCont.subway-7 .sybway-station .station.red:after{background-color:#ffcccc;}
+
+/* 역사별감시-노선별 역사 아이콤, 8호선 알람*/
+.subwayCont.subway-8 .sybway-station{position:absolute;top:0;left:0;width:100%;height:100%;}
+.subwayCont.subway-8 .sybway-station .station{position:absolute;width:36px;height:36px;}
+.subwayCont.subway-8 .sybway-station .station:before{content:"";position:absolute;top:0;left:0;width:36px;height:36px;border-radius:50%;border:5px solid #a25eb5;background:#fff;z-index:3;cursor:pointer;}
+.subwayCont.subway-8 .sybway-station .station.yellow:before{background-color:#ffde00;border-color:#201b16;}
+.subwayCont.subway-8 .sybway-station .station.orange:before{background-color:#ff7800;border-color:#201b16;}
+.subwayCont.subway-8 .sybway-station .station.red:before{background-color:#ff0000;border-color:#201b16;}
+.subwayCont.subway-8 .sybway-station .station:after{content:"";position:absolute;top:calc(-32px + 17px);left:calc(-32px + 17px);width:65px;height:65px;border-radius:50%;background:none;z-index:1;}
+.subwayCont.subway-8 .sybway-station .station.yellow:after{background-color:#fff9d1;}
+.subwayCont.subway-8 .sybway-station .station.orange:after{background-color:#ffd6b1;}
+.subwayCont.subway-8 .sybway-station .station.red:after{background-color:#ffcccc;}
+/*.subwayCont.subway-6 .subway-line{position:relative;width:1748px;height:445px;background:url("../images/monitoring/bg_subway_line_6.png") no-repeat 0 0;z-index:2;}*/
+
+.subwayCont.subway-6 .sybway-station .station:before{content:"";position:absolute;top:0;left:0;width:36px;height:36px;border-radius:50%;border:5px solid #ac451e;background:#fff;z-index:3;cursor:pointer;}
+.subwayCont.subway-7 .sybway-station .station:before{content:"";position:absolute;top:0;left:0;width:36px;height:36px;border-radius:50%;border:5px solid #6c702f;background:#fff;z-index:3;cursor:pointer;}
+.subwayCont.subway-8 .sybway-station .station:before{content:"";position:absolute;top:0;left:0;width:36px;height:36px;border-radius:50%;border:5px solid #e92076;background:#fff;z-index:3;cursor:pointer;}
+
+
+/* 5호선 노선도  */
+.sybway-station .station.st-510{bottom:417px;left:188px;}
+.sybway-station .station.st-511{bottom:417px;left:262px;}
+.sybway-station .station.st-512{bottom:417px;left:334px;}
+.sybway-station .station.st-513{bottom:417px;left:404px;}
+.sybway-station .station.st-514{bottom:417px;left:478px;}
+.sybway-station .station.st-515{bottom:417px;left:548px;}
+.sybway-station .station.st-516{bottom:417px;left:620px;}
+.sybway-station .station.st-517{bottom:417px;left:692px;}
+.sybway-station .station.st-518{bottom:417px;left:764px;}
+.sybway-station .station.st-519{bottom:417px;left:836px;}
+.sybway-station .station.st-520{bottom:417px;left:908px;}
+.sybway-station .station.st-521{bottom:417px;left:980px;}
+.sybway-station .station.st-522{bottom:417px;left:1052px;}
+.sybway-station .station.st-523{bottom:417px;left:1124px;}
+.sybway-station .station.st-524{bottom:417px;left:1196px;}
+.sybway-station .station.st-525{bottom:417px;left:1268px;}
+.sybway-station .station.st-526{bottom:417px;left:1340px;}
+.sybway-station .station.st-527{bottom:417px;left:1412px;}
+.sybway-station .station.st-528{bottom:417px;left:1484px;}
+.sybway-station .station.st-529{bottom:417px;left:1556px;}
+.sybway-station .station.st-530{bottom:399px;left:1628px;}
+.sybway-station .station.st-531{bottom:351px;left:1677px;}
+.sybway-station .station.st-532{bottom:283px;left:1695px;}
+.sybway-station .station.st-533{bottom:215px;left:1677px;}
+.sybway-station .station.st-534{bottom:167px;left:1628px;}
+.sybway-station .station.st-535{bottom:148px;left:1556px;}
+.sybway-station .station.st-536{bottom:148px;left:1484px;}
+.sybway-station .station.st-537{bottom:148px;left:1412px;}
+.sybway-station .station.st-538{bottom:148px;left:1340px;}
+.sybway-station .station.st-539{bottom:148px;left:1268px;}
+.sybway-station .station.st-540{bottom:148px;left:1196px;}
+.sybway-station .station.st-541{bottom:148px;left:1124px;}
+.sybway-station .station.st-542{bottom:148px;left:1052px;}
+.sybway-station .station.st-543{bottom:148px;left:980px;}
+.sybway-station .station.st-544{bottom:148px;left:908px;}
+.sybway-station .station.st-545{bottom:148px;left:836px;}
+.sybway-station .station.st-546{bottom:148px;left:764px;}
+.sybway-station .station.st-547{bottom:148px;left:692px;}
+.sybway-station .station.st-548{bottom:148px;left:620px;}
+/*5호선 상일동행 */
+.sybway-station .station.st-549{bottom:68px;left:619px;}
+.sybway-station .station.st-550{bottom:13px;left:576px;}
+.sybway-station .station.st-551{bottom:-7px;left:501px;}
+.sybway-station .station.st-552{bottom:-7px;left:429px;}
+.sybway-station .station.st-553{bottom:-7px;left:357px;}
+/*5호선 하남선 */
+.sybway-station .station.st-554{bottom:-7px;left:285px;}
+.sybway-station .station.st-555{bottom:-7px;left:213px;}
+.sybway-station .station.st-556{bottom:-7px;left:141px;}
+.sybway-station .station.st-557{bottom:-7px;left:69px;}
+.sybway-station .station.st-558{bottom:-7px;left:-3px;}
+/*5호선 마천행 */
+.sybway-station .station.st-p549{bottom:201px;left:576px;}
+.sybway-station .station.st-p550{bottom:222px;left:501px;}
+.sybway-station .station.st-p551{bottom:222px;left:429px;}
+.sybway-station .station.st-p552{bottom:222px;left:357px;}
+.sybway-station .station.st-p553{bottom:222px;left:285px;}
+.sybway-station .station.st-p554{bottom:222px;left:213px;}
+.sybway-station .station.st-p555{bottom:222px;left:141px;}
+
+.sybway-station .station .station-name{position:absolute;white-space:nowrap;font-size:16px;color:#000;font-weight:bold;}
+.sybway-station .station .station-name{top:-5px;left:30px;z-index:3;
+    -ms-transform:rotate(-45deg);-webkit-transform:rotate(-45deg);transform:rotate(-45deg);
+    -ms-transform-origin:0 0;-webkit-transform-origin:0 0;transform-origin:0 0;
+}
+/*.sybway-station .station.st-530 .station-name{top:35px;left:30px;}*/
+/*.sybway-station .station.st-531 .station-name{top:35px;left:30px;}*/
+/*.sybway-station .station.st-548 .station-name{top:-5px;left:35px;}*/
+/*.sybway-station .station.st-p549 .station-name{top:35px;left:30px;}*/
+.sybway-station .station.st-533 .station-name{top:50px;left:17px;}
+.sybway-station .station.st-534 .station-name{top:56px;left:13px;}
+.sybway-station .station.st-549 .station-name{top:44px;left:24px;}
+.sybway-station .station.st-550 .station-name{top:56px;left:13px;}
+
+/* 6호선 노선도  */
+
+/* 7호선 노선도  */
+.sybway-station .station.st-709{bottom:454px;left:105px;}
+.sybway-station .station.st-710{bottom:454px;left:180px;}
+.sybway-station .station.st-711{bottom:454px;left:255px;}
+.sybway-station .station.st-712{bottom:454px;left:330px;}
+.sybway-station .station.st-713{bottom:454px;left:405px;}
+.sybway-station .station.st-714{bottom:454px;left:480px;}
+.sybway-station .station.st-715{bottom:454px;left:555px;}
+.sybway-station .station.st-716{bottom:454px;left:630px;}
+.sybway-station .station.st-717{bottom:454px;left:705px;}
+.sybway-station .station.st-718{bottom:454px;left:780px;}
+.sybway-station .station.st-719{bottom:454px;left:855px;}
+.sybway-station .station.st-720{bottom:454px;left:930px;}
+.sybway-station .station.st-721{bottom:454px;left:1005px;}
+.sybway-station .station.st-722{bottom:454px;left:1080px;}
+.sybway-station .station.st-723{bottom:454px;left:1155px;}
+.sybway-station .station.st-724{bottom:454px;left:1230px;}
+.sybway-station .station.st-725{bottom:454px;left:1305px;}
+.sybway-station .station.st-726{bottom:454px;left:1380px;}
+.sybway-station .station.st-727{bottom:454px;left:1455px;}
+.sybway-station .station.st-728{bottom:454px;left:1530px;}
+.sybway-station .station.st-729{bottom:454px;left:1605px;}
+.sybway-station .station.st-730{bottom:405px;left:1670px;}
+.sybway-station .station.st-731{bottom:340px;left:1670px;}
+.sybway-station .station.st-732{bottom:275px;left:1670px;}
+.sybway-station .station.st-733{bottom:225px;left:1615px;}
+.sybway-station .station.st-734{bottom:225px;left:1540px;}
+.sybway-station .station.st-735{bottom:225px;left:1465px;}
+.sybway-station .station.st-736{bottom:225px;left:1390px;}
+.sybway-station .station.st-737{bottom:225px;left:1315px;}
+.sybway-station .station.st-738{bottom:225px;left:1240px;}
+.sybway-station .station.st-739{bottom:225px;left:1165px;}
+.sybway-station .station.st-740{bottom:225px;left:1090px;}
+.sybway-station .station.st-741{bottom:225px;left:1015px;}
+.sybway-station .station.st-742{bottom:225px;left:940px;}
+.sybway-station .station.st-743{bottom:225px;left:865px;}
+.sybway-station .station.st-744{bottom:225px;left:790px;}
+.sybway-station .station.st-745{bottom:225px;left:715px;}
+.sybway-station .station.st-746{bottom:225px;left:640px;}
+.sybway-station .station.st-747{bottom:225px;left:565px;}
+.sybway-station .station.st-748{bottom:225px;left:490px;}
+.sybway-station .station.st-749{bottom:225px;left:415px;}
+.sybway-station .station.st-750{bottom:225px;left:340px;}
+.sybway-station .station.st-751{bottom:225px;left:265px;}
+.sybway-station .station.st-752{bottom:225px;left:190px;}
+.sybway-station .station.st-753{bottom:225px;left:115px;}
+.sybway-station .station.st-754{bottom:225px;left:40px;}
+.sybway-station .station.st-755{bottom:174px;left:-9px;}
+.sybway-station .station.st-756{bottom:109px;left:-9px;}
+.sybway-station .station.st-757{bottom:44px;left:-9px;}
+.sybway-station .station.st-758{bottom:-8px;left:30px;}
+
+.sybway-station .station.st-759{bottom:-8px;left:105px;}
+.sybway-station .station.st-760{bottom:-8px;left:180px;}
+.sybway-station .station.st-761{bottom:-8px;left:255px;}
+.sybway-station .station.st-762{bottom:-8px;left:330px;}
+.sybway-station .station.st-763{bottom:-8px;left:405px;}
+.sybway-station .station.st-764{bottom:-8px;left:480px;}
+.sybway-station .station.st-765{bottom:-8px;left:555px;}
+.sybway-station .station.st-766{bottom:-8px;left:630px;}
+.sybway-station .station.st-767{bottom:-8px;left:705px;}
+
+.sybway-station .station.st-733 .station-name{top:54px;left:-25px;}
+.sybway-station .station.st-755 .station-name{top:74px;left:-50px;}
+
+/*전체노선 - 5호선 노선도  */
+.subwayCont.subway-all .sybway-station .station.st-510{bottom:377px;left:150px;}
+.subwayCont.subway-all .sybway-station .station.st-511{bottom:335px;left:150px;}
+.subwayCont.subway-all .sybway-station .station.st-512{bottom:293px;left:150px;}
+.subwayCont.subway-all .sybway-station .station.st-513{bottom:251px;left:150px;}
+.subwayCont.subway-all .sybway-station .station.st-514{bottom:209px;left:150px;}
+.subwayCont.subway-all .sybway-station .station.st-515{bottom:168px;left:150px;}
+.subwayCont.subway-all .sybway-station .station.st-516{bottom:122px;left:150px;}
+.subwayCont.subway-all .sybway-station .station.st-517{bottom:87px;left:170px;}
+.subwayCont.subway-all .sybway-station .station.st-518{bottom:81px;left:213px;}
+.subwayCont.subway-all .sybway-station .station.st-519{bottom:81px;left:258px;}
+.subwayCont.subway-all .sybway-station .station.st-520{bottom:81px;left:303px;}
+.subwayCont.subway-all .sybway-station .station.st-521{bottom:81px;left:348px;}
+.subwayCont.subway-all .sybway-station .station.st-522{bottom:81px;left:393px;}
+.subwayCont.subway-all .sybway-station .station.st-523{bottom:81px;left:438px;}
+.subwayCont.subway-all .sybway-station .station.st-524{bottom:69px;left:480px;}
+.subwayCont.subway-all .sybway-station .station.st-525{bottom:42px;left:514px;}
+.subwayCont.subway-all .sybway-station .station.st-526{bottom:33px;left:560px;}
+.subwayCont.subway-all .sybway-station .station.st-527{bottom:59px;left:598px;}
+.subwayCont.subway-all .sybway-station .station.st-528{bottom:107px;left:598px;}
+.subwayCont.subway-all .sybway-station .station.st-529{bottom:154px;left:598px;}
+.subwayCont.subway-all .sybway-station .station.st-530{bottom:220px;left:598px;}
+.subwayCont.subway-all .sybway-station .station.st-531{bottom:290px;left:598px;}
+.subwayCont.subway-all .sybway-station .station.st-532{bottom:360px;left:598px;}
+.subwayCont.subway-all .sybway-station .station.st-533{bottom:403px;left:658px;}
+.subwayCont.subway-all .sybway-station .station.st-534{bottom:375px;left:740px;}
+.subwayCont.subway-all .sybway-station .station.st-535{bottom:323px;left:781px;}
+.subwayCont.subway-all .sybway-station .station.st-536{bottom:274px;left:822px;}
+.subwayCont.subway-all .sybway-station .station.st-537{bottom:243px;left:881px;}
+.subwayCont.subway-all .sybway-station .station.st-538{bottom:243px;left:930px;}
+.subwayCont.subway-all .sybway-station .station.st-539{bottom:243px;left:980px;}
+.subwayCont.subway-all .sybway-station .station.st-540{bottom:243px;left:1030px;}
+.subwayCont.subway-all .sybway-station .station.st-541{bottom:243px;left:1080px;}
+.subwayCont.subway-all .sybway-station .station.st-542{bottom:226px;left:1122px;}
+.subwayCont.subway-all .sybway-station .station.st-543{bottom:204px;left:1160px;}
+
+.subwayCont.subway-all .sybway-station .station.st-544{bottom:179px;left:1194px;}
+.subwayCont.subway-all .sybway-station .station.st-545{bottom:178px;left:1238px;}
+.subwayCont.subway-all .sybway-station .station.st-546{bottom:178px;left:1282px;}
+.subwayCont.subway-all .sybway-station .station.st-547{bottom:178px;left:1326px;}
+.subwayCont.subway-all .sybway-station .station.st-548{bottom:178px;left:1372px;}
+/*전체노선 - 5호선 노선도 상일동행 */
+.subwayCont.subway-all .sybway-station .station.st-549{bottom:215px;left:1392px;}
+.subwayCont.subway-all .sybway-station .station.st-550{bottom:219px;left:1432px;}
+.subwayCont.subway-all .sybway-station .station.st-551{bottom:219px;left:1474px;}
+.subwayCont.subway-all .sybway-station .station.st-552{bottom:219px;left:1516px;}
+.subwayCont.subway-all .sybway-station .station.st-553{bottom:219px;left:1558px;}
+/*전체노선 - 5호선 노선도 미사 */
+.subwayCont.subway-all .sybway-station .station.st-554{bottom:219px;left:1600px;}
+.subwayCont.subway-all .sybway-station .station.st-555{bottom:219px;left:1642px;}
+.subwayCont.subway-all .sybway-station .station.st-556{bottom:219px;left:1684px;}
+.subwayCont.subway-all .sybway-station .station.st-557{bottom:219px;left:1726px;}
+.subwayCont.subway-all .sybway-station .station.st-558{bottom:219px;left:1768px;}
+/*전체노선 - 5호선 노선도 마천행 */
+.subwayCont.subway-all .sybway-station .station.st-p549{bottom:146px;left:1392px;}
+.subwayCont.subway-all .sybway-station .station.st-p550{bottom:143px;left:1432px;}
+.subwayCont.subway-all .sybway-station .station.st-p551{bottom:143px;left:1474px;}
+.subwayCont.subway-all .sybway-station .station.st-p552{bottom:143px;left:1516px;}
+.subwayCont.subway-all .sybway-station .station.st-p553{bottom:143px;left:1558px;}
+.subwayCont.subway-all .sybway-station .station.st-p554{bottom:143px;left:1600px;}
+.subwayCont.subway-all .sybway-station .station.st-p555{bottom:143px;left:1642px;}
+
+/*전체노선 - 6호선 노선도  */
+.subwayCont.subway-all .sybway-station .station.st-610{bottom:304px;left:250px;}
+.subwayCont.subway-all .sybway-station .station.st-611{bottom:326px;left:303px;}
+.subwayCont.subway-all .sybway-station .station.st-612{bottom:369px;left:348px;}
+.subwayCont.subway-all .sybway-station .station.st-613{bottom:420px;left:310px;}
+
+.subwayCont.subway-all .sybway-station .station.st-614{bottom:397px;left:250px;}
+.subwayCont.subway-all .sybway-station .station.st-615{bottom:350px;left:250px;}
+.subwayCont.subway-all .sybway-station .station.st-616{bottom:262px;left:250px;}
+.subwayCont.subway-all .sybway-station .station.st-617{bottom:220px;left:250px;}
+.subwayCont.subway-all .sybway-station .station.st-618{bottom:178px;left:250px;}
+.subwayCont.subway-all .sybway-station .station.st-619{bottom:154px;left:290px;}
+.subwayCont.subway-all .sybway-station .station.st-620{bottom:154px;left:334px;}
+.subwayCont.subway-all .sybway-station .station.st-621{bottom:154px;left:378px;}
+.subwayCont.subway-all .sybway-station .station.st-622{bottom:154px;left:422px;}
+.subwayCont.subway-all .sybway-station .station.st-623{bottom:154px;left:466px;}
+.subwayCont.subway-all .sybway-station .station.st-624{bottom:154px;left:510px;}
+.subwayCont.subway-all .sybway-station .station.st-625{bottom:154px;left:554px;}
+.subwayCont.subway-all .sybway-station .station.st-626{bottom:154px;left:598px;}
+
+.subwayCont.subway-all .sybway-station .station.st-627{bottom:154px;left:642px;}
+.subwayCont.subway-all .sybway-station .station.st-628{bottom:154px;left:686px;}
+.subwayCont.subway-all .sybway-station .station.st-629{bottom:154px;left:730px;}
+.subwayCont.subway-all .sybway-station .station.st-630{bottom:154px;left:774px;}
+.subwayCont.subway-all .sybway-station .station.st-631{bottom:154px;left:818px;}
+.subwayCont.subway-all .sybway-station .station.st-632{bottom:154px;left:862px;}
+.subwayCont.subway-all .sybway-station .station.st-633{bottom:198px;left:881px;}
+.subwayCont.subway-all .sybway-station .station.st-634{bottom:243px;left:881px;}
+.subwayCont.subway-all .sybway-station .station.st-635{bottom:304px;left:881px;}
+.subwayCont.subway-all .sybway-station .station.st-636{bottom:365px;left:881px;}
+.subwayCont.subway-all .sybway-station .station.st-637{bottom:417px;left:902px;}
+.subwayCont.subway-all .sybway-station .station.st-638{bottom:444px;left:955px;}
+.subwayCont.subway-all .sybway-station .station.st-639{bottom:444px;left:1018px;}
+.subwayCont.subway-all .sybway-station .station.st-640{bottom:444px;left:1081px;}
+.subwayCont.subway-all .sybway-station .station.st-641{bottom:444px;left:1144px;}
+.subwayCont.subway-all .sybway-station .station.st-642{bottom:444px;left:1207px;}
+.subwayCont.subway-all .sybway-station .station.st-643{bottom:444px;left:1270px;}
+.subwayCont.subway-all .sybway-station .station.st-644{bottom:444px;left:1333px;}
+.subwayCont.subway-all .sybway-station .station.st-645{bottom:444px;left:1396px;}
+.subwayCont.subway-all .sybway-station .station.st-646{bottom:444px;left:1454px;}
+.subwayCont.subway-all .sybway-station .station.st-647{bottom:444px;left:1517px;}
+/*전체노선 - 7호선 노선도  */
+.subwayCont.subway-all .sybway-station .station.st-709{bottom:526px;left:1702px;}
+.subwayCont.subway-all .sybway-station .station.st-710{bottom:526px;left:1656px;}
+.subwayCont.subway-all .sybway-station .station.st-711{bottom:526px;left:1610px;}
+.subwayCont.subway-all .sybway-station .station.st-712{bottom:526px;left:1564px;}
+.subwayCont.subway-all .sybway-station .station.st-713{bottom:526px;left:1518px;}
+.subwayCont.subway-all .sybway-station .station.st-714{bottom:526px;left:1472px;}
+.subwayCont.subway-all .sybway-station .station.st-715{bottom:526px;left:1426px;}
+.subwayCont.subway-all .sybway-station .station.st-716{bottom:486px;left:1396px;}
+.subwayCont.subway-all .sybway-station .station.st-717{bottom:444px;left:1396px;}
+.subwayCont.subway-all .sybway-station .station.st-718{bottom:400px;left:1395px;}
+.subwayCont.subway-all .sybway-station .station.st-719{bottom:367px;left:1374px;}
+.subwayCont.subway-all .sybway-station .station.st-720{bottom:336px;left:1343px;}
+.subwayCont.subway-all .sybway-station .station.st-721{bottom:304px;left:1314px;}
+.subwayCont.subway-all .sybway-station .station.st-722{bottom:273px;left:1283px;}
+.subwayCont.subway-all .sybway-station .station.st-723{bottom:242px;left:1253px;}
+.subwayCont.subway-all .sybway-station .station.st-724{bottom:211px;left:1223px;}
+
+.subwayCont.subway-all .sybway-station .station.st-726{bottom:152px;left:1167px;}
+.subwayCont.subway-all .sybway-station .station.st-727{bottom:126px;left:1142px;}
+.subwayCont.subway-all .sybway-station .station.st-728{bottom:100px;left:1118px;}
+.subwayCont.subway-all .sybway-station .station.st-729{bottom:74px;left:1093px;}
+.subwayCont.subway-all .sybway-station .station.st-730{bottom:48px;left:1067px;}
+.subwayCont.subway-all .sybway-station .station.st-731{bottom:22px;left:1041px;}
+.subwayCont.subway-all .sybway-station .station.st-732{bottom:2px;left:1009px;}
+.subwayCont.subway-all .sybway-station .station.st-733{bottom:-7px;left:969px;}
+.subwayCont.subway-all .sybway-station .station.st-734{bottom:-7px;left:929px;}
+.subwayCont.subway-all .sybway-station .station.st-735{bottom:-7px;left:889px;}
+.subwayCont.subway-all .sybway-station .station.st-736{bottom:-7px;left:849px;}
+.subwayCont.subway-all .sybway-station .station.st-737{bottom:-7px;left:809px;}
+.subwayCont.subway-all .sybway-station .station.st-738{bottom:-7px;left:769px;}
+.subwayCont.subway-all .sybway-station .station.st-739{bottom:-7px;left:729px;}
+.subwayCont.subway-all .sybway-station .station.st-740{bottom:-7px;left:689px;}
+.subwayCont.subway-all .sybway-station .station.st-741{bottom:-7px;left:649px;}
+.subwayCont.subway-all .sybway-station .station.st-742{bottom:-7px;left:609px;}
+.subwayCont.subway-all .sybway-station .station.st-743{bottom:-7px;left:569px;}
+.subwayCont.subway-all .sybway-station .station.st-744{bottom:-7px;left:529px;}
+.subwayCont.subway-all .sybway-station .station.st-745{bottom:-7px;left:489px;}
+.subwayCont.subway-all .sybway-station .station.st-746{bottom:-7px;left:449px;}
+.subwayCont.subway-all .sybway-station .station.st-747{bottom:-7px;left:409px;}
+.subwayCont.subway-all .sybway-station .station.st-748{bottom:-7px;left:369px;}
+.subwayCont.subway-all .sybway-station .station.st-749{bottom:-7px;left:329px;}
+.subwayCont.subway-all .sybway-station .station.st-750{bottom:-7px;left:289px;}
+.subwayCont.subway-all .sybway-station .station.st-751{bottom:-7px;left:249px;}
+.subwayCont.subway-all .sybway-station .station.st-752{bottom:-7px;left:209px;}
+.subwayCont.subway-all .sybway-station .station.st-753{bottom:-7px;left:169px;}
+.subwayCont.subway-all .sybway-station .station.st-754{bottom:-7px;left:129px;}
+.subwayCont.subway-all .sybway-station .station.st-755{bottom:-3px;left:90px;}
+.subwayCont.subway-all .sybway-station .station.st-756{bottom:18px;left:59px;}
+.subwayCont.subway-all .sybway-station .station.st-757{bottom:57px;left:51px;}
+.subwayCont.subway-all .sybway-station .station.st-758{bottom:97px;left:51px;}
+.subwayCont.subway-all .sybway-station .station.st-759{bottom:136px;left:51px;}
+.subwayCont.subway-all .sybway-station .station.st-760{bottom:175px;left:51px;}
+.subwayCont.subway-all .sybway-station .station.st-761{bottom:214px;left:51px;}
+.subwayCont.subway-all .sybway-station .station.st-762{bottom:253px;left:51px;}
+.subwayCont.subway-all .sybway-station .station.st-763{bottom:292px;left:51px;}
+.subwayCont.subway-all .sybway-station .station.st-764{bottom:331px;left:51px;}
+.subwayCont.subway-all .sybway-station .station.st-765{bottom:370px;left:51px;}
+.subwayCont.subway-all .sybway-station .station.st-766{bottom:400px;left:30px;}
+.subwayCont.subway-all .sybway-station .station.st-767{bottom:405px;left:-10px;}
+/*전체노선 - 8호선 노선도  */
+.subwayCont.subway-all .sybway-station .station.st-810{bottom:225px;left:1326px;}
+
+.subwayCont.subway-all .sybway-station .station.st-812{bottom:127px;left:1326px;}
+.subwayCont.subway-all .sybway-station .station.st-813{bottom:83px;left:1288px;}
+.subwayCont.subway-all .sybway-station .station.st-814{bottom:83px;left:1219px;}
+.subwayCont.subway-all .sybway-station .station.st-815{bottom:54px;left:1156px;}
+.subwayCont.subway-all .sybway-station .station.st-816{bottom:25px;left:1195px;}
+.subwayCont.subway-all .sybway-station .station.st-817{bottom:25px;left:1245px;}
+.subwayCont.subway-all .sybway-station .station.st-818{bottom:25px;left:1295px;}
+.subwayCont.subway-all .sybway-station .station.st-819{bottom:25px;left:1345px;}
+.subwayCont.subway-all .sybway-station .station.st-820{bottom:25px;left:1395px;}
+.subwayCont.subway-all .sybway-station .station.st-821{bottom:25px;left:1445px;}
+.subwayCont.subway-all .sybway-station .station.st-822{bottom:25px;left:1495px;}
+.subwayCont.subway-all .sybway-station .station.st-823{bottom:25px;left:1545px;}
+.subwayCont.subway-all .sybway-station .station.st-824{bottom:25px;left:1595px;}
+.subwayCont.subway-all .sybway-station .station.st-825{bottom:25px;left:1645px;}
+.subwayCont.subway-all .sybway-station .station.st-826{bottom:25px;left:1695px;}
+
+
+
+/*역사명 왼쪽위치 */
+.subwayCont.subway-all .sybway-station .station.st-510 .station-name, .subwayCont.subway-all .sybway-station .station.st-511 .station-name, .subwayCont.subway-all .sybway-station .station.st-512 .station-name, .subwayCont.subway-all .sybway-station .station.st-513 .station-name, .subwayCont.subway-all .sybway-station .station.st-514 .station-name, .subwayCont.subway-all .sybway-station .station.st-515 .station-name, 
+.subwayCont.subway-all .sybway-station .station.st-516 .station-name, .subwayCont.subway-all .sybway-station .station.st-517 .station-name, .subwayCont.subway-all .sybway-station .station.st-530 .station-name, .subwayCont.subway-all .sybway-station .station.st-531 .station-name, .subwayCont.subway-all .sybway-station .station.st-532 .station-name, .subwayCont.subway-all .sybway-station .station.st-610 .station-name, 
+.subwayCont.subway-all .sybway-station .station.st-614 .station-name, .subwayCont.subway-all .sybway-station .station.st-615 .station-name, .subwayCont.subway-all .sybway-station .station.st-616 .station-name, .subwayCont.subway-all .sybway-station .station.st-618 .station-name, .subwayCont.subway-all .sybway-station .station.st-633 .station-name, .subwayCont.subway-all .sybway-station .station.st-637 .station-name, 
+.subwayCont.subway-all .sybway-station .station.st-766 .station-name, .subwayCont.subway-all .sybway-station .station.st-716 .station-name, .subwayCont.subway-all .sybway-station .station.st-727 .station-name, .subwayCont.subway-all .sybway-station .station.st-728 .station-name, .subwayCont.subway-all .sybway-station .station.st-729 .station-name, .subwayCont.subway-all .sybway-station .station.st-730 .station-name, 
+.subwayCont.subway-all .sybway-station .station.st-756 .station-name, .subwayCont.subway-all .sybway-station .station.st-757 .station-name, .subwayCont.subway-all .sybway-station .station.st-758 .station-name, .subwayCont.subway-all .sybway-station .station.st-759 .station-name, .subwayCont.subway-all .sybway-station .station.st-760 .station-name, .subwayCont.subway-all .sybway-station .station.st-761 .station-name, 
+.subwayCont.subway-all .sybway-station .station.st-762 .station-name, .subwayCont.subway-all .sybway-station .station.st-763 .station-name, .subwayCont.subway-all .sybway-station .station.st-764 .station-name, .subwayCont.subway-all .sybway-station .station.st-765 .station-name, .subwayCont.subway-all .sybway-station .station.st-812 .station-name, .subwayCont.subway-all .sybway-station .station.st-815 .station-name{top:7px;left:-122px;text-align:right;}
+/*역사명 오른쪽위치  */
+.subwayCont.subway-all .sybway-station .station.st-524 .station-name, .subwayCont.subway-all .sybway-station .station.st-528 .station-name, .subwayCont.subway-all .sybway-station .station.st-527 .station-name, .subwayCont.subway-all .sybway-station .station.st-612 .station-name, .subwayCont.subway-all .sybway-station .station.st-617 .station-name, .subwayCont.subway-all .sybway-station .station.st-635 .station-name, 
+.subwayCont.subway-all .sybway-station .station.st-636 .station-name, .subwayCont.subway-all .sybway-station .station.st-632 .station-name, .subwayCont.subway-all .sybway-station .station.st-718 .station-name, .subwayCont.subway-all .sybway-station .station.st-719 .station-name, .subwayCont.subway-all .sybway-station .station.st-720 .station-name, .subwayCont.subway-all .sybway-station .station.st-721 .station-name, 
+.subwayCont.subway-all .sybway-station .station.st-722 .station-name, .subwayCont.subway-all .sybway-station .station.st-723 .station-name, .subwayCont.subway-all .sybway-station .station.st-724 .station-name, .subwayCont.subway-all .sybway-station .station.st-766 .station-name, .subwayCont.subway-all .sybway-station .station.st-810 .station-name{top:6px;left:30px;text-align:left;}
+/*역사명 상단 센터정렬  */
+.subwayCont.subway-all .sybway-station .station.st-523 .station-name, .subwayCont.subway-all .sybway-station .station.st-525 .station-name, .subwayCont.subway-all .sybway-station .station.st-526 .station-name, .subwayCont.subway-all .sybway-station .station.st-546 .station-name, .subwayCont.subway-all .sybway-station .station.st-549 .station-name, .subwayCont.subway-all .sybway-station .station.st-551 .station-name, 
+.subwayCont.subway-all .sybway-station .station.st-553 .station-name, .subwayCont.subway-all .sybway-station .station.st-p550 .station-name, .subwayCont.subway-all .sybway-station .station.st-620 .station-name, .subwayCont.subway-all .sybway-station .station.st-628 .station-name, .subwayCont.subway-all .sybway-station .station.st-630 .station-name, .subwayCont.subway-all .sybway-station .station.st-639 .station-name, 
+.subwayCont.subway-all .sybway-station .station.st-641 .station-name, .subwayCont.subway-all .sybway-station .station.st-644 .station-name, .subwayCont.subway-all .sybway-station .station.st-752 .station-name, .subwayCont.subway-all .sybway-station .station.st-748 .station-name, .subwayCont.subway-all .sybway-station .station.st-746 .station-name, .subwayCont.subway-all .sybway-station .station.st-741 .station-name, 
+.subwayCont.subway-all .sybway-station .station.st-738 .station-name, .subwayCont.subway-all .sybway-station .station.st-736 .station-name, .subwayCont.subway-all .sybway-station .station.st-734 .station-name, .subwayCont.subway-all .sybway-station .station.st-767 .station-name, .subwayCont.subway-all .sybway-station .station.st-557 .station-name{top:-16px;}
+/*역사명 상단 센터정렬 2줄일때  */
+.subwayCont.subway-all .sybway-station .station.st-625 .station-name, .subwayCont.subway-all .sybway-station .station.st-646 .station-name, .subwayCont.subway-all .sybway-station .station.st-822 .station-name{top:-26px;}
+/*역사명 환승역, 좌 하단 */
+.subwayCont.subway-all .sybway-station .station.st-524 .station-name, .subwayCont.subway-all .sybway-station .station.st-529 .station-name, .subwayCont.subway-all .sybway-station .station.st-534 .station-name, .subwayCont.subway-all .sybway-station .station.st-535 .station-name, .subwayCont.subway-all .sybway-station .station.st-536 .station-name, .subwayCont.subway-all .sybway-station .station.st-537 .station-name, 
+.subwayCont.subway-all .sybway-station .station.st-547 .station-name, .subwayCont.subway-all .sybway-station .station.st-548 .station-name, .subwayCont.subway-all .sybway-station .station.st-717 .station-name, .subwayCont.subway-all .sybway-station .station.st-755 .station-name{top:26px;left:-112px;text-align:right;}
+
+/*역사명 하단 센터정렬 기본, 10글자까지 정렬지원. 그 이상은 width 값을 늘리고 정렬에 따라 위치조절해야한다.. */
+.subwayCont.subway-all .sybway-station .station .station-name{position:absolute;white-space:nowrap;width:120px;font-size:12px;color:#000;font-weight:bold;text-align:center;cursor:default;}
+.subwayCont.subway-all .sybway-station .station .station-name{top:30px;left:-47px;z-index:3;-ms-transform:rotate(0);-webkit-transform:rotate(0);transform:rotate(0);-ms-transform-origin:0 0;-webkit-transform-origin:0 0;transform-origin:0 0;}
+/*6,8호선 역사명 disabled*/
+.subwayCont.subway-all .subway-line-disabled .sybway-station .station .station-name{color:#b2b2b2;}
+
+/* 메인감시 > 역사별 성능감시 - GRID */
+.mu-container.dbSubway .gridListWrap{padding-top:10px;}
+.mu-container.dbSubway .tab_container{background:none;}
+.mu-container.dbSubway .mu-tab{background:none;display:inline-block;width:auto;}
+.mu-container.dbSubway .mu-tab > li + li{margin-left:2px;}
+.mu-container.dbSubway .mu-tab > li > a{background:#939393;border-radius:0;font-size:18px;font-weight:bold;color:#fff;min-width:110px;padding:0 15px;height:44px;line-height:44px;}
+.mu-container.dbSubway .mu-tab > li > a:active, .mu-container.dbSubway .mu-tab > li.active > a{background:#394d77;height:46px;}
+.mu-container.dbSubway .mu-tab > li > a:active, .mu-container.dbSubway .mu-tab > li.sb_line-5.active > a{background:#8936e0;height:46px;}
+.mu-container.dbSubway .mu-tab > li > a:active, .mu-container.dbSubway .mu-tab > li.sb_line-6.active > a{background:#b5500c;height:46px;}
+.mu-container.dbSubway .mu-tab > li > a:active, .mu-container.dbSubway .mu-tab > li.sb_line-7.active > a{background:#6a7216;height:46px;}
+.mu-container.dbSubway .mu-tab > li > a:active, .mu-container.dbSubway .mu-tab > li.sb_line-8.active > a{background:#e51e6f;height:46px;}
+.mu-container.dbSubway .mu-tab > li > a:active, .mu-container.dbSubway .mu-tab > li.sb_line-t.active > a{background:#000;height:46px;}
+.mu-container.dbSubway .mu-tab-body{padding:0;background:#96afd7;border:2px solid #394d77;box-shadow:0 1px 0 rgba(0, 0, 0, 0.2);}
+.mu-container.dbSubway .mu-tab-body.sb_line-5{padding:0;background:#dedae2;border:2px solid #8936e0;box-shadow:0 1px 0 rgba(0, 0, 0, 0.2);}
+.mu-container.dbSubway .mu-tab-body.sb_line-6{padding:0;background:#e2dad7;border:2px solid #b5500c;box-shadow:0 1px 0 rgba(0, 0, 0, 0.2);}
+.mu-container.dbSubway .mu-tab-body.sb_line-7{padding:0;background:#e0e0d0;border:2px solid #6a7216;box-shadow:0 1px 0 rgba(0, 0, 0, 0.2);}
+.mu-container.dbSubway .mu-tab-body.sb_line-8{padding:0;background:#e4d1d8;border:2px solid #e51e6f;box-shadow:0 1px 0 rgba(0, 0, 0, 0.2);}
+.mu-container.dbSubway .mu-tab-body.sb_line-t{padding:0;background:#d6d6d6;border:2px solid #000;box-shadow:0 1px 0 rgba(0, 0, 0, 0.2);}
+.mu-container.dbSubway .btnWrap{box-shadow:none;margin-top:10px;}
+
+/* 통합감시 > 서비스장비 상태감시 */
+.mu-container.system .gridWrap{background:#fff;border:1px solid #fff;;overflow:auto;}
+.mu-container.system .mu-grid th{background:#8ca5ba;font-size:14px;color:#000;border-bottom:4px solid #fff;height:40px;}
+.mu-container.system .mu-grid th + th, .mu-container.system .mu-grid td + td{border-left:1px solid #fff;}
+.mu-container.system .mu-grid td{background:#ddedfb;color:#000;height:83px;border-bottom:1px solid #fff;padding:0 15px;}
+.mu-container.system .mu-grid tr:nth-child(2n) th, .mu-container.system .mu-grid tr:nth-child(2n) td{background:#d1e2f1;}
+.mu-container.system .mu-grid tbody > tr > td.stat .alram{width:18px;height:18px;}
+.mu-container.system .mu-progress{background:#fff;border:none;width:100%;min-width:200px;height:10px;margin:0;overflow:visible;position:relative;}
+.mu-container.system .mu-progress .mu-pbar{text-indent:0;}
+.mu-container.system .mu-progress .mu-pbar span{position:absolute;bottom:-20px;color:#000;font-size:14px;}
+.mu-container.system .mu-progress .mu-pbar span.cNum{left:0;}
+.mu-container.system .mu-progress .mu-pbar span.tNum{right:0;}
+.mu-container.system .gridListWrap{padding-top:9px;height:auto;}
+.mu-container.system .subtitleWrap{margin-top:0;}
+.mu-container.system .chartWrap{background:#fff;border:1px solid #c6c6c6;position:relative;overflow:hidden;}
+.mu-container.system .chartWrap > div{height:307px;padding:10px;box-sizing:content-box;}
+.mu-container.system .chartWrap h5.mu-title{height:31px;background:#f5f5f5;border-bottom:1px solid #c6c6c6;text-align:center;line-height:30px;font-weight:bold;}
+.mu-container.system .highcharts-title{display:none;}
+.mu-container.system .highcharts-button{position:absolute;top:0;left:0;}
+.mu-container.system .mu-boxWrap{border-spacing:10px;}
+.mu-container.system .mu-boxWrap .mu-boxCell{padding:0;}
+.mu-container.system .mu-boxWrap .mu-boxCell + .mu-boxCell{padding:0;}
+
+/* 시스템 > 서버상태관리 */
+.mu-container.sysState .gridWrap{overflow:auto;}
+.mu-container.sysState .mu-grid{table-layout:initial;}
+.mu-container.sysState .mu-grid td{height:90px;}
+.mu-container.sysState .mu-grid tbody > tr > td.stat .alram{width:18px;height:18px;}
+.mu-container.sysState .mu-grid .mu-progress{background:#cfcfcf;border:none;width:100%;min-width:200px;height:10px;margin:0;overflow:visible;position:relative;}
+.mu-container.sysState .mu-grid .mu-progress .mu-pbar{text-indent:0;}
+.mu-container.sysState .mu-grid .mu-progress .mu-pbar span{position:absolute;bottom:-20px;color:#393f4a;}
+.mu-container.sysState .mu-grid .mu-progress .mu-pbar span.cNum{left:0;}
+.mu-container.sysState .mu-grid .mu-progress .mu-pbar span.tNum{right:0;}
+.mu-container.sysState .chartWrap{background:#fff;border:1px solid #c6c6c6;position:relative;overflow:hidden;}
+.mu-container.sysState .chartWrap > div{height:245px;padding:10px;box-sizing:content-box;}
+.mu-container.sysState .chartWrap h5.mu-title{height:31px;background:#f5f5f5;border-bottom:1px solid #c6c6c6;text-align:center;line-height:30px;font-weight:bold;}
+.mu-container.sysState .highcharts-title{display:none;}
+.mu-container.sysState .highcharts-button{position:absolute;top:0;left:0;}
+.mu-container.sysState .mu-boxWrap{border-spacing:10px;}
+.mu-container.sysState .mu-boxWrap .mu-boxCell{padding:0;}
+.mu-container.sysState .mu-boxWrap .mu-boxCell + .mu-boxCell{padding:0;}
+
+/* 통합감시 > 네트워크토폴로지 */
+.mobileLoca.mu-formbox tbody > tr.rating > td{height:42px;background:#252525;text-align:center;font-weight:bold;padding:2px 8px;}
+.mobileLoca.mu-formbox tbody > tr.rating > td span{display:inline-block;padding:0 8px;border-radius:15px;width:125px;height:26px;line-height:26px;font-size:14px;font-weight:bold;}
+.mu-tooltip .mu-formbox tbody > tr:first-child > th, .mu-tooltip .mu-formbox tbody > tr:first-child > td{border:none;padding-top:0;}
+.dashboard .topologyWrap{/*height:calc(100% - 252px);*/}
+.dashboard .gridListWrap{min-height:242px;}
+.dashboard .gridListWrap .mu-scroll-v{height:100%;}
+
+.mu-tooltip-header span{padding-left:47px;}
+.mu-tooltip-header .mu-btn, .mu-tooltip-header .mu-btn:hover, .mu-tooltip-header .mu-btn:active {background: inherit;border: medium none;box-shadow: none;height: 100%;margin-right: 0;width: 47px;}
+.mu-tooltip-header .mu-icon-img::before {background: rgba(0, 0, 0, 0) url("../images/common/icon_close.png") no-repeat scroll 0 0;content: "";display: block;height: 100%;width: 100%;height: 23px;width: 23px;}
+
+/* 네트워크 토폴로지/고장감시 - 실장도 기반 고장영역표시 팝업 */
+.serverBg{width:300px;height:686px;background:url("../images/common/bg_server.jpg") no-repeat 0 0;border:1px solid #4e697f;position:relative;}
+.failArea{background:#456179;width:253px;padding:1px;position:absolute;top:90px;left:24px;}
+.failArea > ul > li{float:left;width:20px;height:195px;word-break:break-all;text-align:center;vertical-align:middle;}
+.failArea > ul li > span{display:inline-block;width:100%;height:auto;padding:4px;vertical-align:middle;}
+.failArea > ul li:after{content:"";display:inline-block;height:100%;vertical-align:middle;}
+.failArea > ul > li + li{margin-left:1px;}
+.failArea > ul > li > ul{height:100%;}
+.failArea > ul > li > ul > li{font-size:10px;line-height:100%;letter-spacing:3px;height:auto;display:block;}
+.failArea > ul > li > ul.slot_4 > li{height:25%;}
+.failArea > ul > li > ul.slot_3 > li{height:33.3%}
+.failArea > ul > li > ul > li + li{border-top:1px solid #456179;}
+.failArea .serverFan{clear:both;height:28px;line-height:28px;color:#fff;text-align:center;font-size:14px;font-weight:bold;}
+.failArea li{background:#f7f8e8;font-size:14px;font-weight:bold;}
+.failArea .critical{background:#eb0606;}
+.failArea .major{background:#eb8206;}
+.failArea .minor{background:#ebe806;}
+.failArea .normal{background:#7cd93d;}
+.failArea .blank{background:#d2d2d2;color:#a6a6a6;}
+
+
+
+/* 기본 section */
+section{position:relative;padding:0 20px 20px;}
+.mu-container .mu-row .mu-col{position:initial;}
+.mu-container .mu-row .mu-col-12{width:100%;}
+.mu-container .mu-row .mu-col-10{width:70%;}
+section > .titleWrap{position:relative;width:100%;height:65px;line-height:100%;border-bottom:1px solid #fff;padding-left:5px;margin-bottom:8px;}
+section > .titleWrap:after{content:"";position:absolute;top:0;left:0;width:100%;height:100%;border-bottom:1px solid #9ca7ae;}
+section > .titleWrap h3.mu-title{width:100%;height:100%;border-bottom:1px solid #ebebeb;font-size:22px;padding:21px 0 0 37px;background:url("../images/common/img_title.png") no-repeat 0 21px;} /* 22-02-08 MOD : 디자인아이콘변경 */
+.subtitleWrap{position:relative;margin:20px 0 5px;}
+h4.mu-title{position:relative; font-size:18px;color:#3c3c3c;font-weight:bold;line-height:31px;padding-left:20px; text-align:left;}/* 22-02-08 ADD : 디자인블릿변경,left */  
+h4.mu-title:before {content:""; position:absolute; top:calc(50% - 2px); left:6px; width:4px; height:4px; margin-right:8px; background-color:#575e70; border-radius:50%;}/* 22-02-08 ADD : 디자인블릿변경 */
+.topologyWrap h4.mu-title{margin:20px 20px 5px;}
+.subtitleWrap .hdRight {position: absolute;right:0;top:5px;}
+.titleWrap .mu-path{position:absolute;top:28px;right:0;}
+.titleWrap .mu-path li:first-child {padding-left:18px; background:url("../images/common/icon_location.png") no-repeat 0 0;}
+
+.mu-boxWrap{border-spacing:0;margin-top:0;height:auto;}
+/* .mu-boxWrap + .mu-boxWrap{margin-top:20px;} */
+.mu-boxWrap:not([style*="none"]) ~ .mu-boxWrap{margin-top:20px;}
+.mu-boxWrap .mu-boxCell{border:none;}
+.mu-boxWrap .mu-boxCell{padding-right:10px;overflow:hidden;}
+.mu-boxWrap .mu-boxCell:last-child{padding-right:0;}
+/* .mu-boxWrap .mu-boxCell + .mu-boxCell{padding-left:10px;} */
+.mu-boxWrap .mu-boxCell{padding-left:0;}
+.mu-boxWrap .mu-boxCell:not([style*="none"]) ~ .mu-boxCell{padding-left:10px;}
+.mu-boxWrap .mu-boxCell .chartWrap{width:100%;height:100%;background:#fff;border:1px solid #c6c6c6;position:relative;overflow:hidden;}
+/* .mu-dialog .mu-boxWrap{border-spacing:10px;}
+.mu-dialog .mu-boxWrap .mu-boxCell{border:1px solid #c7cddb;}
+.mu-dialog .mu-boxWrap .mu-boxCell + .mu-boxCell{padding-left:0;} */
+.mu-dialog .mu-boxWrap{height:100%;}
+
+
+
+/* search */
+.mu-search-group{padding:8px;box-shadow:none;border:1px solid #c6c6c6;line-height:100%;}
+.mu-search-group .mu-search-btn{padding:0 10px;border-left:1px solid #e5e5e5;margin:3px 0;height:auto;font-size:0;}
+.mu-search-group .mu-search-btn .mu-btn + .mu-btn{margin-left:5px;}
+.mu-search-group .mu-search-btn > *{font-size:14px;vertical-align:middle;}
+.mu-search-group .mu-search-btn > * + .mu-btn{margin-left:5px;}
+.mu-search-group .mu-search-btn .mu-item-group > * + *{margin-left:5px;}
+.mu-search-group .mu-search-btn .mu-vgroup .mu-btn{margin-left:0;}
+.mu-search-group .mu-search-btn .mu-vgroup > * + *{margin-top:10px;}
+.mu-search-group .mu-search-btn .mu-btn{font-size:13px;min-width:120px;}
+.mu-search-group .mu-search-btn .mu-btn-icon-only{min-width:0;}
+.mu-search-group .mu-search-item{padding:0 10px;line-height:23px;vertical-align:middle;}
+.mu-search-group.mu-more-item .mu-search-item{line-height:100%;}
+.mu-search-item .mu-item-group + .mu-item-group{border-left:1px solid #e5e5e5;padding-left:10px;}
+.mu-search-group .mu-item-group .mu-hgroup label{margin:0;}
+.mu-search-group .mu-item-group .mu-hgroup + .mu-hgroup{margin-left:10px;border-left:1px solid #e5e5e5;padding-left:10px;}
+.mu-item-group .searchTarget{display:block;width:100%;}
+.mu-item-group .searchTarget .mu-input{width:700px;}
+.mu-search-group td .searchTarget{width:100%;}
+.mu-search-group td .searchTarget .mu-input{width:calc(100% - 100px);display:inline-block;}
+.mu-search-item > table > tbody > tr > td{padding:5px 10px;}
+.mu-search-item > table > tbody > tr > td + td{vertical-align:top;}
+.mu-search-group label{color:#232323;font-weight:bold;}
+.mu-search-group .mu-item-group label{color:#232323;font-weight:bold;margin:0 5px 0 10px;}
+.mu-more-item{margin-top:1px;}/* search단 상세조건 */
+.mu-more-item .mu-search-btn{width:100px;border-left:1px solid #e5e5e5;}
+.mu-more-item .mu-search-btn .mu-selectbox, .mu-more-item .mu-search-btn .mu-selectbox .mu-value{width:100%;}
+.mu-btn#search_du_btn{width:100%;}
+.mu-vgroup .mu-radio, .mu-vgroup .mu-checkbox{display:block;}
+.mu-vgroup .mu-datepicker + span{text-align:right;height:5px;line-height:5px;}
+.mu-icon.excel:before{content:"";display:inline-block;width:19px;height:19px;background:url("../images/common/icon_excel.png") no-repeat 0 0;vertical-align:middle;}
+.mu-icon.clock:before{color:#434343;font-size:17px;}
+.mu-search-group .troubleAlram{background:#57646f;border-radius:5px;box-shadow:none;height:31px;}
+.mu-search-group .troubleAlram li{height:31px;line-height:31px;}
+.mu-item-group .timeWrap .mu-icon{vertical-align:middle;margin-right:5px;}
+.mu-search-group .mu-icon.sound:before{content:"\f026";color:#fefefe;font-size:14px;margin-right:5px;}
+.mu-search-group .mu-toggle-on .mu-icon.sound:before{content:"\f028";}
+.mu-vgroup > *{display:block;}
+.mu-search-group .mu-item-group, .mu-search-group label, .mu-search-group .mu-datepicker{display:inline-block;vertical-align:middle;}
+.mu-hgroup{display:inline-block;vertical-align:middle;font-size:0;}
+.mu-hgroup > *{display:inline-block;vertical-align:middle;font-size:14px;}
+.mu-hgroup > * + *{margin-left:10px;}
+.mu-hgroup > .mu-btn{font-size:13px;}
+.mu-item-group > .mu-radio + .mu-radio{margin-left:10px;}
+/* .mu-item-group{display:inline-block;vertical-align:middle;font-size:0;}
+.mu-item-group > *{display:inline-block;vertical-align:middle;font-size:14px;}
+.mu-item-group > * + *{margin-left:5px;} */
+.mu-hgroup > .mu-input{width:auto;}
+.mu-hgroup .mu-datepicker{font-size:0;}
+.mu-item-group.hidden, .mu-hgroup.hidden, .lineY.hidden{display:none;}
+/* .mu-item-group > * + *{margin-left:10px;} */
+.mu-search-item .mu-bar{display:inline-block;width:1px;height:15px;background-color:#a5a5a5;border-left:0}
+
+
+
+/* Chart */
+/* .chartWrap{overflow:auto;border:2px solid #324b69;} */
+/* .chartWrap{background:#fff;border:1px solid #c6c6c6;position:relative;overflow:hidden;padding:10px;}
+.chartWrap > div{width:100%;height:100%;box-sizing:content-box;} */
+/* .chartWrap{background:#fff;border:1px solid #c6c6c6;position:relative;overflow:hidden;padding:10px;}
+.chartWrap .chart{width:100%;height:100%;}
+.chartWrap .chart > div{width:100%;height:100%;box-sizing:content-box;} */
+.chartWrap{background:#fff;border:1px solid #c6c6c6;position:relative;overflow:hidden;padding:10px;}
+.chartWrap .chart{width:100%;height:100%;box-sizing:content-box;}
+
+
+
+/* 등록table */
+.mu-formbox{border:1px solid #c6c6c6;background:none;table-layout:fixed;}
+.mu-formbox tbody > tr > th{font-weight:normal;}
+.mu-formbox tbody > tr + tr > th:first-child, .mu-formbox tbody > tr + tr > td{border:none;}
+.mu-formbox thead > tr > th:first-child, .mu-formbox tbody > tr > th:first-child, .mu-formbox thead > tr > td:first-child, .mu-formbox tbody > tr > td:first-child{border:none;}
+.mu-formbox tbody > tr:first-child > th, .mu-formbox tbody > tr:first-child > td{border:none;padding-top:10px;}
+.mu-formbox thead > tr > th:last-child, .mu-formbox tbody > tr > th:last-child, .mu-formbox thead > tr > td:last-child, .mu-formbox tbody > tr > td:last-child{border:none;}
+.mu-formbox tbody > tr:last-child > th, .mu-formbox tbody > tr:last-child > td{border:none;padding-bottom:10px;}
+.mu-formbox tbody > tr+tr > th,.mu-formbox tbody > tr+tr > td{border:none;}
+.mu-formbox tbody > tr+tr > th,.mu-formbox tbody > tr+tr > td{border-top:none;}
+.mu-formbox tbody > tr > th{background:transparent;padding:5px 10px;}
+.mu-formbox tbody > tr > td{padding:5px 10px;}
+.mu-formbox + .mu-title{margin-top:20px;}
+
+.mu-formbox2{width:80%;background-color:#fff;border:1px solid #c6c6c6; margin : auto;}
+.mu-formbox2 tbody > tr{height:31px}
+.mu-formbox2 tbody > tr > th,.mu-formbox2 tbody > tr > td{padding:0 8px;vertical-align:middle}
+.mu-formbox2 tbody > tr > th+th,.mu-formbox2 tbody > tr > th+td,.mu-formbox2 tbody > tr > td+td,.mu-formbox2 tbody > tr > td+th{border-left:1px solid #c6c6c6;}
+.mu-formbox2 tbody > tr+tr > th,.mu-formbox2 tbody > tr+tr > td{border-top:1px solid #c6c6c6;}
+.mu-formbox2 tbody > tr > th{background-color:#f0f0f0;text-align:left;font-weight:bold}
+.mu-formbox2 tbody > tr:first-child > th,.mu-formbox2 tbody > tr:first-child > td{border-top:1px solid #c6c6c6;}
+.mu-formbox2 tbody > tr:last-child > th,.mu-formbox2 tbody > tr:last-child > td{border-bottom:1px solid #c6c6c6;}
+.mu-formbox2 thead > tr > th:first-child,.mu-formbox2 tbody > tr > th:first-child,
+.mu-formbox2 thead > tr > td:first-child,.mu-formbox2 tbody > tr > td:first-child{border-left:1px solid #c6c6c6;}
+.mu-formbox2 thead > tr > th:last-child,.mu-formbox2 tbody > tr > th:last-child,
+.mu-formbox2 thead > tr > td:last-child,.mu-formbox2 tbody > tr > td:last-child{border-right:1px solid #c6c6c6;}
+.mu-formbox2 tbody > tr > td > .mu-input,.mu-formbox2 tbody > tr > td > .mu-btn,.mu-formbox2 tbody > tr > td > .mu-selectbox2 .mu-value{border-radius:0}
+.mu-formbox2 tbody > tr > td > .mu-selectbox,.mu-formbox2 tbody > tr > td > .mu-selectbox .mu-value{width:100%}
+
+.mu-formbox-vertical thead > tr > th,.mu-formbox-vertical thead > tr > td{background-color:#c2d8de;border-bottom:1px solid #c6c6c6;font-weight:bold;text-align:center}
+.mu-formbox-vertical thead > tr > th+th,.mu-formbox-vertical thead > tr > th+td,.mu-formbox-vertical thead > tr > td+td,.mu-formbox-vertical thead > tr > td+th{border-left:1px solid #c6c6c6}
+
+
+
+/* dialog */
+/* .gridWrap{background:#fff; border-left:1px solid #c6c6c6; border-right:1px solid #c6c6c6; border-bottom:1px solid #c6c6c6;} */
+.gridBtnWrap{padding:5px;}
+.infoTxt{color:#8a8a8a;}
+.infoTxt .mu-icon{margin-right:3px;}
+.infoTxt .mu-icon:before{font-size:10px;color:#ff7200;}
+.mu-grid + .mu-title{margin-top:20px;}
+.gridWrap + .mu-title{margin-top:20px;}
+.mu-grid .mu-icon.alram + *{margin-left:5px;}
+
+/**/
+.listBox{overflow:hidden;position:relative;width:100%;}
+.listBox .inBox{width:325px;height:250px;overflow:auto;/* padding-bottom:8px; */background:#fff;border:1px solid #c6c6c6}
+.listBox .mu-grid{border:0;}
+.listBox .btnDel, .listBox .btnAdd{position:absolute;left:335px;display:block;width:30px;height:30px;border-radius:2px;}
+.listBox .btnAdd{top:90px;}
+.listBox .btnDel{top:125px;}
+/**/
+.table_hour{width:336px;/* height:164px; */font-size:0;margin:0 auto;margin-bottom:10px;}
+.table_hour li{width:55px;height:40px;display:inline-block;margin:0 1px 4px 0;font-size:12px;}
+.table_hour li .mu-btn{width:100%;height:100%;font-size:18px;font-weight:bold;color:#fff;border-radius:0;border-top:1px solid #aaa;box-shadow:0 2px 1px rgba(0, 0, 0, 0.1);background: #7d7d7d; /* Old browsers */background: -moz-linear-gradient(top,  #7d7d7d 0%, #8a8a8a 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #7d7d7d 0%,#8a8a8a 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #7d7d7d 0%,#8a8a8a 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#7d7d7d', endColorstr='#8a8a8a',GradientType=0 ); /* IE6-9 */}
+.table_hour li .mu-btn:hover{border-top:1px solid #b7b7b7;background: #9c9c9c; /* Old browsers */background: -moz-linear-gradient(top,  #9c9c9c 0%, #6d6d6e 100%); /* FF3.6-15 */background: -webkit-linear-gradient(top,  #9c9c9c 0%,#6d6d6e 100%); /* Chrome10-25,Safari5.1-6 */background: linear-gradient(to bottom,  #9c9c9c 0%,#6d6d6e 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#9c9c9c', endColorstr='#6d6d6e',GradientType=0 ); /* IE6-9 */}
+.table_hour li .mu-btn.active{border-top:1px solid #626262;background:#3baadb;}
+#dlg_hour .mu-dialog-body-top .mu-hgroup{padding:0 10px;}
+#dlg_hour .mu-dialog-body-top .mu-hgroup + .mu-hgroup{border-left:1px solid #e1e1e1;}
+#dlg_hour .mu-dialog-body-top .mu-hgroup .mu-btn{width:98px;}
+#dlg_hour .mu-dialog-body{/* background:#565e70; */text-align:center;}
+
+/* dialog formbox */
+.mu-formbox .mu-item-group label{display:inline-block;min-width:50px;}
+.mu-formbox .mu-item-group label ~ label{margin-left:5px;}
+.mu-formbox .mu-item-group .mu-selectbox .mu-value{min-width:150px;}
+.mu-formbox tbody > tr > th{vertical-align:top;line-height:23px;}
+
+/* dialog-board */
+.board .mu-grid tbody > tr > th{background:#c2d8de;font-weight:bold;}
+.board .mu-grid tbody > tr > td{border-bottom:1px solid #e8e8e8;padding:8px;}
+.board .mu-grid tbody > tr:last-child > td{border-bottom:0;}
+.board .mu-grid .mu-area{background:#f8f8f8;height:160px;}
+.board .mu-grid pre{height:160px;overflow:auto;}
+.board .mu-grid .attachment{background:#f8f8f8;border:1px solid #c6c6c6;width:160px;height:56px;overflow-y:auto;vertical-align:top;}
+.board .mu-grid .attachment li{height:18px;padding:2px 6px;}
+.board .mu-grid .attachment li:hover{background:#c0ecff;}
+
+/* popup - title */
+.setting-title .titleWrap{border-bottom:1px solid #fff;padding-top:15px;}
+.setting-title .titleWrap h3.mu-title{border-bottom:1px solid #ebebeb;padding:0 0 10px 20px;font-size:20px;line-height:25px;}
+.setting-title .titleWrap .mu-path{top:22px;}
+
+
+
+/* 성능감시 > 감시 > Access망감시 */
+td span.critical{background:#db3c3c;border-radius:10px;padding:1px 8px 2px;min-width:50px;display:inline-block; color:#fff;}/* 22-02-08 가독성 추가 */
+td span.major{background:#ffa200;border-radius:10px;padding:1px 8px 2px;min-width:50px;display:inline-block; color:#252525;}/* 22-02-08 가독성 추가 */
+td span.minor{background:#ebe806;border-radius:10px;padding:1px 8px 2px;min-width:50px;display:inline-block; color:#252525;}/* 22-02-08 가독성 추가 */
+td span.normal{background:#7cd93d;border-radius:10px;padding:1px 8px 2px;min-width:50px;display:inline-block; color:#252525;}/* 22-02-08 가독성 추가 */
+
+/* 고장통계 > 고장통계 > 장비별 알람통계  기준 동적 테이블 */
+.overTxt {text-overflow:ellipsis;overflow:hidden;}
+.tbFix {table-layout:fixed;}
+
+/* dialog - 임계치추가 */
+.mu-formbox-top{border:none;}
+.mu-circle:before{content:"\f111";}
+.threshold .mu-circle:before{font-size:11px;margin-right:5px;}
+.threshold .attempt{color:#83be45; /*width:110px;*/}
+.threshold .minor{color:#d7d400;}
+.threshold .major{color:#eb8206;}
+.threshold .critical{color:#eb0606;}
+
+/* dialog -switch */
+.switches{background:#e5e6d7}
+.switchWrap{background:#e5e6d7;padding:6px 12px 14px;}
+/*.swtichBg{height:32px;margin-bottom:4px;background:url("../images/common/switch_bg.png") repeat 0 0;}*/
+.switchBg{height:32px;margin-bottom:4px;}
+.switch{border:1px solid #95a3a8;width:auto;display:inline-block;}
+.switch:after{content:"";clear:both;display:block;}
+.switch li{float:left;width:47px;border-left:1px solid #95a3a8;}
+.switch li:nth-child(1), .switch li:nth-child(2){/*width:46px;*/border-left:none;}
+.switch li:nth-child(even){margin-top:60px;margin-left:-47px;border-top:1px solid #95a3a8;}
+.switch li:nth-child(even) dt{float:left;margin-top:36px;}
+.switch li:nth-child(2){/*margin-left:-46px;*/}
+.switch dl{width:100%;text-align:center;}
+.switch dt{width:100%;height:24px;background:#95a3a8;color:#fff;padding:4px 0;}
+.switch dd.normal{width:100%;height:36px;background:#f7f8e8;padding:5px 0;}
+.switch dd.error{width:100%;height:36px;background:#eb0606;padding:5px 0;}
+.switch .port{width:26px;height:26px;background:url("../images/common/port.gif") no-repeat 0 0;margin:0 auto;}
+.switch .port.critical{background-position:-78px 0;}
+.switch .port.major{background-position:-52px 0;}
+.switch .port.normal{background-position:-26px 0;}
+
+/* dialog - 내부 스위치, DU 스위치 10Gb Ethernet */
+/*.switch-10G-not-bb-div {height: 179px;}*/
+/*.switch-10G-bb-div {width: 1155px;}*/
+.switch-10G{border:1px solid #95a3a8;width:auto;}
+.switch-10G:after{content:"";clear:both;display:block;}
+.switch-10G li{float:left;width:47px;border-left:1px solid #95a3a8;}
+/*.switch-10G li:nth-child(1), .switch li:nth-child(2){!*width:46px;*!border-left:none;}*/
+.switch-10G li:nth-child(1) {/*width:46px;*/border-left:none;}
+.switch-10G li:nth-child {margin-top:60px;margin-left:-47px;border-top:1px solid #95a3a8;}
+.switch-10G li:nth-child dt{margin-top:36px;}
+.switch-10G dl{width:100%;text-align:center;}
+.switch-10G dt{width:100%;height:24px;background:#95a3a8;color:#fff;padding:4px 0;}
+.switch-10G dd.normal{width:100%;height:36px;background:#f7f8e8;padding:5px 0;}
+.switch-10G dd.error{width:100%;height:36px;background:#eb0606;padding:5px 0;}
+.switch-10G .port{width:26px;height:26px;background:url("../images/common/port.gif") no-repeat 0 0;margin:0 auto;}
+.switch-10G .port.critical{background-position:-78px 0;}
+.switch-10G .port.major{background-position:-52px 0;}
+.switch-10G .port.normal{background-position:-26px 0;}
+
+/*switch 설정*/
+.switchSettingWrap{padding:6px 12px 14px;}
+.switchSetting{width:auto;}
+.switchSetting:after{content:"";clear:both;display:block;}
+.switchSetting li{float:left;width:43px;border-left:1px solid #95a3a8;}
+.switchSetting li:nth-child(1), .switchSetting li:nth-child(2){width:42px;border-left:none;}
+.switchSetting li:nth-child(even){margin-top:60px;margin-left:-43px;border-top:1px solid #95a3a8;}
+.switchSetting li:nth-child(even) dt{float:left;margin-top:36px;position:absolute;}
+.switchSetting li:nth-child(2){margin-left:-42px;}
+.switchSetting dl{width:100%;height:60px;text-align:center;position:relative;}
+.switchSetting dt{width:100%;height:24px;background:#95a3a8;color:#fff;padding:4px 0;}
+.switchSetting dd{width:100%;height:36px;background:#c7d1d7;padding:5px 0;line-height:30px;}
+.switchSetting dd input{margin:0;}
+
+.switchSetting-10G{width:auto;}
+.switchSetting-10G:after{content:"";clear:both;display:block;}
+.switchSetting-10G li{float:left;width:43px;border-left:1px solid #95a3a8;}
+.switchSetting-10G li:nth-child(1){width:42px;border-left:none;}
+.switchSetting-10G li:nth-child{margin-top:60px;margin-left:-43px;border-top:1px solid #95a3a8;}
+.switchSetting-10G li:nth-child dt{float:left;margin-top:36px;position:absolute;}
+.switchSetting-10G dl{width:100%;height:60px;text-align:center;position:relative;}
+.switchSetting-10G dt{width:100%;height:24px;background:#95a3a8;color:#fff;padding:4px 0;}
+.switchSetting-10G dd{width:100%;height:36px;background:#f7f8e8;padding:5px 0;line-height:30px;}
+.switchSetting-10G dd input{margin:0;}
+
+/*switch2 설정*/
+.switchSettingWrap2{padding:6px 12px 14px;}
+.switchSetting2{width:auto;}
+.switchSetting2:after{content:"";clear:both;display:block;}
+.switchSetting2 li{float:left;width:103px;border-left:1px solid #95a3a8;}
+.switchSetting2 li:nth-child(1), .switchSetting2 li:nth-child(2){width:102px;border-left:none;}
+.switchSetting2 li:nth-child(even){margin-top:86px;margin-left:-103px;border-top:1px solid #95a3a8;}
+.switchSetting2 li:nth-child(even) dt{float:left;margin-top:62px;position:absolute;}
+.switchSetting2 li:nth-child(2){margin-left:-102px;}
+.switchSetting2 dl{width:100%;height:86px;text-align:center;position:relative;}
+.switchSetting2 dt{width:100%;height:24px;background:#95a3a8;color:#fff;padding:4px 0;}
+.switchSetting2 dd{width:100%;height:62px;background:#c7d1d7;padding:5px 0;line-height:30px;}
+.switchSetting2 dd input{margin:0;}
+
+.switchSetting2-10G{width:auto;}
+.switchSetting2-10G:after{content:"";clear:both;display:block;}
+.switchSetting2-10G li{float:left;width:103px;border-left:1px solid #95a3a8;}
+.switchSetting2-10G li:nth-child(1){width:102px;border-left:none;}
+.switchSetting2-10G li:nth-child{margin-top:86px;margin-left:-103px;border-top:1px solid #95a3a8;}
+.switchSetting2-10G li:nth-child dt{float:left;margin-top:62px;position:absolute;}
+.switchSetting2-10G dl{width:100%;height:86px;text-align:center;position:relative;}
+.switchSetting2-10G dt{width:100%;height:24px;background:#95a3a8;color:#fff;padding:4px 0;}
+.switchSetting2-10G dd{width:100%;height:62px;background:#f7f8e8;padding:5px 0;line-height:30px;}
+.switchSetting2-10G dd input{margin:0;}
+
+/* du switch */
+.duSwitch li{width:700px;height:46px;margin-top:5px;background:url("../images/common/switch_du_40h.png") no-repeat 0 0;}
+.duSwitch li.critical{background-position:0 -192px;}
+.duSwitch li.major{background-position:0 -146px;}
+.duSwitch li.minor{background-position:0 -98px;}
+.duSwitch li.normal{background-position:0 -50px;}
+.duSwitch li .port{width:100%;height:100%;background:url("../images/common/switch_du_40h.png") no-repeat 0 -250px;}
+.duSwitch li .port1{background-position:0 -244px;}
+.duSwitch li .port2{background-position:0 -304px;}
+
+
+
+/* dialog - 중요고장 필터 등... */
+.mu-tree-box{width:100%;height:calc(100% - 34px);border:1px solid #c6c6c6;padding:10px;overflow-y:scroll;}
+.mu-list-box{width:100%;height:calc(100% - 34px);border:1px solid #c6c6c6;}
+.mu-list-box .mu-scroll-v{border:1px solid #c6c6c6;margin:-1px;}
+.mu-list-box .mu-scroll-v .mu-grid{border:none;}
+
+
+
+/* 구성변경관리*/
+.mu-grid-formbox{margin-bottom:20px;}
+.mu-grid-formbox .mu-grid{table-layout:fixed;}
+.mu-grid-formbox .mu-grid tbody tr th{background:#e8efff;font-weight:bold;}
+.mu-grid-formbox .mu-grid tbody tr th + td{border-left:1px solid #c6c6c6;}
+.mu-grid-formbox .mu-grid thead tr th, .mu-grid-formbox .mu-grid tbody tr th, .mu-grid-formbox .mu-grid tbody tr td{height:46px;line-height:18px;overflow:initial;text-overflow:initial;white-space:normal;text-align:center;vertical-align:middle;}
+
+
+
+/* tooltip -열차 운행 감시 툴팁 */
+/* .trainMonitor{padding-bottom:0;position:relative;}
+.trainMonitor .mu-formbox thead > tr > th{background:#4e4e4e;color:#fff;font-weight:bold;height:24px;padding:2px 8px;vertical-align:middle;}
+.trainMonitor .mu-formbox thead > tr > th:nth-last-child(2){background:#464646;}
+.trainMonitor .mu-formbox tbody > tr > td.phoneNo{background:#606060;}
+.trainMonitor .mu-formbox tbody > tr:nth-child(8n + 5) > td.phoneNo{background:#575757;}
+.trainMonitor .mu-formbox tbody > tr > td{background:#787878;height:24px;padding:2px 8px;text-align:center;font-weight:bold;}
+.trainMonitor .mu-formbox tbody > tr > td:nth-last-child(2){background:#6c6c6c;text-align:right;font-weight:normal;}
+.trainMonitor .mu-formbox tbody > tr > td:nth-last-child(1){text-align:right;font-weight:normal;}
+.trainMonitor .mu-formbox tbody > tr:nth-child(2n) > td{background:#818181;}
+.trainMonitor .mu-formbox tbody > tr:nth-child(2n):not(.rating) > td:nth-last-child(2){background:#747474;}
+.trainMonitor .mu-formbox tbody > tr.rating > td{height:42px;background:#252525;text-align:center;font-weight:bold;}
+.trainMonitor .mu-formbox tbody > tr.rating > td span{display:inline-block;padding:0 8px;border-radius:15px;width:125px;height:26px;line-height:26px;font-size:14px;font-weight:bold;} */
+
+/* dialog - 단말 위치 감시 팝업 */
+/* .mobileLoca .mu-grid{border:1px solid #c6c6c6;}
+.mobileLoca thead > tr > th, .mobileLoca tbody > tr > td{border-right:1px solid #e8e8e8;}
+.mobileLoca tbody > tr > td{border-bottom:1px solid #e8e8e8;padding:4px 8px;height:auto;text-align:center;font-weight:bold;}
+.mobileLoca tbody > tr > td:nth-last-child(2), .mobileLoca tbody > tr > td:nth-last-child(1){text-align:right;font-weight:bold;}
+.mobileLoca thead > tr > th:last-child, .mobileLoca tbody > tr > td:last-child{border-right:none;}
+.mobileLoca tbody > tr:last-child > td{border-bottom:none;}
+.mobileLoca td{border-left:1px solid #e8e8e8;}
+.mobileLoca tbody > tr.rating > td{text-align:center;font-weight:bold;}
+.mobileLoca tbody > tr.rating > td span.main-alarm{display:inline-block;padding:0 8px;border-radius:15px;width:215px;height:26px;line-height:26px;font-size:14px;font-weight:bold;color:#000;}
+.mobileLoca tbody > tr.rating > td span{display:inline-block;padding:0 8px;border-radius:15px;width:115px;height:26px;line-height:26px;font-size:14px;font-weight:bold;color:#000;} */
+
+/*dapickerWrap*/
+/* .dapickerWrap > *{float:left}
+.dapickerWrap > .mu-input{width:90px;height:26px;line-height:26px;border-radius:2px}
+.dapickerWrap > .mu-btn{height:26px;line-height:26px}
+.dapickerWrap > .mu-input + .mu-btn{margin-left:2px}
+.dapickerWrap > span{margin:3px 7px 0;color:#222} */
+
+/* 네트워크 토폴로지 dialog */
+/* 아래 2줄 네트워크 토폴로지 dialog에 영향 없고 다른 팝업들에 영향이 있어 주석 처리 함. */
+/* .mu-dialog-body{height:calc(100% - 32px);} */
+/* .mu-dialog-body .mu-search-group + *{height:calc(100% - 65px);} */
+
+.mu-dialog .equipList{background:#b4c3d7;padding:10px;overflow-y:auto;}
+.mu-dialog .serverGroup{position:relative;width:87px;display:inline-block;margin:15px 25px;height:113px;}
+
+.mu-dialog .serverGroup .stage {display:none; width:60px; height:60px; position:absolute; right:-18px; top:-6px; z-index:3; background:url("../images/monitoring/icon_switch_stage.png") no-repeat 0 0; text-indent:-999em; cursor:pointer;}
+.mu-dialog .serverGroup .stage.yellow {background-position:0 0}
+.mu-dialog .serverGroup .stage.orange {background-position:0 -60px}
+.mu-dialog .serverGroup .stage.red {background-position:0 -120px}
+
+.mu-dialog .engineer {display:inline-block; position:absolute; left:3px; top:30px; width:26px; height:59px; background:url("../images/monitoring/icon_engineer_m.png") no-repeat 0 0; cursor:pointer;}
+.mu-dialog .engineer.yellow {background:url("../images/monitoring/icon_engineer_m_minor.png") no-repeat 0 0;}
+.mu-dialog .engineer.orange {background:url("../images/monitoring/icon_engineer_m_major.png") no-repeat 0 0;}
+.mu-dialog .engineer.red {background:url("../images/monitoring/icon_engineer_m_critical.png") no-repeat 0 0;}
+
+.mu-dialog .serverBox {/* position:relative; */ display:inline-block; width:87px; height:85px; text-align:center; cursor:pointer;}
+.mu-dialog .serverBox .stage {display:block; width:44px; height:44px; position:absolute; right:20%; top:-20px; z-index:3; background:url("../images/monitoring/icon_switch_stage.png") no-repeat 0 0; text-indent:-999em;}
+.mu-dialog .serverBox .stage.yellow {background-position:0 0}
+.mu-dialog .serverBox .stage.orange {background-position:0 -44px}
+.mu-dialog .serverBox .stage.red {background-position:0 -88px}
+
+.mu-dialog .serverBox .state {display:block; height:85px; background:url("../images/monitoring/icon_topology_server.png") no-repeat 0 0; text-indent:-999em; font-size:0; cursor:pointer;}
+.mu-dialog .serverBox .state.normalgray{background-position:0 0;}
+.mu-dialog .serverBox .state.normalblue{background-position:0 -85px;}
+.mu-dialog .serverBox .state.yellow{background-position:0 -170px}
+.mu-dialog .serverBox .state.orange{background-position:0 -255px}
+.mu-dialog .serverBox .state.red{background-position:0 -340px}
+
+.mu-dialog .serverBox .tit {font-size:12px;}
+
+
+/* 기지국통합감시 22-02-11 */
+.monitoringWrap {padding:72px 10px 0;}
+.monitoringWrap .subtitleWrap {background:#fff; border:1px solid #c6c6c6; padding-left:20px;}
+.monitoringWrap .subtitleWrap .mu-title {line-height:49px;}
+.monitoringWrap .mu-row .mu-col {}
+.monitoringWrap .mu-row .mu-col:first-child {width:1361px; padding:0 10px 0 0;}
+.monitoringWrap .mu-row .mu-col:last-child {width:calc(100% - 1361px); padding:0 0 0 10px;}
+.monitoringWrap >* {height:100%;}
+.monitoringWrap .monitoring-map {overflow:hidden; position:relative; width:100%; height:610px; border:1px solid #a7a7a7; background-color:#fff;}
+.monitoringWrap .monitoring-map img {object-fit:cover;}
+/* 기지국통합감시 현황 */
+.monitoringWrap .monitoring-state {width:100%; display:block; margin-left:0;}
+.monitoringWrap .monitoring-state .mu-panel-head {height:59px; line-height:59px;}
+.monitoringWrap .monitoring-state .mu-panel-body {padding:20px 30px;}
+.monitoringWrap .monitoring-state li {width:100%; min-width:440px;}
+.monitoringWrap .monitoring-state li .state span {line-height:18px;}
+
+/* 기지국통합감시 map 22-02-14 mod / 22-03-14 MOD */
+/* .alram-map {position:absolute; display:inline-block; width:26px; height:26px; border:2px solid #fff; border-radius:50%; cursor:pointer;}
+.alram-map.critical {background:#eb0606;}
+.alram-map.major {background:#eb8206;}
+.alram-map.minor {background:#ebe806;}
+.alram-map.normal {background:#00b1ff;} */
+.alram-map {position:absolute; display:inline-block; width:18px; height:18px; cursor:pointer;}
+.alram-map:before {content:"";position:absolute;top:-9px;left:-9px;width:18px;height:18px;border-radius:50%;border:3px solid #fff;background:#fff;z-index:3;}
+.alram-map.critical:before {background-color:#eb0606;border-color:#000;}
+.alram-map.major:before {background-color:#eb8206;border-color:#000;}
+.alram-map.minor:before {background-color:#ebe806;border-color:#000;}
+.alram-map.normal:before {background-color:#00b1ff;border-color:#000;}
+.alram-map:after {content:"";position:absolute;top:-15px;left:-15px;width:30px;height:30px;border-radius:50%;background:none;z-index:1;}
+.alram-map.critical:after {background:#eb0606;opacity:.3;}
+.alram-map.major:after {background:#eb8206;opacity:.3;}
+.alram-map.minor:after {background:#ebe806;opacity:.5;}
+
+
+
+
+

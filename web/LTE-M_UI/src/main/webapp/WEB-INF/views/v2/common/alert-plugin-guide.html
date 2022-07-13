@@ -1,0 +1,1916 @@
+<!DOCTYPE html>
+<!-- saved from url=(0101)https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>
+            Smart Alert
+        </title>
+        
+
+        <!-- BLUEPRINT FRAMEWORK -->
+
+        <link href="./Smart Alert_files/screen.css" rel="stylesheet" media="screen, projection">
+        <link href="./Smart Alert_files/print.css" rel="stylesheet" media="print">
+        <!--[if lt IE 8]>
+        <link
+            href="css/blueprint/ie.css"
+            rel="stylesheet"
+            media="screen, projection"
+        />
+        <![endif]-->
+        <link href="./Smart Alert_files/screen(1).css" rel="stylesheet" media="screen, projection">
+
+        <!-- SYNTAX HIGHLIGHTING -->
+
+        <link href="./Smart Alert_files/highlight.css" rel="stylesheet">
+
+        <!-- JQUERY -->
+
+        <script src="./Smart Alert_files/jquery.js.다운로드"></script>
+        <script src="./Smart Alert_files/jquery-ui.js.다운로드"></script>
+
+        <!-- PLUGIN-->
+
+        <link href="./Smart Alert_files/alert.min.css" rel="stylesheet">
+        <link href="./Smart Alert_files/theme.min.css" rel="stylesheet">
+        <script src="./Smart Alert_files/alert.min.js.다운로드"></script>
+
+        <!-- DOCUMENTATION -->
+
+        <link href="./Smart Alert_files/doc.css" rel="stylesheet" media="screen">
+        <link href="./Smart Alert_files/awesome.css" rel="stylesheet" media="screen">
+        <script src="./Smart Alert_files/doc.js.다운로드"></script>
+    </head>
+    <body>
+        <div class="container">
+
+            <!-- HEADER -->
+
+            <h3 class="center alt">
+                “Smart Alert 1.2” Documentation by “Lukáš Prvý”
+            </h3>
+            <hr><br><br>
+            <h1 class="center">
+                Smart Alert 1.2
+            </h1>
+            <br>
+            <div class="borderTop">
+                <div class="span-6 colborder info prepend-1">
+                    <p class="prepend-top">
+                        <strong>
+                            Created: 11/03/2013
+                            <br>
+                            Code: <a href="http://codecanyon.net/user/PrvyLukas/portfolio" target="_blank">Lukáš Prvý</a>
+                            <br>
+                            Design: <a href="https://themeforest.net/user/PierreBorodin" target="_blank">Pierre Borodin</a>
+                        </strong>
+                    </p>
+                </div>
+                <div class="span-12 last">
+                    <p class="prepend-top append-0">
+                        Thank you for purchasing this plugin. If you have any questions that are beyond the scope of this help file, please feel free to email via my user page contact form <a href="http://codecanyon.net/user/PrvyLukas" target="_blank">here</a>. Thanks so much!
+                    </p>
+                </div>
+            </div>
+            <hr><br><br>
+
+
+            <!-- TABLE OF CONTENTS -->
+
+            <h2 id="toc" class="alt">
+                Table of Contents
+            </h2>
+            <ol class="alpha">
+                <li>
+                    <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#introduction">
+                        Introduction
+                    </a>
+                    <ol>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#introduction_preface">
+                                Preface
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#introduction_features">
+                                Features
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#introduction_included_files">
+                                Included files
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#introduction_getting_started">
+                                Getting started
+                            </a>
+                        </li>
+                    </ol>
+                </li>
+                <li>
+                    <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#usage">
+                        Usage
+                    </a>
+                    <ol>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#usage_arguments">
+                                Arguments
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#usage_basic_usage">
+                                Basic usage
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#usage_alert_type">
+                                Alert type
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#usage_title">
+                                Title
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#usage_close_icon">
+                                Close icon
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#usage_icon">
+                                Icon
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#usage_width">
+                                Width
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#usage_height">
+                                Content maximum height
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#usage_content_alignment">
+                                Content alignment
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#usage_callback">
+                                Callback
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#usage_buttons">
+                                Buttons
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#usage_drag_and_drop">
+                                Drag&amp;drop
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#usage_container">
+                                Container
+                            </a>
+                        </li>
+                    </ol>
+                </li>
+                <li>
+                    <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#setup">
+                        Setup
+                    </a>
+                    <ol>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#setup_arguments">
+                                Arguments
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#setup_defaults">
+                                Defaults
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#setup_alert_types">
+                                Alert types
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#setup_localization">
+                                Localization
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#setup_ie_support" class="highlight">
+                                IE support
+                            </a>
+                        </li>
+                    </ol>
+                </li>
+                <li>
+                    <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#themes">
+                        Themes
+                    </a>
+                    <ol>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#themes_theme_files">
+                                Theme files
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#themes_dom_structure">
+                                DOM structure
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#themes_crossbrowser_optimization">
+                                Crossbrowser optimization
+                            </a>
+                        </li>
+                    </ol>
+                </li>
+            </ol>
+            <br><br><br><hr><br><br>
+
+
+            <!-- INTRODUCTION -->
+
+            <h2 id="introduction">
+                <strong>A) Introduction</strong>
+            </h2>
+            <br><br>
+
+
+            <!-- PREFACE -->
+
+            <h3 id="introduction_preface">
+                <strong>1) Preface</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                Default JavaScript alert can't be configured at all - it's impossible to set own title, customize buttons and other things that one would expect to be configurable. Usually it doesn't fit into the overall site look, plus it looks different across all browsers. Frankly I think it's pretty useless and therefore I made this plugin.
+            </p>
+            <br><br><hr><br><br>
+
+            <h3 id="introduction_features">
+                <strong>2) Features</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <ul>
+                <li>
+                    <i class="icon-check"></i>Easy to use
+                </li>
+                <li>
+                    <i class="icon-check"></i>Three creative themes included
+                </li>
+                <li>
+                    <i class="icon-check"></i>Crossbrowser(Firefox, Chrome, Safari, Opera, Internet explorer 7+)
+                </li>
+                <li>
+                    <i class="icon-check"></i>Compatible with every layout
+                </li>
+                <li>
+                    <i class="icon-check"></i>Fully themeable
+                </li>
+                <li>
+                    <i class="icon-check"></i>Fully configurable
+                </li>
+                <li>
+                    <i class="icon-check"></i>Localization support
+                </li>
+                <li>
+                    <i class="icon-check"></i>Retina ready
+                </li>
+            </ul>
+            <br><br><hr><br><br>
+
+
+            <!-- INCLUDED FILES -->
+
+            <h3 id="introduction_included_files">
+                <strong>3) Included files</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                Included files description:
+            </p>
+            <ul>
+                <li>
+                    <i class="icon-folder-open"></i>alert
+                    <ul>
+                        <li>
+                            <i class="icon-folder-open"></i>css - <i>styles</i>
+                            <ul>
+                                <li>
+                                    <i class="icon-file"></i>alert.css - <i>core styles</i>
+                                </li>
+                                <li>
+                                    <i class="icon-file"></i>alert.min.css - <i>minified core styles</i>
+                                </li>
+                                <li>
+                                    <i class="icon-file"></i>PIE.htc - <i>CSS3 PIE library(see <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#setup_ie_support">chapter C4</a>)</i>
+                                </li>
+                                <li>
+                                    <i class="icon-file"></i>PIE.php - <i>CSS3 PIE wrapper</i>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <i class="icon-folder-open"></i>js - <i>scripts</i>
+                            <ul>
+                                <li>
+                                    <i class="icon-file"></i>alert.js - <i>alert plugin</i>
+                                </li>
+                                <li>
+                                    <i class="icon-file"></i>alert.min.js - <i>minified alert plugin</i>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <i class="icon-folder-open"></i>themes - <i>theme files</i>
+                            <ul>
+                                <li>
+                                    <i class="icon-folder-open"></i>default - <i>default theme</i>
+                                    <ul>
+                                        <li>
+                                            <i class="icon-folder-open"></i>img - <i>images</i>
+                                            <ul>
+                                                <li>
+                                                    <i class="icon-file"></i>close.png - <i>close icon</i>
+                                                </li>
+                                                <li>
+                                                    <i class="icon-file"></i>confirm.png - <i>confirm icon</i>
+                                                </li>
+                                                <li>
+                                                    <i class="icon-file"></i>error.png - <i>error icon</i>
+                                                </li>
+                                                <li>
+                                                    <i class="icon-file"></i>info.png - <i>info icon</i>
+                                                </li>
+                                                <li>
+                                                    <i class="icon-file"></i>warning.png - <i>warning icon</i>
+                                                </li>
+                                                <li>
+                                                    <i class="icon-file"></i>prompt.png - <i>prompt icon</i>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <i class="icon-folder-close"></i>x2 - <i>double-sized images for retina display</i>
+                                        </li>
+                                        <li>
+                                            <i class="icon-file"></i>theme.css - <i>theme stylesheet</i>
+                                        </li>
+                                        <li>
+                                            <i class="icon-file"></i>theme.min.css - <i>minified theme stylesheet</i>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <i class="icon-folder-close"></i>dark - <i>dark theme</i>
+                                </li>
+                                <li>
+                                    <i class="icon-folder-close"></i>light - <i>light theme</i>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <i class="icon-folder-close"></i>doc - <i>this documentation</i>
+                </li>
+                <li>
+                    <i class="icon-folder-close"></i>quick-start - <i>quick-start guide</i>
+                </li>
+                <li>
+                    <i class="icon-folder-open"></i>psd - <i>graphics</i>
+                    <ul>
+                        <li>
+                            <i class="icon-file"></i>themes.psd - <i>included themes graphics</i>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <br><br><hr><br><br>
+
+
+            <!-- GETTING STARTED -->
+
+            <h3 id="introduction_getting_started">
+                <strong>4) Getting started</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                Copy alert folder for example into your sites root folder:
+            </p>
+            <ul>
+                <li>
+                    <i class="icon-folder-open"></i>root folder
+                    <ul>
+                        <li class="highlight">
+                            <i class="icon-folder-close"></i>alert
+                        </li>
+                        <li>
+                            <i class="icon-folder-close"></i>some other folder
+                        </li>
+                        <li>
+                            <i class="icon-folder-close"></i>some other folder
+                        </li>
+                        <li>
+                            <i class="icon-file"></i>some file
+                        </li>
+                        <li>
+                            <i class="icon-file"></i>some file
+                        </li>
+                        <li>
+                            <i class="icon-file"></i>some file
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <br>
+
+            <p>
+                jQuery and jQuery-UI are required. Put them into header together with plugin files:
+            </p>
+<pre><code class="xml"><span class="comment">&lt;!-- JQUERY --&gt;</span>
+
+<span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">"//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"</span>&gt;</span><span class="javascript"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+<span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">"//ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/jquery-ui.min.js"</span>&gt;</span><span class="javascript"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+
+<span class="comment">&lt;!-- ALERT --&gt;</span>
+
+<span class="tag">&lt;<span class="title">link</span> <span class="attribute">href</span>=<span class="value">"alert/css/alert.css"</span> <span class="attribute">rel</span>=<span class="value">"stylesheet"</span> /&gt;</span>
+<span class="tag">&lt;<span class="title">link</span> <span class="attribute">href</span>=<span class="value">"alert/themes/default/theme.css"</span> <span class="attribute">rel</span>=<span class="value">"stylesheet"</span> /&gt;</span>
+<span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">"alert/js/alert.js"</span>&gt;</span><span class="javascript"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></code></pre>
+            <br>
+            <p>
+                <i class="icon-info-sign"></i><i>When jQuery-UI is missing, then alert will be still fully functional, except of drag&amp;drop functionality.</i>
+            </p>
+            <br><br><hr><br><br>
+
+
+            <!-- USAGE -->
+
+            <h2 id="usage">
+                <strong>B) Usage</strong>
+            </h2>
+            <br><br>
+
+
+            <!-- ARGUMENTS -->
+
+            <h3 id="usage_arguments">
+                <strong>1) Arguments</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <h4>
+                <b>Usage:</b>
+            </h4>
+<!--$.alert.open([type], [title], content, [buttons], [callback]);-->
+<pre><code class="javascript">$.alert.open([<i>type</i>], [<i>title</i>], content, [<i>buttons</i>], [<i>callback</i>]);</code></pre>
+            <p>
+                or
+            </p>
+<!--$.alert.open({settings});-->
+<pre><code class="javascript">$.alert.open({settings});</code></pre>
+            <br>
+            <h4>
+                <b>Settings:</b>
+            </h4>
+            <table class="usage">
+                <thead>
+                    <tr>
+                        <th>
+                            Property
+                        </th>
+                        <th>
+                            Type
+                        </th>
+                        <th>
+                            Description
+                        </th>
+                        <th>
+                            Values
+                        </th>
+                        <th>
+                            Default
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            container
+                        </td>
+                        <td>
+                            <i>String, Object</i>
+                        </td>
+                        <td>
+                            Container for alert placement
+                        </td>
+                        <td>
+                            Selector, DOM object
+                        </td>
+                        <td>
+                            'body'
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            type
+                        </td>
+                        <td>
+                            <i>String</i>
+                        </td>
+                        <td>
+                            Alert type
+                        </td>
+                        <td>
+                            'info', 'confirm', 'warning', 'error', 'prompt' or user-defined alert type
+                        </td>
+                        <td>
+                            'info'
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            title
+                        </td>
+                        <td>
+                            <i>String</i>
+                        </td>
+                        <td>
+                            Alert title
+                        </td>
+                        <td>
+
+                        </td>
+                        <td>
+                            Default title for certain alert type
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            cancel
+                        </td>
+                        <td>
+                            <i>Boolean</i>
+                        </td>
+                        <td>
+                            Show close icon(alert can be then closed also with ESC)
+                        </td>
+                        <td>
+                            true, false
+                        </td>
+                        <td>
+                            true
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            icon
+                        </td>
+                        <td>
+                            <i>String, Boolean</i>
+                        </td>
+                        <td>
+                            Set one of icons defined in theme stylesheet or hide icon by setting false
+                        </td>
+                        <td>
+                            icon name, false
+                        </td>
+                        <td>
+                            'info'
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            content
+                        </td>
+                        <td>
+                            <i>String</i>
+                        </td>
+                        <td>
+                            Alert content
+                        </td>
+                        <td>
+
+                        </td>
+                        <td>
+                            Empty string
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            width
+                        </td>
+                        <td>
+                            <i>Number, String</i>
+                        </td>
+                        <td>
+                            Alert width
+                        </td>
+                        <td>
+                            Number(in pixels) or any valid CSS value for width property
+                        </td>
+                        <td>
+                            'auto'
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            maxHeight
+                        </td>
+                        <td>
+                            <i>Number, String</i>
+                        </td>
+                        <td>
+                            Content maximum height
+                        </td>
+                        <td>
+                            Number(in pixels) or any valid CSS value for max-height property
+                        </td>
+                        <td>
+                            160
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            align
+                        </td>
+                        <td>
+                            <i>String</i>
+                        </td>
+                        <td>
+                            Content alignment
+                        </td>
+                        <td>
+                            'left', 'center', 'right'
+                        </td>
+                        <td>
+                            'left'
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            callback
+                        </td>
+                        <td>
+                            <i>Function</i>
+                        </td>
+                        <td>
+                            Function that will be called after button press. Value of callback parameter will be pressed button id or false in case of closing alert by click on close icon.
+                        </td>
+                        <td>
+
+                        </td>
+                        <td>
+                            Empty function
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            buttons
+                        </td>
+                        <td>
+                            <i>Object</i>
+                        </td>
+                        <td>
+                            Object with buttons
+                        </td>
+                        <td>
+                            {id: 'label', ...}
+                        </td>
+                        <td>
+                            Default buttons for certain alert type or {ok: 'Ok'} if default isn't defined
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            draggable
+                        </td>
+                        <td>
+                            <i>Boolean</i>
+                        </td>
+                        <td>
+                            Drag&amp;drop(requires jQuery-UI)
+                        </td>
+                        <td>
+                            true, false
+                        </td>
+                        <td>
+                            true
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            pie
+                        </td>
+                        <td>
+                            <i>String</i>
+                        </td>
+                        <td>
+                            Determines whether to use PIE.htc directly or use its PHP wrapper
+                        </td>
+                        <td>
+                            'htc', 'php'
+                        </td>
+                        <td>
+                            'htc'
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <br><br><hr><br><br>
+
+
+            <!-- BASIC USAGE -->
+
+            <h3 id="usage_basic_usage">
+                <strong>2) Basic usage</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                Basic usage is the same as the default alert. Content can be plain text or HTML code.
+            </p>
+            <br>
+
+            <h4>
+                <b>Text</b>
+            </h4>
+<!--$.alert.open('Lorem ipsum dolor sit amet');-->
+<pre><code class="javascript">$.alert.open(<span class="string">'Lorem ipsum dolor sit amet'</span>);</code></pre>
+            <p>
+                or
+            </p>
+<!--$.alert.open({
+    content: 'Lorem ipsum dolor sit amet'
+});-->
+<pre><code class="javascript">$.alert.open({
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_basic_usage_text">Try it!</a>
+            <br><br><br><hr class="dashed"><br>
+
+            <h4>
+                <b>HTML</b>
+            </h4>
+<pre><code class="javascript">$.alert.open(<span class="string">'&lt;b&gt;Lorem&lt;/b&gt; &lt;i&gt;ipsum&lt;/i&gt; &lt;u&gt;dolor&lt;/u&gt;&lt;br /&gt;&lt;a href="#"&gt;sit amet&lt;/a&gt; consectetur.'</span>);</code></pre>
+            <p>
+                or
+            </p>
+<pre><code class="javascript">$.alert.open({
+    content: <span class="string">'&lt;b&gt;Lorem&lt;/b&gt; &lt;i&gt;ipsum&lt;/i&gt; &lt;u&gt;dolor&lt;/u&gt;&lt;br /&gt;&lt;a href="#"&gt;sit amet&lt;/a&gt; consectetur.'</span>
+});
+</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_basic_usage_html">Try it!</a>
+            <br><br><br><br><hr><br><br>
+
+
+            <!-- ALERT TYPE -->
+
+            <h3 id="usage_alert_type">
+                <strong>3) Alert type</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                Plugin contains four predefined alert types. Other types can be defined additionally(see <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#setup_alert_types">chapter C3</a>).
+            </p>
+            <br>
+
+            <h4>
+                <b>Info</b>(default)
+            </h4>
+<!--$.alert.open('info', 'Lorem ipsum dolor sit amet');-->
+<pre><code class="javascript">$.alert.open(<span class="string">'info'</span>, <span class="string">'Lorem ipsum dolor sit amet'</span>);</code></pre>
+            <p>
+                or
+            </p>
+<!--$.alert.open({
+    type: 'info',
+    content: 'Lorem ipsum dolor sit amet'
+});-->
+<pre><code class="javascript">$.alert.open({
+    type: <span class="string">'info'</span>,
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_alert_type_info">Try it!</a>
+            <br><br><br><hr class="dashed"><br>
+
+            <h4>
+                <b>Confirm</b>
+            </h4>
+<!--$.alert.open('confirm', 'Lorem ipsum dolor sit amet');-->
+<pre><code class="javascript">$.alert.open(<span class="string">'confirm'</span>, <span class="string">'Lorem ipsum dolor sit amet'</span>);</code></pre>
+            <p>
+                or
+            </p>
+<!--$.alert.open({
+    type: 'confirm',
+    content: 'Lorem ipsum dolor sit amet'
+});-->
+<pre><code class="javascript">$.alert.open({
+    type: <span class="string">'confirm'</span>,
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_alert_type_confirm">Try it!</a>
+            <br><br><br><hr class="dashed"><br>
+
+            <h4>
+                <b>Warning</b>
+            </h4>
+<!--$.alert.open('warning', 'Lorem ipsum dolor sit amet');-->
+<pre><code class="javascript">$.alert.open(<span class="string">'warning'</span>, <span class="string">'Lorem ipsum dolor sit amet'</span>);</code></pre>
+            <p>
+                or
+            </p>
+<!--$.alert.open({
+    type: 'warning',
+    content: 'Lorem ipsum dolor sit amet'
+});-->
+<pre><code class="javascript">$.alert.open({
+    type: <span class="string">'warning'</span>,
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_alert_type_warning">Try it!</a>
+            <br><br><br><hr class="dashed"><br>
+
+            <h4>
+                <b>Error</b>
+            </h4>
+<!--$.alert.open('error', 'Lorem ipsum dolor sit amet');-->
+<pre><code class="javascript">$.alert.open(<span class="string">'error'</span>, <span class="string">'Lorem ipsum dolor sit amet'</span>);</code></pre>
+            <p>
+                or
+            </p>
+<!--$.alert.open({
+    type: 'error',
+    content: 'Lorem ipsum dolor sit amet'
+});-->
+<pre><code class="javascript">$.alert.open({
+    type: <span class="string">'error'</span>,
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_alert_type_error">Try it!</a>
+            <br><br><br><hr class="dashed"><br>
+
+            <h4>
+                <b>Prompt</b>
+            </h4>
+<!--$.alert.open('prompt', 'Lorem ipsum dolor sit amet');-->
+<pre><code class="javascript">$.alert.open(<span class="string">'prompt'</span>, <span class="string">'Lorem ipsum dolor sit amet'</span>);</code></pre>
+            <p>
+                or
+            </p>
+<!--$.alert.open({
+    type: 'prompt',
+    content: 'Lorem ipsum dolor sit amet'
+});-->
+<pre><code class="javascript">$.alert.open({
+    type: <span class="string">'prompt'</span>,
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_alert_type_prompt">Try it!</a>
+            <br><br><br><br><hr><br><br>
+
+
+            <!-- TITLE -->
+
+            <h3 id="usage_title">
+                <strong>4) Title</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+<!--$.alert.open('My title', 'Lorem ipsum dolor sit amet');-->
+<pre><code class="javascript">$.alert.open(<span class="string">'My title'</span>, <span class="string">'Lorem ipsum dolor sit amet'</span>);</code></pre>
+            <p>
+                or
+            </p>
+<!--$.alert.open({
+    title: 'My title',
+    content: 'Lorem ipsum dolor sit amet'
+});-->
+<pre><code class="javascript">$.alert.open({
+    title: <span class="string">'My title'</span>,
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_title">Try it!</a>
+            <br><br><br><br><hr><br><br>
+
+
+            <!-- CLOSE ICON -->
+
+            <h3 id="usage_close_icon">
+                <strong>5) Close icon</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                The 'cancel' property determines whether alert may be cancelable(show close icon and alert can be then closed also with ESC) or not.
+            </p>
+            <h4>
+                <b>Cancelable</b>(default)
+            </h4>
+<!--$.alert.open({
+    type: 'confirm',
+    content: 'Lorem ipsum dolor sit amet',
+    cancel: true
+});-->
+<pre><code class="javascript">$.alert.open({
+    type: <span class="string">'confirm'</span>,
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>,
+    cancel: <span class="literal">true</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_close_icon_cancelable">Try it!</a>
+            <br><br><br><hr class="dashed"><br>
+
+            <h4>
+                <b>Noncancelable</b>
+            </h4>
+<!--$.alert.open({
+    type: 'confirm',
+    content: 'Lorem ipsum dolor sit amet',
+    cancel: false
+});-->
+<pre><code class="javascript">$.alert.open({
+    type: <span class="string">'confirm'</span>,
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>,
+    cancel: <span class="literal">false</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_close_icon_noncancelable">Try it!</a>
+            <br><br><br><br><hr><br><br>
+
+
+            <!-- ICON -->
+
+            <h3 id="usage_icon">
+                <strong>6) Icon</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <h4>
+                <b>Select icon</b>
+            </h4>
+            <p>
+                Select one of icons defined in theme stylesheet:
+            </p>
+<!--$.alert.open({
+    title: 'Alert',
+    content: 'Lorem ipsum dolor sit amet',
+    icon: 'warning'
+});-->
+<pre><code class="javascript">$.alert.open({
+    title: <span class="string">'Alert'</span>,
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>,
+    icon: <span class="string">'warning'</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_icon_select">Try it!</a>
+            <br><br><br><hr class="dashed"><br>
+
+            <h4>
+                <b>Hide icon</b>
+            </h4>
+            <p>
+                Don't show any icon:
+            </p>
+<!--$.alert.open({
+    content: 'Lorem ipsum dolor sit amet',
+    icon: false
+});-->
+<pre><code class="javascript">$.alert.open({
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>,
+    icon: <span class="literal">false</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_icon_hide">Try it!</a>
+            <br><br><br><hr class="dashed"><br>
+
+            <h4>
+                <b>Set custom icon</b>
+            </h4>
+            <p>
+                Define your icon in theme stylesheet(see <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#themes_theme_files">chapter D1</a>):
+            </p>
+<!--#smartAlert[data-icon="hand"] #smartAlertIcon {
+    background-image: url(img/hand.png);
+}-->
+<pre><code><span class="id">#smartAlert</span><span class="attr_selector">[data-icon="hand"]</span> <span class="id">#smartAlertIcon</span> <span class="rules">{
+    <span class="rule"><span class="attribute">background-image</span>:<span class="value"> <span class="function">url(img/hand.png)</span></span>;</span>
+<span class="rule">}</span></span></code></pre>
+            <p>
+                Set double-sized icon for retina display:
+            </p>
+<!--@media only screen and (min-device-pixel-ratio: 2),
+only screen and (-webkit-min-device-pixel-ratio: 2),
+only screen and (-moz-min-device-pixel-ratio: 2),
+only screen and (-o-min-device-pixel-ratio: 2/1) {
+
+    #smartAlert[data-icon="hand"] #smartAlertIcon {
+        background-image: url(x2/hand.png);
+    }
+
+}-->
+<pre><code class="css"><span class="at_rule">@<span class="keyword">media</span> only screen and (min-device-pixel-ratio: <span class="number">2</span>),
+only screen and (-webkit-min-device-pixel-ratio: <span class="number">2</span>),
+only screen and (-moz-min-device-pixel-ratio: <span class="number">2</span>),
+only screen and (-o-min-device-pixel-ratio: <span class="number">2</span>/<span class="number">1</span>) </span>{
+
+    <span class="id">#smartAlert</span><span class="attr_selector">[data-icon="hand"]</span> <span class="id">#smartAlertIcon</span> <span class="rules">{
+        <span class="rule"><span class="attribute">background-image</span>:<span class="value"> <span class="function">url(x2/hand.png)</span></span>;</span>
+    <span class="rule">}</span></span>
+
+}</code></pre>
+            <p>
+                Now you can simply use it:
+            </p>
+<!--$.alert.open({
+    content: 'Lorem ipsum dolor sit amet',
+    icon: 'hand'
+});-->
+<pre><code class="javascript">$.alert.open({
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>,
+    icon: <span class="string">'hand'</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_icon_custom">Try it!</a>
+            <br><br><br><br><hr><br><br>
+
+
+            <!-- WIDTH -->
+
+            <h3 id="usage_width">
+                <strong>7) Width</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                Width can be set to number(in pixels) or any valid CSS value for width property.
+            </p>
+<!--$.alert.open({
+    content: 'Lorem ipsum dolor sit amet',
+    width: 400
+});-->
+<pre><code class="javascript">$.alert.open({
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>,
+    width: <span class="number">400</span>
+});
+</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_width">Try it!</a>
+            <br><br><br><br><hr><br><br>
+
+
+            <!-- CONTENT MAXIMUM HEIGHT -->
+
+            <h3 id="usage_height">
+                <strong>8) Content maximum height</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                Content maximum height can be set to number(in pixels) or any valid CSS value for max-height property.
+            </p>
+<!-- $.alert.open({
+    maxHeight: 160,
+    content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut egestas ligula ut nunc porttitor dictum. Pellentesque sit amet massa sapien. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris risus lectus, facilisis luctus consectetur dictum, posuere a urna. Curabitur bibendum nisi sem. Nam at lectus at ipsum suscipit consectetur vel at ante. Mauris risus metus, commodo vel volutpat vitae, eleifend nec diam. Nullam tempor tortor ut mi porttitor adipiscing. Curabitur vitae diam sem, sed mattis odio. Pellentesque pretium interdum odio ac tristique. Nunc accumsan mauris et lorem adipiscing vel pulvinar lacus auctor. Fusce euismod, turpis quis elementum interdum, lacus risus porta dui, ac viverra diam augue eu mi. Praesent id lacus sem, eget dictum dui. In scelerisque euismod tellus a tincidunt. Sed sodales ullamcorper viverra. Praesent semper ipsum ac tellus euismod semper bibendum libero lobortis. Vivamus placerat auctor congue. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi posuere mi vitae arcu aliquet pretium suscipit libero sollicitudin. Vivamus et ligula nisl. Fusce adipiscing porttitor lacus, et luctus dui ornare quis. Pellentesque luctus velit varius turpis egestas posuere. Phasellus et velit metus, at bibendum ante. Vivamus vel enim id est dapibus vestibulum. Nullam tincidunt risus non erat scelerisque cursus ac sed.'
+}); -->
+<pre><code class="javascript">$.alert.open({
+    maxHeight: <span class="number">160</span>,
+    content: <span class="string">'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut egestas ligula ut nunc porttitor dictum. Pellentesque sit amet massa sapien. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris risus lectus, facilisis luctus consectetur dictum, posuere a urna. Curabitur bibendum nisi sem. Nam at lectus at ipsum suscipit consectetur vel at ante. Mauris risus metus, commodo vel volutpat vitae, eleifend nec diam. Nullam tempor tortor ut mi porttitor adipiscing. Curabitur vitae diam sem, sed mattis odio. Pellentesque pretium interdum odio ac tristique. Nunc accumsan mauris et lorem adipiscing vel pulvinar lacus auctor. Fusce euismod, turpis quis elementum interdum, lacus risus porta dui, ac viverra diam augue eu mi. Praesent id lacus sem, eget dictum dui. In scelerisque euismod tellus a tincidunt. Sed sodales ullamcorper viverra. Praesent semper ipsum ac tellus euismod semper bibendum libero lobortis. Vivamus placerat auctor congue. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi posuere mi vitae arcu aliquet pretium suscipit libero sollicitudin. Vivamus et ligula nisl. Fusce adipiscing porttitor lacus, et luctus dui ornare quis. Pellentesque luctus velit varius turpis egestas posuere. Phasellus et velit metus, at bibendum ante. Vivamus vel enim id est dapibus vestibulum. Nullam tincidunt risus non erat scelerisque cursus ac sed.'</span>
+});</code></pre>
+
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_height">Try it!</a>
+            <br><br><br><br><hr><br><br>
+
+
+            <!-- CONTENT ALIGNMENT -->
+
+            <h3 id="usage_content_alignment">
+                <strong>9) Content alignment</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                Content can be aligned to left, center or right.
+            </p>
+            <br>
+
+            <h4>
+                <b>Left</b>(default)
+            </h4>
+<!--$.alert.open({
+    content: 'Lorem ipsum dolor sit amet',
+    width: 400,
+    align: 'left'
+});-->
+<pre><code class="javascript">$.alert.open({
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>,
+    width: <span class="number">400</span>,
+    align: <span class="string">'left'</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_content_alignment_left">Try it!</a>
+            <br><br><br><hr class="dashed"><br>
+
+            <h4>
+                <b>Center</b>
+            </h4>
+<!--$.alert.open({
+    content: 'Lorem ipsum dolor sit amet',
+    width: 400,
+    align: 'center'
+});-->
+<pre><code class="javascript">$.alert.open({
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>,
+    width: <span class="number">400</span>,
+    align: <span class="string">'center'</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_content_alignment_center">Try it!</a>
+            <br><br><br><hr class="dashed"><br>
+
+            <h4>
+                <b>Right</b>
+            </h4>
+<!--$.alert.open({
+    content: 'Lorem ipsum dolor sit amet',
+    width: 400,
+    align: 'right'
+});-->
+<pre><code class="javascript">$.alert.open({
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>,
+    width: <span class="number">400</span>,
+    align: <span class="string">'right'</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_content_alignment_right">Try it!</a>
+            <br><br><br><br><hr><br><br>
+
+
+            <!-- CALLBACK -->
+
+            <h3 id="usage_callback">
+                <strong>10) Callback</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                Execute callback after closing alert:
+            </p>
+<!--$.alert.open('Lorem ipsum dolor sit amet', function() {
+    $.alert.open('This alert was opened from callback!');
+});-->
+<pre><code class="javascript">$.alert.open(<span class="string">'Lorem ipsum dolor sit amet'</span>, <span class="function"><span class="keyword">function</span><span class="params">()</span> {</span>
+    $.alert.open(<span class="string">'This alert was opened from callback!'</span>);
+});</code></pre>
+            <p>
+                or
+            </p>
+<!--$.alert.open({
+    content: 'Lorem ipsum dolor sit amet',
+    callback: function() {
+        $.alert.open('This alert was opened from callback!');
+    }
+});-->
+<pre><code class="javascript">$.alert.open({
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>,
+    callback: <span class="function"><span class="keyword">function</span><span class="params">()</span> {</span>
+        $.alert.open(<span class="string">'This alert was opened from callback!'</span>);
+    }
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_callback">Try it!</a>
+            <br><br><br><hr class="dashed"><br>
+
+            <p>
+                Get prompt value:
+            </p>
+<!--$.alert.open('prompt', 'Lorem ipsum dolor sit amet', function(button, value) {
+    if (button == 'ok')
+        $.alert.open(value || 'No value has been entered');
+});-->
+<pre><code class="javascript">$.alert.open(<span class="string">'prompt'</span>, <span class="string">'Lorem ipsum dolor sit amet'</span>, <span class="function"><span class="keyword">function</span><span class="params">(button, value)</span> {</span>
+    <span class="keyword">if</span> (button == <span class="string">'ok'</span>)
+        $.alert.open(value || <span class="string">'No value has been entered'</span>);
+});</code></pre>
+            <p>
+                or
+            </p>
+<!--$.alert.open({
+    type: 'prompt',
+    content: 'Lorem ipsum dolor sit amet',
+    callback: function(button, value) {
+        if (button == 'ok')
+            $.alert.open(value || 'No value has been entered');
+    }
+});-->
+<pre><code class="javascript">$.alert.open({
+    type: <span class="string">'prompt'</span>,
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>,
+    callback: <span class="function"><span class="keyword">function</span><span class="params">(button, value)</span> {</span>
+        <span class="keyword">if</span> (button == <span class="string">'ok'</span>)
+            $.alert.open(value || <span class="string">'No value has been entered'</span>);
+    }
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_callback_prompt">Try it!</a>
+            <br><br><br><br><hr><br><br>
+
+
+            <!-- BUTTONS -->
+
+            <h3 id="usage_buttons">
+                <strong>11) Buttons</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <h4>
+                <b>Define custom buttons</b>
+            </h4>
+            <p>
+                For defining custom buttons use object {id: 'label', ...}.
+            </p>
+<!--$.alert.open('Lorem ipsum dolor sit amet', {
+    someId: 'Abc',
+    otherId: 'Def',
+});-->
+<pre><code class="javascript">$.alert.open(<span class="string">'Lorem ipsum dolor sit amet'</span>, {
+    someId: <span class="string">'Abc'</span>,
+    otherId: <span class="string">'Def'</span>
+});</code></pre>
+            <p>
+                or
+            </p>
+<!--$.alert.open({
+    content: 'Lorem ipsum dolor sit amet',
+    buttons: {
+        someId: 'Abc',
+        otherId: 'Def',
+    }
+});-->
+<pre><code class="javascript">$.alert.open({
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>,
+    buttons: {
+        someId: <span class="string">'Abc'</span>,
+        otherId: <span class="string">'Def'</span>
+    }
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_buttons_define">Try it!</a>
+            <br><br><br><hr class="dashed"><br>
+
+            <h4>
+                <b>Handle button click</b>
+            </h4>
+            <p>
+                For handling button click use callback function. Value of callback parameter will be pressed button id or false in case of closing alert by click on close icon. Ids of predefined buttons are 'ok', 'yes' and 'no'.
+            </p>
+
+<!--$.alert.open('confirm', 'Lorem ipsum dolor sit amet', function(button) {
+    if (button == 'yes')
+        $.alert.open('You pressed the "yes" button.');
+    else if (button == 'no')
+        $.alert.open('You pressed the "no" button.');
+    else
+        $.alert.open('Alert was canceled.');
+});-->
+<pre><code class="javascript">$.alert.open(<span class="string">'confirm'</span>, <span class="string">'Lorem ipsum dolor sit amet'</span>, <span class="function"><span class="keyword">function</span><span class="params">(button)</span> {</span>
+    <span class="keyword">if</span> (button == <span class="string">'yes'</span>)
+        $.alert.open(<span class="string">'You pressed the "yes" button.'</span>);
+    <span class="keyword">else</span> <span class="keyword">if</span> (button == <span class="string">'no'</span>)
+        $.alert.open(<span class="string">'You pressed the "no" button.'</span>);
+    <span class="keyword">else</span>
+        $.alert.open(<span class="string">'Alert was canceled.'</span>);
+});</code></pre>
+            <p>
+                or
+            </p>
+<!--$.alert.open({
+    type: 'confirm',
+    content: 'Lorem ipsum dolor sit amet',
+    callback: function(button) {
+        if (button == 'yes')
+            $.alert.open('You pressed the "yes" button.');
+        else if (button == 'no')
+            $.alert.open('You pressed the "no" button.');
+        else
+            $.alert.open('Alert was canceled.');
+    }
+});-->
+<pre><code class="javascript">$.alert.open({
+    type: <span class="string">'confirm'</span>,
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>,
+    callback: <span class="function"><span class="keyword">function</span><span class="params">(button)</span> {</span>
+        <span class="keyword">if</span> (button == <span class="string">'yes'</span>)
+            $.alert.open(<span class="string">'You pressed the "yes" button.'</span>);
+        <span class="keyword">else</span> <span class="keyword">if</span> (button == <span class="string">'no'</span>)
+            $.alert.open(<span class="string">'You pressed the "no" button.'</span>);
+        <span class="keyword">else</span>
+            $.alert.open(<span class="string">'Alert was canceled.'</span>);
+    }
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_buttons_handle1">Try it!</a>
+            <br><br><br><hr class="dashed"><br>
+
+            <p>
+                The same with custom buttons:
+            </p>
+<!--$.alert.open(
+    'Lorem ipsum dolor sit amet',
+    {
+        A: 'A',
+        B: 'B',
+        C: 'C'
+    },
+    function(button) {
+        if (!button)
+            $.alert.open('Alert was canceled.');
+        else
+            $.alert.open('You pressed the "' + button + '" button.');
+    }
+);-->
+<pre><code class="javascript">$.alert.open(
+    <span class="string">'Lorem ipsum dolor sit amet'</span>,
+    {
+        A: <span class="string">'A'</span>,
+        B: <span class="string">'B'</span>,
+        C: <span class="string">'C'</span>
+    },
+    <span class="function"><span class="keyword">function</span><span class="params">(button)</span> {</span>
+        <span class="keyword">if</span> (!button)
+            $.alert.open(<span class="string">'Alert was canceled.'</span>);
+        <span class="keyword">else</span>
+            $.alert.open(<span class="string">'You pressed the "'</span> + button + <span class="string">'" button.'</span>);
+    }
+);</code></pre>
+            <p>
+                or
+            </p>
+<!--$.alert.open({
+    content: 'Lorem ipsum dolor sit amet',
+    buttons: {
+        A: 'A',
+        B: 'B',
+        C: 'C'
+    },
+    callback: function(button) {
+        if (!button)
+            $.alert.open('Alert was canceled.');
+        else
+            $.alert.open('You pressed the "' + button + '"');
+    }
+});-->
+<pre><code class="javascript">$.alert.open({
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>,
+    buttons: {
+        A: <span class="string">'A'</span>,
+        B: <span class="string">'B'</span>,
+        C: <span class="string">'C'</span>
+    },
+    callback: <span class="function"><span class="keyword">function</span><span class="params">(button)</span> {</span>
+        <span class="keyword">if</span> (!button)
+            $.alert.open(<span class="string">'Alert was canceled.'</span>);
+        <span class="keyword">else</span>
+            $.alert.open(<span class="string">'You pressed the "'</span> + button + <span class="string">'" button.'</span>);
+    }
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_buttons_handle2">Try it!</a>
+            <br><br><br><br><hr><br><br>
+
+
+            <!-- drag&amp;drop -->
+
+            <h3 id="usage_drag_and_drop">
+                <strong>12) Drag&amp;drop</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                Drag&amp;drop(requires jQuery-UI) can be enabled or disabled with 'draggable' property.
+            </p>
+            <br>
+            <h4>
+                <b>Drag&amp;drop enabled</b>(default)
+            </h4>
+<!--$.alert.open({
+    content: 'Lorem ipsum dolor sit amet',
+    draggable: true
+});-->
+<pre><code class="javascript">$.alert.open({
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>,
+    draggable: <span class="literal">true</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_drag_and_drop_enabled">Try it!</a>
+            <br><br><br><hr class="dashed"><br>
+
+            <h4>
+                <b>Drag&amp;drop disabled</b>
+            </h4>
+<!--$.alert.open({
+    content: 'Lorem ipsum dolor sit amet',
+    draggable: false
+});-->
+<pre><code class="javascript">$.alert.open({
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>,
+    draggable: <span class="literal">false</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_drag_and_drop_disabled">Try it!</a>
+            <br><br><br><br><hr><br><br>
+
+
+            <!-- CONTAINER -->
+
+            <h3 id="usage_container">
+                <strong>13) Container</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                It's possible to place alert elsewhere than page body. The container must have a relative or absolute position and, of course, be large enough.
+            </p>
+<!--$.alert.open({
+    container: '#example',
+    content: 'Lorem ipsum dolor sit amet'
+});-->
+<pre><code class="javascript">$.alert.open({
+    container: <span class="string">'#example'</span>,
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-usage_container">Try it!</a>
+            <br><br><br>
+            <div id="example-usage_container">
+                #example
+            </div>
+            <br><br><br><br><hr><br><br>
+
+
+            <!-- SETUP -->
+
+            <h2 id="setup">
+                <strong>C) Setup</strong>
+            </h2>
+            <br><br>
+
+
+            <!-- ARGUMENTS -->
+
+            <h3 id="setup_arguments">
+                <strong>1) Arguments</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+
+            <h4>
+                <b>Get options</b>
+            </h4>
+<!--$.alert.setup();-->
+<pre><code class="javascript">$.alert.setup();</code></pre>
+            <br>
+
+
+            <h4>
+                <b>Set options</b>
+            </h4>
+<!--$.alert.setup({settings});-->
+<pre><code class="javascript">$.alert.setup({settings});</code></pre>
+            <br>
+
+            <h4>
+                <b>Settings</b>
+            </h4>
+            <table class="setup">
+                <thead>
+                    <tr>
+                        <th>
+                            Property
+                        </th>
+                        <th>
+                            Description
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            defaults
+                        </td>
+                        <td>
+                            Global defaults
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            types
+                        </td>
+                        <td>
+                            Alert types
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <br><br><hr><br><br>
+
+
+            <!-- DEFAULTS -->
+
+            <h3 id="setup_defaults">
+                <strong>2) Defaults</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                Default values for every setting(see table in <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#usage_arguments">chapter B1</a>) can be easily overriden:
+            </p>
+<!--$.alert.setup({
+    defaults: {
+        type: 'warning',
+        cancel: false
+    }
+});
+
+$.alert.open('Lorem ipsum dolor sit amet');-->
+<pre><code class="javascript">$.alert.setup({
+    defaults: {
+        type: <span class="string">'warning'</span>,
+        cancel: <span class="literal">false</span>
+    }
+});
+
+$.alert.open(<span class="string">'Lorem ipsum dolor sit amet'</span>);</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-setup_defaults">Try it!</a>
+            <br><br><br><br><hr><br><br>
+
+
+            <!-- ALERT TYPES -->
+
+            <h3 id="setup_alert_types">
+                <strong>3) Alert types</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                If predefined alert types doesn't fit your needs, then you can define your own. Suppose you want to define alert for showing tips:
+            </p>
+            <br>
+
+            <h4>
+                <b>CSS</b>
+            </h4>
+            <p>
+                Define the "tip" icon in theme stylesheet:
+            </p>
+<!--#smartAlert[data-icon="tip"] #smartAlertIcon {
+    background-image: url(img/tip.png);
+}-->
+<pre><code><span class="id">#smartAlert</span><span class="attr_selector">[data-icon="tip"]</span> <span class="id">#smartAlertIcon</span> <span class="rules">{
+    <span class="rule"><span class="attribute">background-image</span>:<span class="value"> <span class="function">url(img/tip.png)</span></span>;</span>
+<span class="rule">}</span></span></code></pre>
+            <p>
+                Set double-sized "tip" icon for retina display:
+            </p>
+<!--@media only screen and (min-device-pixel-ratio: 2),
+only screen and (-webkit-min-device-pixel-ratio: 2),
+only screen and (-moz-min-device-pixel-ratio: 2),
+only screen and (-o-min-device-pixel-ratio: 2/1) {
+
+    #smartAlert[data-icon="tip"] #smartAlertIcon {
+        background-image: url(x2/tip.png);
+        background-size: 48px, 48px;
+        -webkit-background-size: 48px, 48px;
+        -moz-background-size: 48px, 48px;
+        -o-background-size: 48px, 48px;
+    }
+
+}-->
+<pre><code class="css"><span class="at_rule">@<span class="keyword">media</span> only screen and (min-device-pixel-ratio: <span class="number">2</span>),
+only screen and (-webkit-min-device-pixel-ratio: <span class="number">2</span>),
+only screen and (-moz-min-device-pixel-ratio: <span class="number">2</span>),
+only screen and (-o-min-device-pixel-ratio: <span class="number">2</span>/<span class="number">1</span>) </span>{
+
+    <span class="id">#smartAlert</span><span class="attr_selector">[data-icon="tip"]</span> <span class="id">#smartAlertIcon</span> <span class="rules">{
+        <span class="rule"><span class="attribute">background-image</span>:<span class="value"> <span class="function">url(x2/tip.png)</span></span>;</span>
+        <span class="rule"><span class="attribute">background-size</span>:<span class="value"> <span class="number">48</span>px, <span class="number">48</span>px</span>;</span>
+        <span class="rule"><span class="attribute">-webkit-background-size</span>:<span class="value"> <span class="number">48</span>px, <span class="number">48</span>px</span>;</span>
+        <span class="rule"><span class="attribute">-moz-background-size</span>:<span class="value"> <span class="number">48</span>px, <span class="number">48</span>px</span>;</span>
+        <span class="rule"><span class="attribute">-o-background-size</span>:<span class="value"> <span class="number">48</span>px, <span class="number">48</span>px</span>;</span>
+    <span class="rule">}</span></span>
+
+}</code></pre>
+            <br>
+
+            <h4>
+                <b>JS</b>
+            </h4>
+            <p>
+                Set the new type defaults:
+            </p>
+<!--$.alert.setup({
+    types: {
+        tip: {
+            title: 'Tip',
+            icon: 'tip',
+            buttons: {
+                cancel: 'Close'
+            }
+        }
+    }
+});-->
+<pre><code class="javascript">$.alert.setup({
+    types: {
+        tip: {
+            title: <span class="string">'Tip'</span>,
+            icon: <span class="string">'tip'</span>,
+            buttons: {
+                cancel: <span class="string">'Close'</span>
+            }
+        }
+    }
+});</code></pre>
+            <br>
+
+            <h4>
+                <b>Usage</b>
+            </h4>
+            <p>
+                Now you can simply use the new type:
+            </p>
+<!--$.alert.open('tip', 'Lorem ipsum dolor sit amet');-->
+<pre><code class="javascript">$.alert.open(<span class="string">'tip'</span>, <span class="string">'Lorem ipsum dolor sit amet'</span>);</code></pre>
+            <p>
+                or
+            </p>
+<!--$.alert.open({
+    type: 'tip',
+    content: 'Lorem ipsum dolor sit amet'
+});-->
+<pre><code class="javascript">$.alert.open({
+    type: <span class="string">'tip'</span>,
+    content: <span class="string">'Lorem ipsum dolor sit amet'</span>
+});</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-setup_alert_types">Try it!</a>
+            <br><br><br>
+            <i class="icon-info-sign"></i><i>When calling $.alert.open function, options are merged as follows: (global defaults &lt;= alert type settings) &lt;= passed options.</i>
+            <br><br><br><br><hr><br><br>
+
+
+            <!-- Localization -->
+
+            <h3 id="setup_localization">
+                <strong>4) Localization</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                For localization into your language simply alter alert types settings. German localization for example:
+            </p>
+<!--$.alert.setup({
+    types: {
+        error: {
+            title: 'Fehler'
+        },
+        warning: {
+            title: 'Warnung'
+        },
+        confirm: {
+            title: 'Konfirmieren',
+            buttons: {
+                yes: 'Ja',
+                no: 'Nein'
+            }
+        }
+    }
+});
+
+$.alert.open('confirm', 'Lorem ipsum dolor sit amet');-->
+<pre><code class="javascript">$.alert.setup({
+    types: {
+        error: {
+            title: <span class="string">'Fehler'</span>
+        },
+        warning: {
+            title: <span class="string">'Warnung'</span>
+        },
+        confirm: {
+            title: <span class="string">'Konfirmieren'</span>,
+            buttons: {
+                yes: <span class="string">'Ja'</span>,
+                no: <span class="string">'Nein'</span>
+            }
+        }
+    }
+});
+
+$.alert.open(<span class="string">'confirm'</span>, <span class="string">'Lorem ipsum dolor sit amet'</span>);</code></pre>
+            <i class="icon-eye-open"></i><a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#example-setup_localization">Try it!</a>
+            <br><br><br><br><hr><br><br>
+
+
+            <!-- IE SUPPORT -->
+
+            <h3 id="setup_ie_support">
+                <strong>5) IE support</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                CSS3 support in IE is provided by <a href="http://www.css3pie.com/" target="_blank">CSS3 PIE</a> library(PIE.htc file). IE requires that HTC behaviors are served up with a content-type header of "text/x-component", otherwise it will simply ignore the behavior. Many web servers are preconfigured to serve the correct content-type, but others are not. If you have problems with the PIE behavior not being applied, check your server configuration and if possible update it to use the correct content-type. For Apache, you can do this in a .htaccess file:
+            </p>
+<pre><code>AddType text/x-component .htc</code></pre>
+            <p>
+                If for some reason you are unable to modify the server configuration (e.g. if you are on a shared host which does not allow custom .htaccess files), then you may also use a wrapper script(PIE.php file). This script simply serves up the PIE.htc file using the correct content-type header. To use it, simply set the 'pie' property to value of 'php':
+            </p>
+<!--$.alert.setup({
+    defaults: {
+        pie: 'php'
+    }
+});-->
+<pre><code class="javascript">$.alert.setup({
+    defaults: {
+        pie: <span class="string">'php'</span>
+    }
+});</code></pre>
+            <br>
+            <p>
+                <i class="icon-info-sign"></i><i>This issue is particularly a problem in IE9, which seems more strict about the content-type than some other IE versions.</i>
+            </p>
+            <br><br><hr><br><br>
+
+
+            <!-- THEMES -->
+
+            <h2 id="themes">
+                <strong>D) Themes</strong>
+            </h2>
+            <br><br>
+
+
+            <!-- THEME FILES -->
+
+            <h3 id="themes_theme_files">
+                <strong>1) Theme files</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                Theme consists of these files:
+            </p>
+            <ul>
+                <li>
+                    <i class="icon-folder-open"></i>alert
+                    <ul>
+                        <li>
+                            <i class="icon-folder-open"></i>css
+                            <ul>
+                                <li>
+                                    <i class="icon-file"></i>alert.css - <i>alert core styles(<span class="highlight">don't change them</span>)</i>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <i class="icon-folder-open"></i>themes
+                            <ul>
+                                <li>
+                                    <i class="icon-folder-open"></i>mytheme - <i>theme files</i>
+                                    <ul>
+                                        <li>
+                                            <i class="icon-folder-open"></i>img - <i>images</i>
+                                            <ul>
+                                                <li>
+                                                    <i class="icon-file"></i>info.png - <i>info icon</i>
+                                                </li>
+                                                <li>
+                                                    <i class="icon-file"></i>confirm.png - <i>confirm icon</i>
+                                                </li>
+                                                <li>
+                                                    <i class="icon-file"></i>warning.png - <i>warning icon</i>
+                                                </li>
+                                                <li>
+                                                    <i class="icon-file"></i>error.png - <i>error icon</i>
+                                                </li>
+                                                <li>
+                                                    <i class="icon-file"></i>prompt.png - <i>prompt icon</i>
+                                                </li>
+                                                <li>
+                                                    <i class="icon-file"></i>other.png - <i>some other file used by theme</i>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <i class="icon-folder-close"></i>x2 - <i>double-sized images for retina display</i>
+                                        </li>
+                                        <li>
+                                            <i class="icon-file"></i>theme.css - <i>theme stylesheet(good start point is copy of themes/default/theme.css)</i>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <br><br><br><hr><br><br><br>
+
+
+            <!-- DOM structure -->
+
+            <h3 id="themes_dom_structure">
+                <strong>2) DOM structure</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                Alert elements are created dynamically. DOM structure looks as follows:
+            </p>
+            <img src="./Smart Alert_files/structure.png" alt="alert dom structure">
+            <br><br><br><br><br><hr><br><br><br>
+
+
+            <!-- CROSSBROWSER OPTIMIZATION -->
+
+            <h3 id="themes_crossbrowser_optimization">
+                <strong>3) Crossbrowser optimization</strong> - <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">top</a>
+            </h3>
+            <p>
+                Targeting styles for specific browser or engine is very easy. #smartAlert wrapper has attribute for determining which browser and version is used.
+            </p>
+            <br>
+            <h4>
+                <b>Attributes</b>
+            </h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>
+                            Attribute
+                        </th>
+                        <th>
+                            Browser
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            data-mozilla
+                        </td>
+                        <td>
+                            Gecko-based browsers(Firefox, Camino, ...)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            data-webkit
+                        </td>
+                        <td>
+                            Webkit-based browsers(Chrome, Chromium, Safari, ...)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            data-chrome
+                        </td>
+                        <td>
+                            Chrome, Chromium
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            data-safari
+                        </td>
+                        <td>
+                            Safari
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            data-opera
+                        </td>
+                        <td>
+                            Opera
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            data-ie
+                        </td>
+                        <td>
+                            Internet explorer
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <br>
+
+            <h4>
+                <b>Examples</b>
+            </h4>
+            <p>
+                Target title styles for IE8:
+            </p>
+<!--#smartAlert[data-ie="8"] #smartAlertTitle {
+
+    ...
+
+}-->
+<pre><code class="css"><span class="id">#smartAlert</span><span class="attr_selector">[data-ie="8"]</span> <span class="id">#smartAlertTitle</span> <span class="rules">{
+
+    ...
+
+<span class="rule">}</span></span></code></pre>
+            <p>
+                Target button styles for webkit-based browsers:
+            </p>
+<!--#smartAlert[data-webkit] .smartAlertButton {
+
+    ...
+
+}-->
+<pre><code class="css"><span class="id">#smartAlert</span><span class="attr_selector">[data-webkit]</span> <span class="class">.smartAlertButton</span> <span class="rules">{
+
+    ...
+
+<span class="rule">}</span></span></code></pre>
+            <br>
+
+            <h4>
+                <b>CSS3 backgrounds</b>
+            </h4>
+            <p>
+                Due to the use of the CSS3 PIE library(see <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#setup_ie_support">chapter C4</a>) is required to add -pie- prefix to every CSS3 background for its proper rendering in IE:
+            </p>
+<!--background: linear-gradient(#bbb, #ccc);
+-pie-background: linear-gradient(#bbb, #ccc);-->
+<pre><code class="css"><span class="tag">background</span>: <span class="tag">linear</span>-<span class="tag">gradient</span>(<span class="id">#bbb</span>, <span class="id">#ccc</span>);
+-<span class="tag">pie</span>-<span class="tag">background</span>: <span class="tag">linear</span>-<span class="tag">gradient</span>(<span class="id">#bbb</span>, <span class="id">#ccc</span>);</code></pre>
+            <br><br><br><hr>
+
+
+            <!-- FOOTER -->
+
+            <p class="append-bottom alt large">
+                <strong>Lukáš Prvý</strong>
+            </p>
+            <p>
+                <a href="https://www.jqueryscript.net/demo/Stylish-jQuery-Notification-Alert-Plugin-Smart-Alert/doc/index.html#toc">
+                    Go To Table of Contents
+                </a>
+            </p>
+            <br>
+        </div>
+    
+</body></html>

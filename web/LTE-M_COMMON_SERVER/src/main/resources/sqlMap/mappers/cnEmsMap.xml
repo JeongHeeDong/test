@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.CnEmsDAO">
+	
+	<select id="getCnEmsSearch" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			EMS_ID,
+			EMS_NAME,
+			IP_ADDRESS,
+			PORT,
+			IFNULL(TB_CO_VENDOR.VENDOR_NAME,'-') AS VENDOR_NAME,
+			DATE_FORMAT(TB_CO_EMS.INSTALL_DATE,'%Y-%m-%d %H:%i:%s') AS INSTALL_DATE,
+			COUNT.TOTAL_COUNT
+		FROM
+			TB_CO_EMS
+			LEFT OUTER JOIN
+			TB_CO_VENDOR
+			ON TB_CO_EMS.VENDOR_ID = TB_CO_VENDOR.VENDOR_ID,
+			(
+				SELECT
+					COUNT(1) AS TOTAL_COUNT
+				FROM
+					TB_CO_EMS
+					LEFT OUTER JOIN
+					TB_CO_VENDOR
+					ON TB_CO_EMS.VENDOR_ID = TB_CO_VENDOR.VENDOR_ID
+				WHERE
+					EQUIP_TYPE = '15'
+					<if test="cnEms_name != ''">
+						AND EMS_NAME LIKE (CONCAT('%', #{cnEms_name}, '%'))
+					</if>
+			) AS COUNT
+		WHERE
+			EQUIP_TYPE = '15'
+			<if test="cnEms_name != ''">
+				AND EMS_NAME LIKE (CONCAT('%', #{cnEms_name}, '%'))
+			</if>
+		ORDER BY
+			EMS_ID DESC
+		LIMIT #{pageNo}, 20
+	</select>
+	
+	<select id="getCnEmsDetail" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			TB_CO_EMS.EMS_ID,
+			TB_CO_EMS.EMS_NAME,
+			TB_CO_EMS.IP_ADDRESS,
+			TB_CO_EMS.PORT,
+			TB_CO_EMS.VENDOR_ID,
+			IFNULL(TB_CO_VENDOR.VENDOR_NAME,'-') AS VENDOR_NAME,
+			DATE_FORMAT(TB_CO_EMS.INSTALL_DATE,'%Y-%m-%d') AS INSTALL_DATE,
+			DATE_FORMAT(TB_CO_EMS.UPDATE_DATE,'%Y-%m-%d') AS UPDATE_DATE
+		FROM
+			TB_CO_EMS
+			LEFT OUTER JOIN
+			TB_CO_VENDOR
+			ON TB_CO_EMS.VENDOR_ID = TB_CO_VENDOR.VENDOR_ID
+		WHERE
+			TB_CO_EMS.EMS_ID = #{cnEms_id}
+	</select>
+	
+	<select id = "getCnEmsDetailGrid" parameterType = "java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			EQUIP_TYPE,
+			EQUIP_ID,
+			EQUIP_NAME
+		FROM
+			(
+				SELECT 'MME' AS EQUIP_TYPE, MME_ID AS EQUIP_ID, MME_NAME AS EQUIP_NAME FROM TB_CO_MME WHERE EMS_ID = #{cnEms_id}
+				UNION ALL
+				SELECT 'PGW' AS EQUIP_TYPE, PGW_ID AS EQUIP_ID, PGW_NAME AS EQUIP_NAME FROM TB_CO_PGW WHERE EMS_ID = #{cnEms_id}
+			) AS EQUIP
+	</select>
+	
+	<select id="getVendor" resultType="java.util.HashMap"> 
+		SELECT
+			VENDOR_ID,
+			VENDOR_NAME
+		FROM
+			TB_CO_VENDOR
+		GROUP BY
+			VENDOR_ID,VENDOR_NAME
+		ORDER BY
+			VENDOR_NAME DESC
+	</select>
+	
+	<select id = "maxID" resultType="java.util.HashMap">
+		SELECT
+			CONCAT(MAX(CONVERT(EMS_ID,UNSIGNED))+1) AS MAX_ID
+		FROM
+			TB_CO_EMS
+	</select>
+	
+	<update id="cnEmsDetailupdate" parameterType="java.util.HashMap">
+		UPDATE 
+			TB_CO_EMS
+		SET
+			EMS_NAME = #{cnEms_name},
+			IP_ADDRESS = #{ip},
+			PORT = #{port},
+			VENDOR_ID = #{vendor_id},
+			INSTALL_DATE = DATE_FORMAT(#{install_date},'%Y%m%d'),
+			<if test="update_date != ''">
+				UPDATE_DATE = DATE_FORMAT(#{update_date},'%Y%m%d'),
+			</if>
+			UPDATE_USER_ID = #{update_user_id}
+		WHERE
+			EMS_ID = #{cnEms_id}
+	</update>
+	
+	<select id="cnEmsIdCheckResult" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT
+			COUNT(1) AS COUNT
+		FROM
+			TB_CO_EMS
+		WHERE
+			EMS_ID = #{cnEms_id}
+	</select>
+	
+	<insert id="cnEmsAdd" parameterType="java.util.HashMap">
+		INSERT
+		INTO TB_CO_EMS
+		(EMS_ID,EMS_NAME,IP_ADDRESS,PORT,VENDOR_ID,INSTALL_DATE,UPDATE_USER_ID,EQUIP_TYPE)
+		VALUES
+		(#{cnEms_id},#{cnEms_name},#{ip},#{port},#{vendor_id},DATE_FORMAT(#{install_date},'%Y%m%d%H%i%s'),#{update_user_id},'15')
+	</insert>
+</mapper>

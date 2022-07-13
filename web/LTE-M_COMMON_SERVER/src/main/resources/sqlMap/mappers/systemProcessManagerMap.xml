@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.SystemProcessManagerDAO">
+	<select id="getProcData" parameterType="string" resultType="java.util.HashMap">
+		SELECT HOST_NAME, 
+			   HOST_IP, 
+			   PROCESS_NAME, 
+			   PROCESS_DESC, 
+			   PROCESS_STATUS, 
+			   FORMAT(CPU_RATE, 2) AS CPU_RATE, 
+			   FORMAT(MEMORY_RATE, 2) AS MEMORY_RATE, 
+			   MEMORY_SIZE
+		FROM   TB_SM_PROCESS_LOG
+	<if test="value != null">
+		WHERE  HOST_NAME = #{value}
+	</if>
+		ORDER BY PROCESS_STATUS DESC
+	</select>
+
+	<select id="getProcSearchOption" resultType="string">
+		SELECT HOST_NAME
+		FROM TB_SM_PROCESS_LOG
+		GROUP BY HOST_NAME
+	</select>
+	
+	<select id="getServerList" resultType="java.util.HashMap">
+		SELECT HOST_NAME,
+			   HOST_IP
+		FROM TB_SM_PROCESS_LOG
+		GROUP BY HOST_NAME
+	</select>
+	
+<!-- 	이벤트 플로우 프로세스 관리 쿼리  김성훈 -->
+	<select id="getGroupList" resultType="string">
+		SELECT 
+			GROUP_NAME
+		FROM TB_SM_PROCESS_LOG_V2
+		GROUP BY 	
+			GROUP_NAME
+	</select>
+	<select id="getPortList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			HOST_NAME,
+			HOST_IP,
+			SIOEF_PORT
+		FROM TB_SM_PROCESS_LOG_V2
+		WHERE
+		1=1
+		<if test='searchHostIp != null and searchHostIp != ""'>
+			AND HOST_IP = #{searchHostIp}
+		</if>
+		GROUP BY 	
+			HOST_NAME,
+			HOST_IP,
+			SIOEF_PORT
+	</select>
+	<select id="getNodeList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			V.EVENT_TIME,
+			V.HOST_NAME,
+			V.HOST_IP,
+			V.PROCESS_NAME,
+			V.PROCESS_STATUS,
+			V.CPU_RATE,
+			V.MEMORY_RATE,
+			V.MEMORY_SIZE,
+			V.NODE_NAME,
+			V.GROUP_NAME,
+			DATE_FORMAT(V.ACTIVE_TIME, '%Y-%m-%d %H:%i:%s') AS ACTIVE_TIME,
+			V.SIOEF_PORT,
+			V.PROCESS_DESC
+		FROM TB_SM_PROCESS_LOG_V2 V
+		WHERE
+			CONCAT(V.HOST_IP,':',V.SIOEF_PORT)  IN (${hostInfo})
+		<if test="searchStatus != ''">
+			AND V.PROCESS_STATUS = #{searchStatus}
+		</if>
+		<if test="searchGroup != ''">
+			AND V.GROUP_NAME = #{searchGroup}
+		</if>
+		<if test="searchValue !=''">
+			<if test="searchType == 'procName'">
+				AND V.PROCESS_NAME  LIKE CONCAT ('%',#{searchValue},'%')
+			</if>
+			<if test="searchType == 'procDesc'">
+				AND V.PROCESS_DESC  LIKE CONCAT ('%',#{searchValue},'%')
+			</if>
+		</if>
+		ORDER BY V.PROCESS_STATUS DESC
+	</select>
+	
+	<update id="sioefNodeStatusUpdate" parameterType="java.util.HashMap">
+		UPDATE TB_SM_PROCESS_LOG_V2 SET PROCESS_STATUS = #{ctrlType}
+		WHERE
+		HOST_IP = #{ipAddress}
+		AND
+		SIOEF_PORT = #{port}
+		AND
+		NODE_NAME = #{nodeName}
+	</update>
+	
+	<!-- 	이벤트 플로우 프로세스 이력 쿼리  김성훈 -->
+	<select id="getSioefHistoryList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			DATE_FORMAT(H.CTRL_TIME, '%Y-%m-%d %H:%i:%s') AS CTRL_TIME,
+			H.USER_ID,
+			H.HOST_NAME,
+			H.HOST_IP,
+			H.SIOEF_NAME,
+			H.SIOEF_PORT,
+			H.NODE_NAME,
+			H.GROUP_NAME,
+			H.CTRL_TYPE,
+			H.CTRL_CMD,
+			H.CTRL_RESULT,
+			L.PROCESS_DESC
+		FROM TB_SM_MF_HISTORY H
+		LEFT JOIN TB_SM_PROCESS_LOG_V2 L
+		ON H.HOST_NAME = L.NODE_NAME AND H.HOST_IP = L.HOST_IP AND H.SIOEF_PORT = L.SIOEF_PORT
+		WHERE
+			H.CTRL_TIME BETWEEN #{fromDate} AND #{toDate}
+		<if test="searchHostIp != ''">
+			AND H.HOST_IP = #{searchHostIp}
+		</if>
+		<if test="searchStatus != ''">
+			AND H.CTRL_TYPE = #{searchStatus}
+		</if>
+		<if test="searchGroup != ''">
+			AND H.GROUP_NAME = #{searchGroup}
+		</if>
+		<if test="searchValue !=''">
+			<if test="searchType == 'procName'">
+				AND H.SIOEF_NAME  LIKE CONCAT ('%',#{searchValue},'%')
+			</if>
+			<if test="searchType == 'procDesc'">
+				AND L.PROCESS_DESC  LIKE CONCAT ('%',#{searchValue},'%')
+			</if>
+		</if>
+		ORDER BY H.CTRL_TIME DESC
+		<if test="pageNo != null">
+			LIMIT ${pageNo}, ${pageSize}
+		</if>
+
+	</select>
+	<select id="getSioefHistoryCnt" parameterType="java.util.HashMap" resultType="int">
+		SELECT 
+			COUNT(*) AS TOTAL_COUNT
+		FROM TB_SM_MF_HISTORY H
+		LEFT JOIN TB_SM_PROCESS_LOG_V2 L
+		ON H.HOST_NAME = L.NODE_NAME AND H.HOST_IP = L.HOST_IP AND H.SIOEF_PORT = L.SIOEF_PORT
+		WHERE 
+			H.CTRL_TIME BETWEEN #{fromDate} AND #{toDate}
+		<if test="searchHostIp != ''">
+			AND H.HOST_IP = #{searchHostIp}
+		</if>
+		<if test="searchStatus != ''">
+			AND H.CTRL_TYPE = #{searchStatus}
+		</if>
+		<if test="searchGroup != ''">
+			AND H.GROUP_NAME = #{searchGroup}
+		</if>
+		<if test="searchValue !=''">
+			<if test="searchType == 'procName'">
+				AND H.SIOEF_NAME  LIKE CONCAT ('%',#{searchValue},'%')
+			</if>
+			<if test="searchType == 'procDesc'">
+				AND L.PROCESS_DESC  LIKE CONCAT ('%',#{searchValue},'%')
+			</if>
+		</if>
+	</select>
+	
+	<select id="getSioefStateData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT PROCESS_STATUS
+		  , SUM(CNT) CNT
+		FROM 
+			(SELECT 
+				CASE WHEN PROCESS_STATUS = 'ACT' THEN 'ACT'
+			      ELSE 'TRM' END AS PROCESS_STATUS
+			  	, COUNT(PROCESS_STATUS) CNT
+					FROM TB_SM_PROCESS_LOG_V2 
+			    GROUP BY PROCESS_STATUS) ps
+			GROUP BY PROCESS_STATUS
+	</select>
+	
+	
+</mapper>

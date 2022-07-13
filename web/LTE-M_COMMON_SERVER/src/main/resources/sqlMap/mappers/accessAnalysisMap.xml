@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.AccessAnalysisDAO">
+	<select id="getAccessGridData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			ALL_DATA.EVENT_TIME
+		  , ALL_DATA.COMP_TIME
+		  , ALL_DATA.ATTEMPT
+		  , ALL_DATA.STD_ATT
+		  , ALL_DATA.ATT_RATE
+		  , ALL_DATA.ERAB_ATTEMPT
+		  , ALL_DATA.STD_ERAB
+		  , ALL_DATA.ERAB_ATT_RATE
+		  , ALL_DATA.RRC
+		  , ALL_DATA.RRC_RATE
+		  , ALL_DATA.ERAB_ATTEMPT
+		  , ALL_DATA.ANSWER
+		  , ALL_DATA.ANSWER_RATE
+		  , ALL_DATA.ERAB_ADD_SUCCESS
+		  , ALL_DATA.CD
+		  , ALL_DATA.CD_RATE
+		FROM
+			(
+			SELECT
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i')                                                            AS EVENT_TIME
+			  , DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i')                                                                AS COMP_TIME
+			  , IFNULL(SUM(ATTEMPT),0)                                                                              AS ATTEMPT         -- RRC 시도호
+			  , IFNULL(SUM(STD_ATT_5M),0)                                                                           AS STD_ATT         -- RRC 기준 시도호
+			  , CAST(IFNULL((((SUM(ATTEMPT) - SUM(STD_ATT_5M))/SUM(STD_ATT_5M))*100),0.00) AS DECIMAL(12,2))        AS ATT_RATE        -- RRC 시도호 증감율(%)
+			  , IFNULL(SUM(ERAB_ATTEMPT),0)                                                                         AS ERAB_ATTEMPT    -- ERAB Setup 시도호
+			  , IFNULL(SUM(STD_ERAB_5M),0)                                                                          AS STD_ERAB        -- ERAB Setup 기준 시도호
+			  , CAST(IFNULL((((SUM(ERAB_ATTEMPT) - SUM(STD_ERAB_5M))/SUM(STD_ERAB_5M))*100),0.00) AS DECIMAL(12,2)) AS ERAB_ATT_RATE   -- ERAB Setup 시도호 증감율(%)
+			  , IFNULL(SUM(RRC),0)                                                                                  AS RRC             -- 소통호(RRC 성공호)
+			  , CAST(IFNULL(SUM(RRC_SUCCESS) /SUM(RRC_ATTEMPT)*100,100.00) AS DECIMAL(12,2))                        AS RRC_RATE        -- 소통율(RRC 성공율)(%)
+			  , IFNULL(SUM(ANSWER),0)                                                                               AS ANSWER          -- 완료호(ERAB Setup 성공호)
+			  , CAST(IFNULL(SUM(ERAB_SUCCESS)/SUM(ERAB_ATTEMPT)*100,100.00) AS DECIMAL(12,2))                       AS ANSWER_RATE     -- 완료율(ERAB Setup 성공율)(%)
+			  , IFNULL(SUM(ERAB_ADD_SUCCESS),0)                                                                     AS ERAB_ADD_SUCCESS-- ERAB Setup Add 성공호
+			  , IFNULL(SUM(CD),0)                                                                                   AS CD              -- 절단호
+			  , CAST(IFNULL(SUM(CD) /(SUM(ERAB_SUCCESS)+SUM(ERAB_ADD_SUCCESS))*100,0.00) AS DECIMAL(12,2))          AS CD_RATE         -- 절단율(%)
+			FROM
+				TB_PM_ACCESS_KPI
+			WHERE
+				EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				<if test='equipList != ""'>
+					AND DU_ID IN
+					<foreach collection = "equipList" item="value" separator="," open="(" close=")">
+						#{value}
+					</foreach>
+				</if>
+			GROUP BY
+				EVENT_TIME) AS ALL_DATA
+		ORDER BY
+		<if test = 'sortOption.size() > 0'>
+			<foreach collection="sortOption" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test = 'sortOption.size() == 0'>
+			ALL_DATA.EVENT_TIME DESC
+		</if>
+	</select>
+	<select id="getAccessDTPGridData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			  ALL_DATA.EVENT_TIME
+			, ALL_DATA.COMP_TIME
+			<if test='detailKpi == "1"'>
+			  , ALL_DATA.UP_VOLUMN
+			  , ALL_DATA.UP_VOLUMN_STD
+			  , ALL_DATA.UP_VOLUMN_RATE
+			  , ALL_DATA.UP_DTP
+			  , ALL_DATA.UP_DTP_STD
+			  , ALL_DATA.UP_DTP_RATE
+			  , ALL_DATA.UP_TIME
+			</if>
+			<if test='detailKpi == "2"'>
+			  , ALL_DATA.DW_VOLUMN
+			  , ALL_DATA.DW_VOLUMN_STD
+			  , ALL_DATA.DW_VOLUMN_RATE
+			  , ALL_DATA.DW_DTP
+			  , ALL_DATA.DW_DTP_STD
+			  , ALL_DATA.DW_DTP_RATE
+			  , ALL_DATA.DW_TIME
+			</if>
+		FROM
+			(SELECT
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i')        AS EVENT_TIME
+			  , DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i')            AS COMP_TIME
+				<if test='detailKpi == "1"'>
+				  , IFNULL(SUM(UP_VOLUMN),0) 					AS UP_VOLUMN
+				  , IFNULL(SUM(STD_UP_VOLUMN_5M),0)				AS UP_VOLUMN_STD
+				  , CAST(IFNULL((((SUM(UP_VOLUMN) - SUM(STD_UP_VOLUMN_5M))/SUM(STD_UP_VOLUMN_5M))*100),0.00) AS DECIMAL(12,2)) AS UP_VOLUMN_RATE
+				  , CAST(IFNULL(SUM(UP_DTP),0) AS DECIMAL(12,2))			AS UP_DTP
+				  , CAST(IFNULL(SUM(STD_UP_DTP_5M),0) AS DECIMAL(12,2))		AS UP_DTP_STD
+				  , CAST(IFNULL((((SUM(UP_DTP) - SUM(STD_UP_DTP_5M))/SUM(STD_UP_DTP_5M))*100),0.00) AS DECIMAL(12,2)) AS UP_DTP_RATE
+				  , UP_TIME
+				</if>
+				<if test='detailKpi == "2"'>
+				  , IFNULL(SUM(DW_VOLUMN),0)					AS DW_VOLUMN
+				  , IFNULL(SUM(STD_DW_VOLUMN_5M),0)				AS DW_VOLUMN_STD
+				  , CAST(IFNULL((((SUM(DW_VOLUMN) - SUM(STD_DW_VOLUMN_5M))/SUM(STD_DW_VOLUMN_5M))*100),0.00) AS DECIMAL(12,2)) AS DW_VOLUMN_RATE
+				  , CAST(IFNULL(SUM(DW_DTP),0) AS DECIMAL(12,2))						AS DW_DTP
+				  , CAST(IFNULL(SUM(STD_DW_DTP_5M),0) AS DECIMAL(12,2))					AS DW_DTP_STD
+				  , CAST(IFNULL((((SUM(DW_DTP) - SUM(STD_DW_DTP_5M))/SUM(STD_DW_DTP_5M))*100),0.00) AS DECIMAL(12,2)) AS DW_DTP_RATE
+				  , DW_TIME
+				</if>
+			FROM
+				TB_PM_ALM_ACCESS_DTP
+			WHERE
+				EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				<if test='equipList != ""'>
+					AND DU_ID IN
+					<foreach collection = "equipList" item="value" separator="," open="(" close=")">
+						#{value}
+					</foreach>
+				</if>
+			GROUP BY
+				EVENT_TIME) AS ALL_DATA
+		ORDER BY
+		<if test = 'sortOption.size() > 0'>
+			<foreach collection="sortOption" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test = 'sortOption.size() == 0'>
+			ALL_DATA.EVENT_TIME DESC
+		</if>
+	</select>
+	
+	<select id="getAccessHANDGridData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			ALL_DATA.EVENT_TIME,
+			ALL_DATA.COMP_TIME,
+			ALL_DATA.ATTEMPT,
+			ALL_DATA.STD_ATT,
+			ALL_DATA.ATT_RATE,
+			ALL_DATA.SUCCESS,
+			ALL_DATA.SUCC_RATE
+		FROM
+			(SELECT
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME,
+				DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') AS COMP_TIME,
+				IFNULL(SUM(ATTEMPT),0) AS ATTEMPT,
+				IFNULL(SUM(STD_ATT_5M),0) AS STD_ATT,
+				CAST(IFNULL((((SUM(ATTEMPT) - SUM(STD_ATT_5M))/SUM(STD_ATT_5M))*100),0.00) AS DECIMAL(12,2)) AS ATT_RATE,
+				IFNULL(SUM(SUCCESS),0) AS SUCCESS,
+				CAST(IFNULL(SUM(SUCCESS)/SUM(ATTEMPT)*100,0) AS DECIMAL(12,2)) AS SUCC_RATE
+			FROM
+				TB_PM_ACCESS_HANDOVER
+			WHERE
+				EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				<if test='equipList != ""'>
+					AND DU_ID IN
+					<foreach collection = "equipList" item="value" separator="," open="(" close=")">
+						#{value}
+					</foreach>
+				</if>
+				AND STATISTICS_TYPE = #{detailKpi}
+			GROUP BY
+				EVENT_TIME) AS ALL_DATA
+		ORDER BY
+		<if test = 'sortOption.size() > 0'>
+			<foreach collection="sortOption" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test = 'sortOption.size() == 0'>
+			ALL_DATA.EVENT_TIME DESC
+		</if>
+	</select>
+	
+	<select id="getPopAccessAnalysisData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<if test='flag == "1"'>
+			SELECT
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME
+			  , DU_ID
+			  , DU_NAME
+			  , IFNULL(SUM(ATTEMPT),0)                                                                              AS ATTEMPT
+			  , IFNULL(SUM(STD_ATT_5M),0)                                                                           AS STD_ATT
+			  , CAST(IFNULL((((SUM(ATTEMPT) - SUM(STD_ATT_5M))/SUM(STD_ATT_5M))*100),0.00) AS DECIMAL(12,2))        AS ATT_RATE
+			  , IFNULL(SUM(ERAB_ATTEMPT),0)                                                                         AS ERAB_ATTEMPT
+			  , IFNULL(SUM(STD_ERAB_5M),0)                                                                          AS STD_ERAB
+			  , CAST(IFNULL((((SUM(ERAB_ATTEMPT) - SUM(STD_ERAB_5M))/SUM(STD_ERAB_5M))*100),0.00) AS DECIMAL(12,2)) AS ERAB_ATT_RATE -- ERAB 시도호 증감율
+			  , IFNULL(SUM(RRC),0)                                                                                  AS RRC
+			  , CAST(IFNULL(SUM(RRC_SUCCESS) /SUM(RRC_ATTEMPT)*100,100.00) AS DECIMAL(12,2))                        AS RRC_RATE
+			  , IFNULL(SUM(ANSWER),0)                                                                               AS ANSWER
+			  , CAST(IFNULL(SUM(ERAB_SUCCESS)/SUM(ERAB_ATTEMPT)*100,100.00) AS DECIMAL(12,2))                       AS ANSWER_RATE
+			  , IFNULL(SUM(ERAB_ADD_SUCCESS),0)                                                                     AS ERAB_ADD_SUCCESS
+			  , IFNULL(SUM(CD),0)                                                                                   AS CD
+			  , CAST(IFNULL(SUM(CD) /(SUM(ERAB_SUCCESS)+SUM(ERAB_ADD_SUCCESS))*100,0.00) AS DECIMAL(12,2))          AS CD_RATE
+			FROM
+				TB_PM_ACCESS_KPI
+			WHERE
+				EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				<if test='equipList != ""'>
+					AND DU_ID IN
+					<foreach collection = "equipList" item="value" separator="," open="(" close=")">
+						#{value}
+					</foreach>
+				</if>
+			GROUP BY
+				EVENT_TIME, DU_ID
+			ORDER BY 
+			<if test = 'sortOption.size() > 0'>
+				<foreach collection="sortOption" item="option" separator=",">
+					${option.colName} ${option.order}
+				</foreach>
+			</if>
+			<if test = 'sortOption.size() == 0'>
+				EVENT_TIME DESC, DU_ID
+			</if>
+		</if>
+		<if test='flag == "2"'>
+			SELECT
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME,
+				DU_ID,
+				DU_NAME,
+				<if test='kpi == "1"'>
+					IFNULL(UP_VOLUMN,0) AS VOLUMN,
+					IFNULL(STD_UP_VOLUMN_5M,0) AS VOLUMN_STD,
+					CAST(UP_VOLUME_RATE AS DECIMAL(12,2)) AS VOLUMN_RATE,
+					CAST(IFNULL(UP_DTP,0) AS DECIMAL(12,2)) AS DTP,
+					CAST(IFNULL(STD_UP_DTP_5M,0) AS DECIMAL(12,2)) AS DTP_STD,
+					CAST(UP_DTP_RATE AS DECIMAL(12,2)) AS DTP_RATE,
+					UP_TIME AS TIME
+				</if>
+				<if test='kpi == "2"'>
+					IFNULL(DW_VOLUMN,0) AS VOLUMN,
+					IFNULL(STD_DW_VOLUMN_5M,0) AS VOLUMN_STD,
+					CAST(DW_VOLUME_RATE AS DECIMAL(12,2)) AS VOLUMN_RATE,
+					CAST(IFNULL(DW_DTP,0) AS DECIMAL(12,2)) AS DTP,
+					CAST(IFNULL(STD_DW_DTP_5M,0) AS DECIMAL(12,2)) AS DTP_STD,
+					CAST(DW_DTP_RATE AS DECIMAL(12,2)) AS DTP_RATE,
+					DW_TIME AS TIME
+				</if>
+			FROM
+				TB_PM_ALM_ACCESS_DTP
+			WHERE
+				EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				<if test='equipList != ""'>
+					AND DU_ID IN
+					<foreach collection = "equipList" item="value" separator="," open="(" close=")">
+						#{value}
+					</foreach>
+				</if>
+			GROUP BY
+				EVENT_TIME, DU_ID
+			ORDER BY 
+			<if test = 'sortOption.size() > 0'>
+				<foreach collection="sortOption" item="option" separator=",">
+					${option.colName} ${option.order}
+				</foreach>
+			</if>
+			<if test = 'sortOption.size() == 0'>
+				EVENT_TIME DESC, DU_ID
+			</if>
+		</if>
+		<if test='flag == "3"'>
+			SELECT
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME,
+				DU_ID,
+				DU_NAME,
+				STATISTICS_TYPE,
+				IFNULL(ATTEMPT,0) AS ATTEMPT,
+				IFNULL(STD_ATT_5M,0) AS STD_ATT,
+				IFNULL(ATT_RATE,0) AS ATT_RATE,
+				IFNULL(SUCCESS,0) AS SUCCESS,
+				IFNULL(SUCC_RATE,0) AS SUCC_RATE
+			FROM
+				TB_PM_ACCESS_HANDOVER
+			WHERE
+				EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				<if test='equipList != ""'>
+					AND DU_ID IN
+					<foreach collection = "equipList" item="value" separator="," open="(" close=")">
+						#{value}
+					</foreach>
+				</if>
+				AND STATISTICS_TYPE = #{kpi}
+			GROUP BY
+				EVENT_TIME, DU_ID
+			ORDER BY 
+			<if test = 'sortOption.size() > 0'>
+				<foreach collection="sortOption" item="option" separator=",">
+					${option.colName} ${option.order}
+				</foreach>
+			</if>
+			<if test = 'sortOption.size() == 0'>
+				EVENT_TIME DESC, DU_ID, STATISTICS_TYPE
+			</if>
+		</if>
+	</select>
+</mapper>

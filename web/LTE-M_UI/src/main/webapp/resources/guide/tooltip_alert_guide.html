@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<title>Tooltip & Alert Guide : TSDN</title>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!--[if lt IE 9]>
+	<script src="js/html5.js"></script>
+	<script src="js/respond.min.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" type="text/css" href="guide.css"><!-- //가이드용임 -->
+	<link href="../css/common.css" rel="stylesheet" type="text/css" />
+	<link href="../css/layout_top.css" rel="stylesheet" type="text/css" />
+	<link href="../css/style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<!-- guideWrap2 -->
+<div class="guideWrap2">
+	<h1>Tooltip & Alert Guide</h1>
+	
+	<div class="guideBox">
+		<h2>Basic Tooltip</h2>
+		<p class="txtGuide">mu-tooltip > 내용</p>
+		<div class="boxArea" style="height:620px">
+
+			<!-- mu-tooltip -->
+			<div class="mu-tooltip" style="top:20px;left:20px;width:180px;">
+				<div class="mu-tooltip-header">SGW</div>
+				<div class="mu-tooltip-inner">
+					<div class="tit">Act</div>
+					<table class="mu-formbox">
+						<colgroup>
+							<col width="50%">
+							<col width="50%">
+						</colgroup>
+						<tbody>
+							<tr>
+								<th>시도호</th>
+								<td>145</td>
+							</tr>
+							<tr>
+								<th>성공율</th>
+								<td>98.56%</td>
+							</tr>
+						</tbody>
+					</table>
+					<div class="tit">Mod</div>
+					<table class="mu-formbox">
+						<colgroup>
+							<col width="50%">
+							<col width="50%">
+						</colgroup>
+						<tbody>
+							<tr>
+								<th>시도호</th>
+								<td>34</td>
+							</tr>
+							<tr>
+								<th>접속율</th>
+								<td>98.5%</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<!--// mu-tooltip -->
+
+			<!-- mu-tooltip -->
+			<div class="mu-tooltip mu-tooltip-lg" style="top:20px;left:250px;width:170px;">
+				<div class="mu-tooltip-header">통합품질</div>
+				<div class="mu-tooltip-inner">
+					<table class="mu-formbox">
+						<colgroup>
+							<col width="60%">
+							<col width="40%">
+						</colgroup>
+						<tbody>
+							<tr class="odd">
+								<th>Attach 시도</th>
+								<td>1000</td>
+							</tr>
+							<tr>
+								<th>Attach 성공율</th>
+								<td>99.98%</td>
+							</tr>
+							<tr class="odd">
+								<th>SR시도호</th>
+								<td>1000</td>
+							</tr>
+							<tr>
+								<th>SR성공율</th>
+								<td>99.98%</td>
+							</tr>
+							<tr class="odd">
+								<th>RRC시도호</th>
+								<td>1000</td>
+							</tr>
+							<tr>
+								<th>RRC성공율</th>
+								<td>99.98%</td>
+							</tr>
+							<tr class="odd">
+								<th>CD율</th>
+								<td>0.3%</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<!--// mu-tooltip -->
+
+			<!-- mu-tooltip -->
+			<div class="mu-tooltip mu-tooltip-sm" style="top:20px;left:620px;width:128px;">
+				<div class="mu-tooltip-header">동래</div>
+				<div class="mu-tooltip-inner">
+					<table class="mu-formbox">
+						<colgroup>
+							<col width="50%">
+							<col width="50%">
+						</colgroup>
+						<tbody>
+							<tr class="odd">
+								<th>Attach</th>
+								<td>10</td>
+							</tr>
+							<tr>
+								<th>SR</th>
+								<td>2</td>
+							</tr>
+							<tr class="odd">
+								<th>RRC</th>
+								<td>1</td>
+							</tr>
+							<tr>
+								<th>RAB</th>
+								<td>2</td>
+							</tr>
+							<tr class="odd">
+								<th>CD율</th>
+								<td>0.3%</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<!--// mu-tooltip -->
+			
+		</div>
+
+		<h2>Basic Dialog</h2>
+		<p class="txtGuide">mu-dialog > 내용</p>
+		<div class="boxArea" style="height:620px">
+
+			<!-- mu-dialog -->
+			<!-- 성능/고장 상세 조회 -->
+			<div class="mu-dialog" style="width:700px;top:20px;left:20px;">
+				<div class="mu-dialog-head">
+					<span class="title">성능/고장 상세 조회 : DU#1</span>
+					<button type="button" class="mu-btn mu-btn-icon"><i class="mu-icon-img cancel"></i></button>
+				</div>
+				<div class="mu-dialog-body-top">
+					<div class="mu-search-group">
+						<div class="mu-hgroup">
+							<div class="mu-datepicker">
+								<input value="05/20/2015" readonly="readonly" type="text">
+								<button class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon calendar"></i></button>
+							</div>
+							<div class="mu-selectbox">
+								<button class="mu-value">01시</button>
+								<ul class="mu-list">
+									<li value="1">01시</li>
+									<li value="2">02시</li>
+									<li value="3">03시</li>
+								</ul>
+							</div>
+							<div class="mu-selectbox">
+								<button class="mu-value">00분</button>
+								<ul class="mu-list">
+									<li value="1">00분</li>
+									<li value="2">05분</li>
+									<li value="3">10분</li>
+								</ul>
+							</div>
+						</div>
+						<span>~</span>
+						<div class="mu-hgroup">
+							<div class="mu-datepicker">
+								<input value="05/20/2015" readonly="readonly" type="text">
+								<button class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon calendar"></i></button>
+							</div>
+							<div class="mu-selectbox">
+								<button class="mu-value">01시</button>
+								<ul class="mu-list">
+									<li value="1">01시</li>
+									<li value="2">02시</li>
+									<li value="3">03시</li>
+								</ul>
+							</div>
+							<div class="mu-selectbox on">
+								<button class="mu-value">00분</button>
+								<ul class="mu-list">
+									<li value="1">00분</li>
+									<li value="2">05분</li>
+									<li value="3" class="active">10분</li>
+								</ul>
+							</div>
+							<div class="mu-selectbox">
+								<button class="mu-value">Attach</button>
+								<ul class="mu-list">
+									<li value="1">SR</li>
+									<li value="2">SGS</li>
+								</ul>
+							</div>
+						</div>
+						<button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon search"></i></button>
+					</div>
+				</div>
+				<div class="mu-dialog-body">
+					<ul class="mu-tab topologyTab">
+						<li class="active"><a href="">성능</a></li>
+						<li><a href="">고장</a></li>
+					</ul>
+					<div class="mu-tab-body topologyBody">
+						<div class="mu-tabCont show" id="performance">
+							<table class="mu-grid mu-grid-strip">
+								<colgroup>
+									<col width="38">
+									<col width="80">
+									<col width="100">
+									<col width="100">
+									<col width="150">
+									<col width="">
+								</colgroup>
+								<thead>
+									<tr>
+										<th class="stat"></th>
+										<th>등급</th>
+										<th>장비명</th>
+										<th>알람코드</th>
+										<th>발생시간</th>
+										<th>발생위치</th>
+									</tr>
+								</thead>
+							</table>
+							<div class="mu-scroll-v" style="height:129px;">
+								<table class="mu-grid mu-grid-strip">
+									<colgroup>
+										<col width="38">
+										<col width="80">
+										<col width="100">
+										<col width="100">
+										<col width="150">
+										<col width="">
+									</colgroup>
+									<tbody>
+										<tr>
+											<td class="stat"><i class="mu-icon alram critical"></i></td>
+											<td>Critical</td>
+											<td>RU#01</td>
+											<td>A0001</td>
+											<td>2015/11/09 10:34:15</td>
+											<td>RAN/xxx/xxx/xx</td>
+										</tr>
+										<tr>
+											<td class="stat"><i class="mu-icon alram major"></i></td>
+											<td>Major</td>
+											<td>RU#01</td>
+											<td>A0001</td>
+											<td>2015/11/09 10:34:15</td>
+											<td>RAN/xxx/xxx/xx</td>
+										</tr>
+										<tr>
+											<td class="stat"><i class="mu-icon alram minor"></i></td>
+											<td>Minor</td>
+											<td>RU#01</td>
+											<td>A0001</td>
+											<td>2015/11/09 10:34:15</td>
+											<td>RAN/xxx/xxx/xx</td>
+										</tr>
+										<tr>
+											<td class="stat"><i class="mu-icon alram warning"></i></td>
+											<td>Warning</td>
+											<td>RU#01</td>
+											<td>A0001</td>
+											<td>2015/11/09 10:34:15</td>
+											<td>RAN/xxx/xxx/xx</td>
+										</tr>
+										<tr>
+											<td class="stat"><i class="mu-icon alram warning"></i></td>
+											<td>Warning</td>
+											<td>RU#01</td>
+											<td>A0001</td>
+											<td>2015/11/09 10:34:15</td>
+											<td>RAN/xxx/xxx/xx</td>
+										</tr>
+										<tr>
+											<td class="stat"><i class="mu-icon alram warning"></i></td>
+											<td>Warning</td>
+											<td>RU#01</td>
+											<td>A0001</td>
+											<td>2015/11/09 10:34:15</td>
+											<td>RAN/xxx/xxx/xx</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div class="mu-tabCont" id="trouble">
+							<table class="mu-grid mu-grid-strip">
+								<colgroup>
+									<col width="38">
+									<col width="80">
+									<col width="100">
+									<col width="100">
+									<col width="150">
+									<col width="">
+								</colgroup>
+								<thead>
+									<tr>
+										<th class="stat"></th>
+										<th>등급</th>
+										<th>장비명</th>
+										<th>알람코드</th>
+										<th>발생시간</th>
+										<th>발생위치</th>
+									</tr>
+								</thead>
+							</table>
+							<div class="mu-scroll-v" style="height:129px;">
+								<table class="mu-grid mu-grid-strip">
+									<colgroup>
+										<col width="38">
+										<col width="80">
+										<col width="100">
+										<col width="100">
+										<col width="150">
+										<col width="">
+									</colgroup>
+									<tbody>
+										<tr>
+											<td class="stat"><i class="mu-icon alram critical"></i></td>
+											<td>Critical</td>
+											<td>RU#02</td>
+											<td>A0001</td>
+											<td>2015/11/09 10:34:15</td>
+											<td>RAN/xxx/xxx/xx</td>
+										</tr>
+										<tr>
+											<td class="stat"><i class="mu-icon alram major"></i></td>
+											<td>Major</td>
+											<td>RU#02</td>
+											<td>A0001</td>
+											<td>2015/11/09 10:34:15</td>
+											<td>RAN/xxx/xxx/xx</td>
+										</tr>
+										<tr>
+											<td class="stat"><i class="mu-icon alram minor"></i></td>
+											<td>Minor</td>
+											<td>RU#02</td>
+											<td>A0001</td>
+											<td>2015/11/09 10:34:15</td>
+											<td>RAN/xxx/xxx/xx</td>
+										</tr>
+										<tr>
+											<td class="stat"><i class="mu-icon alram warning"></i></td>
+											<td>Warning</td>
+											<td>RU#02</td>
+											<td>A0001</td>
+											<td>2015/11/09 10:34:15</td>
+											<td>RAN/xxx/xxx/xx</td>
+										</tr>
+										<tr>
+											<td class="stat"><i class="mu-icon alram warning"></i></td>
+											<td>Warning</td>
+											<td>RU#02</td>
+											<td>A0001</td>
+											<td>2015/11/09 10:34:15</td>
+											<td>RAN/xxx/xxx/xx</td>
+										</tr>
+										<tr>
+											<td class="stat"><i class="mu-icon alram warning"></i></td>
+											<td>Warning</td>
+											<td>RU#02</td>
+											<td>A0001</td>
+											<td>2015/11/09 10:34:15</td>
+											<td>RAN/xxx/xxx/xx</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			
+			<!-- 품질 Trend -->
+			<div class="mu-dialog" style="width:700px;top:400px;left:20px;">
+				<div class="mu-dialog-head">
+					<span class="title">품질 Trend : DU#1</span>
+					<button type="button" class="mu-btn mu-btn-icon"><i class="mu-icon-img cancel"></i></button>
+				</div>
+				<div class="mu-dialog-body-top">
+					<div class="mu-search-group">
+						<div class="mu-hgroup">
+							<div class="mu-datepicker">
+								<input value="05/20/2015" readonly="readonly" type="text">
+								<button class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon calendar"></i></button>
+							</div>
+							<div class="mu-selectbox">
+								<button class="mu-value">01시</button>
+								<ul class="mu-list">
+									<li value="1">01시</li>
+									<li value="2">02시</li>
+									<li value="3">03시</li>
+								</ul>
+							</div>
+							<div class="mu-selectbox">
+								<button class="mu-value">00분</button>
+								<ul class="mu-list">
+									<li value="1">00분</li>
+									<li value="2">05분</li>
+									<li value="3">10분</li>
+								</ul>
+							</div>
+						</div>
+						<span>~</span>
+						<div class="mu-hgroup">
+							<div class="mu-datepicker">
+								<input value="05/20/2015" readonly="readonly" type="text">
+								<button class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon calendar"></i></button>
+							</div>
+							<div class="mu-selectbox">
+								<button class="mu-value">01시</button>
+								<ul class="mu-list">
+									<li value="1">01시</li>
+									<li value="2">02시</li>
+									<li value="3">03시</li>
+								</ul>
+							</div>
+							<div class="mu-selectbox">
+								<button class="mu-value">00분</button>
+								<ul class="mu-list">
+									<li value="1">00분</li>
+									<li value="2">05분</li>
+									<li value="3">10분</li>
+								</ul>
+							</div>
+							<div class="mu-selectbox">
+								<button class="mu-value">Attach</button>
+								<ul class="mu-list">
+									<li value="1">SR</li>
+									<li value="2">SGS</li>
+								</ul>
+							</div>
+						</div>
+						<button type="button" class="mu-btn mu-btn-icon mu-btn-icon-only"><i class="mu-icon search"></i></button>
+					</div>
+				</div>
+				<div class="mu-dialog-body">
+					<div class="chartWrap">chart</div>
+				</div>
+			</div>
+			
+		</div>
+	</div>
+</div>
+<!-- //guideWrap2 -->
+	<script src="js/jquery.min.js"></script>
+	<script src="js/common.js"></script>
+</body>
+</html>

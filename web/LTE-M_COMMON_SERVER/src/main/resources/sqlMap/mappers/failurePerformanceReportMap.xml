@@ -1,0 +1,2131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.FailurePerformanceReportDAO">
+	<select id="getFailurePerformData_failure" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			IFNULL(TCE.EQUIP_NAME,'-') AS EQUIP_NAME,
+			TFA.SYSTEM_NAME AS SYSTEM_NAME,
+			CASE WHEN TFA.SEVERITY = 1 THEN 'CRITICAL' WHEN TFA.SEVERITY = 2 THEN 'MAJOR' WHEN TFA.SEVERITY = 3 THEN 'MINOR' ELSE 'NORMAL' END AS SEVERITY,
+			TFA.ALARM_CODE AS ALARM_CODE,
+			TFA.FDN AS FDN, 
+			TFA.PROBABLE_CAUSE AS PROBABLE_CAUSE,
+			DATE_FORMAT(TFA.EVENT_TIME, '%Y-%m-%d %H:%i:%s') AS EVENT_TIME,
+		  IFNULL(DATE_FORMAT(TFAA.RECOVER_TIME, '%Y-%m-%d %H:%i:%s'),'-') AS RECOVER_TIME,
+			IFNULL(CONCAT(TIMESTAMPDIFF(SECOND, TFA.EVENT_TIME, TFAA.RECOVER_TIME),' 초'),'-') AS TIME_DIFF_SEC,
+		  IFNULL(CONCAT(TIMESTAMPDIFF(MINUTE, TFA.EVENT_TIME, TFAA.RECOVER_TIME),' 분'),'-') AS TIME_DIFF_MIN
+		  ,IFNULL(EQUIP_LINE.LINE_NAME,'-') AS LINE_NAME
+      	  ,EQUIP_LINE.LINE_ID
+		  <if test='excelFlag != "Y"'> 
+		  , TOTAL.TOTAL_COUNT
+		  </if> 
+		FROM
+			TB_FM_ALARM AS TFA
+		  LEFT JOIN 
+		    (
+		      SELECT ALARM_ID, RECOVER_TIME FROM TB_FS_ALARM_ABNORMAL WHERE EVENT_TIME
+			    BETWEEN STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+			    AND (STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i') )
+		     ) AS TFAA
+		  ON TFA.ALARM_ID = TFAA.ALARM_ID			
+		  LEFT JOIN TB_CO_EQUIP AS TCE
+			ON TFA.EQUIP_TYPE = TCE.EQUIP_TYPE
+		  LEFT JOIN (  
+		      SELECT 
+		          SYSTEM_ID
+		          , SYSTEM_NAME
+		          , EQUIP_TYPE
+		          , LINE.LINE_ID
+		          , LINE.LINE_NAME
+		          , EQUIP.STATION_ID
+		          FROM 
+		          (
+		          SELECT
+		          VW.SYSTEM_ID
+					,VW.SYSTEM_NAME
+					,VW.EQUIP_TYPE
+       			   ,EQUIPLINE.STATION_ID
+				FROM
+					VW_SYSTEM VW
+
+		  			LEFT OUTER JOIN 
+		  				(
+		  					SELECT
+								MME_ID AS SYSTEM_ID
+								,'1' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_MME
+					        
+							UNION ALL
+					    
+							SELECT
+								PGW_ID AS SYSTEM_ID
+								,'4' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_PGW 
+					        
+							UNION ALL
+					    
+							SELECT
+								PCRF_ID AS SYSTEM_ID
+								,'7' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_PCRF
+					        
+					    UNION ALL    
+					    
+					    SELECT
+							SYSTEM_ID AS SYSTEM_ID
+					      	,EQUIP_TYPE AS EQUIP_TYPE
+					      	,LAREA_ID AS STATION_ID
+							FROM
+							  TB_CO_SYSTEM_ETC AS TCSE
+							  
+							UNION ALL
+							
+							SELECT
+								EMS_ID AS SYSTEM_ID
+					      ,EQUIP_TYPE AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_EMS TCE
+					
+					    UNION ALL
+					    
+					    SELECT
+					      DU_ID AS SYSTEM_ID
+					      ,'2' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+								
+							FROM
+								TB_CO_DU TCD
+    
+		  				) EQUIPLINE
+		  				ON VW.SYSTEM_ID = EQUIPLINE.SYSTEM_ID
+		  				AND VW.EQUIP_TYPE = EQUIPLINE.EQUIP_TYPE
+			  WHERE VW.EQUIP_TYPE != '3'
+				) EQUIP  
+				LEFT OUTER JOIN 
+				(
+				SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID 
+		          ) LINE
+		          ON EQUIP.STATION_ID = LINE.STATION_ID
+		          ) EQUIP_LINE   
+		      ON TFA.SYSTEM_ID = EQUIP_LINE.SYSTEM_ID
+		      AND TFA.EQUIP_TYPE = EQUIP_LINE.EQUIP_TYPE
+			<if test='excelFlag != "Y"'> 
+			JOIN
+			(
+			SELECT
+				COUNT(1) AS TOTAL_COUNT
+			FROM
+				TB_FM_ALARM AS TFA				  
+				LEFT JOIN
+				    (
+				      SELECT ALARM_ID, RECOVER_TIME FROM TB_FS_ALARM_ABNORMAL WHERE EVENT_TIME
+					    BETWEEN STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+					    AND (STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i') )
+				     ) AS TFAA
+				  ON TFA.ALARM_ID = TFAA.ALARM_ID
+					LEFT JOIN TB_CO_EQUIP AS TCE
+					ON TFA.EQUIP_TYPE = TCE.EQUIP_TYPE
+				LEFT JOIN (  
+		      SELECT 
+		          SYSTEM_ID
+		          , SYSTEM_NAME
+		          , EQUIP_TYPE
+		          , LINE.LINE_ID
+		          , LINE.LINE_NAME
+		          , EQUIP.STATION_ID
+		          FROM 
+		          (
+		          SELECT
+		          VW.SYSTEM_ID
+					,VW.SYSTEM_NAME
+					,VW.EQUIP_TYPE
+       			   ,EQUIPLINE.STATION_ID
+				FROM
+					VW_SYSTEM VW
+
+		  			LEFT OUTER JOIN 
+		  				(
+		  					SELECT
+								MME_ID AS SYSTEM_ID
+								,'1' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_MME
+					        
+							UNION ALL
+					    
+							SELECT
+								PGW_ID AS SYSTEM_ID
+								,'4' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_PGW 
+					        
+							UNION ALL
+					    
+							SELECT
+								PCRF_ID AS SYSTEM_ID
+								,'7' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_PCRF
+					        
+					    UNION ALL    
+					    
+					    SELECT
+							SYSTEM_ID AS SYSTEM_ID
+					      	,EQUIP_TYPE AS EQUIP_TYPE
+					      	,LAREA_ID AS STATION_ID
+							FROM
+							  TB_CO_SYSTEM_ETC AS TCSE
+							  
+							UNION ALL
+							
+							SELECT
+								EMS_ID AS SYSTEM_ID
+					      ,EQUIP_TYPE AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_EMS TCE
+					
+					    UNION ALL
+					    
+					    SELECT
+					      DU_ID AS SYSTEM_ID
+					      ,'2' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+								
+							FROM
+								TB_CO_DU TCD
+    
+		  				) EQUIPLINE
+		  				ON VW.SYSTEM_ID = EQUIPLINE.SYSTEM_ID
+		  				AND VW.EQUIP_TYPE = EQUIPLINE.EQUIP_TYPE
+			  WHERE VW.EQUIP_TYPE != '3'
+				) EQUIP  
+				LEFT OUTER JOIN 
+				(
+				SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID  
+		          ) LINE
+		          ON EQUIP.STATION_ID = LINE.STATION_ID
+		          ) EQUIP_LINE   
+		      ON TFA.SYSTEM_ID = EQUIP_LINE.SYSTEM_ID
+		      AND TFA.EQUIP_TYPE = EQUIP_LINE.EQUIP_TYPE
+			WHERE
+				TFA.EVENT_TIME
+				BETWEEN STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+				AND (STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i'))
+				AND TFA.SEVERITY IN ('1', '2', '3') 
+				AND TFA.ALARM_STATE = 1
+				<if test="lineId != '' and lineId != null ">
+					AND EQUIP_LINE.LINE_ID LIKE  (CONCAT('%', #{lineId}, '%'))
+				</if>
+			) AS TOTAL 
+			</if>
+		WHERE
+			TFA.EVENT_TIME
+			BETWEEN STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+			AND (STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i') )
+			AND TFA.SEVERITY IN ('1', '2', '3')
+			AND TFA.ALARM_STATE = 1
+			<if test="lineId != '' and lineId != null ">
+				AND EQUIP_LINE.LINE_ID LIKE  (CONCAT('%', #{lineId}, '%'))
+			</if>
+		ORDER BY
+		<if test = 'sortOption.size() > 0'>
+			<foreach collection="sortOption" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test = 'sortOption.size() == 0'>
+			TFA.EVENT_TIME DESC, TFA.SEVERITY ASC
+		</if>
+		<if test='excelFlag != "Y"'>
+		LIMIT ${pageNo}, ${pagingNum}
+		</if>
+	</select>
+	
+	<!-- 성능, 기지국 -->
+	<select id="getFailurePerformData_access" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			<if test="dayORhour eq '1'.toString()">
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME
+			</if>
+			<if test="dayORhour eq '2'.toString()">
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME
+			</if>
+			,DU_NAME AS DU_NAME
+			,KPI_ATTEMPT AS KPI_ATTEMPT
+			,KPI_STD_ATT AS KPI_STD_ATT
+			,KPI_ERAB_ATTEMPT AS KPI_ERAB_ATTEMPT
+			,KPI_STD_ERAB AS KPI_STD_ERAB
+			,KPI_ERAB_ADD_SUCC AS KPI_ERAB_ADD_SUCC
+			,CASE
+				WHEN KPI_STD_ATT = 0 OR KPI_STD_ATT IS NULL THEN 100.00
+				WHEN KPI_ATTEMPT <![CDATA[<]]> KPI_STD_ATT THEN 0.00
+				ELSE FORMAT(IFNULL(((KPI_ATTEMPT-KPI_STD_ATT)/KPI_STD_ATT)*100,0),2)
+				END AS KPI_ATTEMPT_RATE
+			,CASE 
+				WHEN THD_ATTEMPT  <![CDATA[>=]]>  KPI_ATTEMPT THEN 'NORMAL'
+				WHEN IFNULL(KPI_STD_ATT, 0) = 0 THEN 'NORMAL'
+				WHEN IFNULL(((KPI_ATTEMPT-KPI_STD_ATT)/KPI_STD_ATT)*100,0) <![CDATA[>=]]> ATT_RATE_CRI_INCR THEN 'CRITICAL'
+				WHEN IFNULL(((KPI_ATTEMPT-KPI_STD_ATT)/KPI_STD_ATT)*100,0) <![CDATA[>=]]> ATT_RATE_MAJ_INCR THEN 'MAJOR'
+				WHEN IFNULL(((KPI_ATTEMPT-KPI_STD_ATT)/KPI_STD_ATT)*100,0) <![CDATA[>=]]> ATT_RATE_MIN_INCR THEN 'MINOR'
+				WHEN IFNULL(((KPI_ATTEMPT-KPI_STD_ATT)/KPI_STD_ATT)*100,0) <![CDATA[<=]]> ATT_RATE_CRI_DECR THEN 'CRITICAL'
+				WHEN IFNULL(((KPI_ATTEMPT-KPI_STD_ATT)/KPI_STD_ATT)*100,0) <![CDATA[<=]]> ATT_RATE_MAJ_DECR THEN 'MAJOR'
+				WHEN IFNULL(((KPI_ATTEMPT-KPI_STD_ATT)/KPI_STD_ATT)*100,0) <![CDATA[<=]]> ATT_RATE_MIN_DECR THEN 'MINOR'
+				ELSE 'NORMAL'
+				END AS KPI_ATTEMPT_LV
+			, CASE
+					WHEN KPI_STD_ERAB         = 0
+						OR KPI_STD_ERAB IS NULL
+						THEN 100.00
+					WHEN KPI_ERAB_ATTEMPT <![CDATA[<]]> KPI_STD_ERAB
+						THEN 0.00
+						ELSE FORMAT(IFNULL(((KPI_ERAB_ATTEMPT-KPI_STD_ERAB)/KPI_STD_ERAB)*100,0),2)
+				END AS KPI_ERAB_RATE
+			, CASE
+					WHEN THD_ATTEMPT >= KPI_ATTEMPT
+						THEN 'NORMAL'
+					WHEN IFNULL(KPI_STD_ERAB, 0) = 0
+						THEN 'NORMAL'
+					WHEN IFNULL(((KPI_ERAB_ATTEMPT-KPI_STD_ATT)/KPI_STD_ERAB)*100,0) <![CDATA[>=]]> ERAB_ATT_RATE_CRI_INCR
+						THEN 'CRITICAL'
+					WHEN IFNULL(((KPI_ERAB_ATTEMPT-KPI_STD_ATT)/KPI_STD_ERAB)*100,0) <![CDATA[>=]]> ERAB_ATT_RATE_MAJ_INCR
+						THEN 'MAJOR'
+					WHEN IFNULL(((KPI_ERAB_ATTEMPT-KPI_STD_ATT)/KPI_STD_ERAB)*100,0) <![CDATA[>=]]> ERAB_ATT_RATE_MIN_INCR
+						THEN 'MINOR'
+					WHEN IFNULL(((KPI_ERAB_ATTEMPT-KPI_STD_ATT)/KPI_STD_ERAB)*100,0) <![CDATA[<=]]> ERAB_ATT_RATE_CRI_DECR
+						THEN 'CRITICAL'
+					WHEN IFNULL(((KPI_ERAB_ATTEMPT-KPI_STD_ATT)/KPI_STD_ERAB)*100,0) <![CDATA[<=]]> ERAB_ATT_RATE_MAJ_DECR
+						THEN 'MAJOR'
+					WHEN IFNULL(((KPI_ERAB_ATTEMPT-KPI_STD_ATT)/KPI_STD_ERAB)*100,0) <![CDATA[<=]]> ERAB_ATT_RATE_MIN_DECR
+						THEN 'MINOR'
+					ELSE 'NORMAL'
+					END AS KPI_ERAB_LV
+			, KPI_RRC AS KPI_RRC
+			, CASE
+				WHEN KPI_ATTEMPT = 0 THEN 100.00
+				WHEN KPI_ATTEMPT IS NULL THEN 100.00
+				ELSE FORMAT(IFNULL((KPI_RRC/KPI_ATTEMPT)*100,0),2)
+				END AS SUCC_RATE
+			, CASE 
+				WHEN THD_ATTEMPT  <![CDATA[>=]]>  KPI_ATTEMPT THEN 'NORMAL'
+				WHEN KPI_ATTEMPT = 0 THEN 'NORMAL' WHEN KPI_ATTEMPT IS NULL THEN 'NORMAL'
+				WHEN IFNULL((KPI_RRC/KPI_ATTEMPT)*100,0)  <![CDATA[<=]]>  SEIZER_RATE_CRI THEN 'CRITICAL' 
+				WHEN IFNULL((KPI_RRC/KPI_ATTEMPT)*100,0)  <![CDATA[<=]]>  SEIZER_RATE_MAJ THEN 'MAJOR'
+				WHEN IFNULL((KPI_RRC/KPI_ATTEMPT)*100,0)  <![CDATA[<=]]>  SEIZER_RATE_MIN THEN 'MINOR'
+				ELSE 'NORMAL'
+				END AS SUCC_RATE_LV
+			, KPI_ANSWER AS KPI_ANSWER
+			, CASE
+				WHEN KPI_ERAB_ATTEMPT = 0 THEN 100.00
+				WHEN KPI_ERAB_ATTEMPT IS NULL THEN 100.00
+				ELSE FORMAT(IFNULL((KPI_ANSWER/KPI_ERAB_ATTEMPT)*100,0),2)
+				END AS ANSWER_RATE
+			, CASE 
+				WHEN THD_ATTEMPT  <![CDATA[>=]]>  KPI_ATTEMPT THEN 'NORMAL'
+				WHEN KPI_ERAB_ATTEMPT = 0 THEN 'NORMAL' WHEN KPI_ERAB_ATTEMPT IS NULL THEN 'NORMAL'
+				WHEN IFNULL((KPI_ANSWER/KPI_ERAB_ATTEMPT)*100,0)  <![CDATA[<=]]>  ANSWER_RATE_CRI THEN 'CRITICAL'
+				WHEN IFNULL((KPI_ANSWER/KPI_ERAB_ATTEMPT)*100,0)  <![CDATA[<=]]>  ANSWER_RATE_MAJ THEN 'MAJOR'
+				WHEN IFNULL((KPI_ANSWER/KPI_ERAB_ATTEMPT)*100,0)  <![CDATA[<=]]>  ANSWER_RATE_MIN THEN 'MINOR'
+				ELSE 'NORMAL'
+				END AS ANSWER_RATE_LV
+			, KPI_CD AS KPI_CD
+			, CASE
+				WHEN (IFNULL(KPI_ANSWER, 0) + IFNULL(KPI_ERAB_ADD_SUCC, 0)) = 0 THEN 0.00
+				ELSE FORMAT(IFNULL((KPI_CD/(KPI_ANSWER+KPI_ERAB_ADD_SUCC))*100,0),2)
+				END AS CD_RATE
+		   , CASE
+				WHEN THD_ATTEMPT  <![CDATA[>=]]>  KPI_ATTEMPT THEN 'NORMAL'
+				WHEN IFNULL(KPI_ANSWER, 0) + IFNULL(KPI_ERAB_ADD_SUCC, 0) = 0 THEN 'NORMAL'
+				WHEN IFNULL((KPI_CD/(KPI_ANSWER+KPI_ERAB_ADD_SUCC))*100,0)  <![CDATA[>=]]>  CD_RATE_CRI THEN 'CRITICAL'
+				WHEN IFNULL((KPI_CD/(KPI_ANSWER+KPI_ERAB_ADD_SUCC))*100,0)  <![CDATA[>=]]>  CD_RATE_MAJ THEN 'MAJOR'
+				WHEN IFNULL((KPI_CD/(KPI_ANSWER+KPI_ERAB_ADD_SUCC))*100,0)  <![CDATA[>=]]>  CD_RATE_MIN THEN 'MINOR'
+				ELSE 'NORMAL'
+				END AS CD_RATE_LV
+			, LINE_ID
+			, LINE_NAME
+			<if test='excelFlag != "Y"'> 
+				, TOTAL.TOTAL_COUNT
+			</if> 
+		FROM(
+			SELECT
+				SUM(KPI.ATTEMPT)      AS KPI_ATTEMPT
+			  , SUM(KPI.STD_ATT_5M)   AS KPI_STD_ATT
+			  , SUM(KPI.RRC)          AS KPI_RRC
+			  , SUM(KPI.ANSWER)       AS KPI_ANSWER
+			  , SUM(KPI.CD)           AS KPI_CD
+			  , SUM(KPI.ERAB_ATTEMPT) AS KPI_ERAB_ATTEMPT
+			  , SUM(KPI.STD_ERAB_5M) AS KPI_STD_ERAB
+			  , SUM(KPI.ERAB_ADD_SUCCESS) AS KPI_ERAB_ADD_SUCC
+			  , THD.ATTEMPT               AS THD_ATTEMPT
+			  , THD.ERAB_ATT_RATE_MIN_INCR AS ERAB_ATT_RATE_MIN_INCR
+			  , THD.ERAB_ATT_RATE_MAJ_INCR AS ERAB_ATT_RATE_MAJ_INCR
+			  , THD.ERAB_ATT_RATE_CRI_INCR AS ERAB_ATT_RATE_CRI_INCR
+			  , THD.ERAB_ATT_RATE_MIN_DECR AS ERAB_ATT_RATE_MIN_DECR
+			  , THD.ERAB_ATT_RATE_MAJ_DECR AS ERAB_ATT_RATE_MAJ_DECR
+			  , THD.ERAB_ATT_RATE_CRI_DECR AS ERAB_ATT_RATE_CRI_DECR
+			  , THD.ATT_RATE_MIN_INCR AS ATT_RATE_MIN_INCR
+			  , THD.ATT_RATE_MAJ_INCR AS ATT_RATE_MAJ_INCR
+			  , THD.ATT_RATE_CRI_INCR AS ATT_RATE_CRI_INCR
+			  , THD.ATT_RATE_MIN_DECR AS ATT_RATE_MIN_DECR
+			  , THD.ATT_RATE_MAJ_DECR AS ATT_RATE_MAJ_DECR
+			  , THD.ATT_RATE_CRI_DECR AS ATT_RATE_CRI_DECR
+			  , THD.SEIZER_RATE_MIN   AS SEIZER_RATE_MIN
+			  , THD.SEIZER_RATE_MAJ   AS SEIZER_RATE_MAJ
+			  , THD.SEIZER_RATE_CRI   AS SEIZER_RATE_CRI
+			  , THD.ANSWER_RATE_MIN   AS ANSWER_RATE_MIN
+			  , THD.ANSWER_RATE_MAJ   AS ANSWER_RATE_MAJ
+			  , THD.ANSWER_RATE_CRI   AS ANSWER_RATE_CRI
+			  , THD.CD_RATE_MIN       AS CD_RATE_MIN
+			  , THD.CD_RATE_MAJ       AS CD_RATE_MAJ
+			  , THD.CD_RATE_CRI       AS CD_RATE_CRI
+			  , KPI.DU_NAME           AS DU_NAME
+			  , KPI.EVENT_TIME        AS EVENT_TIME
+			  , KPI.DU_ID             AS DU_ID
+			  , TCD.LINE_ID           AS LINE_ID
+			  , TCD.LINE_NAME         AS LINE_NAME
+			FROM 
+				TB_PM_ACCESS_KPI AS KPI
+				LEFT OUTER JOIN
+				TB_PM_THD_DU AS THD
+					ON KPI.WEEKDAY = THD.WEEKDAY 
+					AND KPI.HOUR_SCOPE = THD.HOUR_SCOPE 
+				LEFT OUTER JOIN
+				( 
+					SELECT
+						LINE_NAME
+						, DU_ID
+						, STATION_NAME
+						, DU_NAME
+						, LINE_ID
+					FROM
+					(
+						SELECT
+							GROUP_CONCAT(TCL.LINE_NAME ORDER BY TCL.LINE_NAME) LINE_NAME
+						  , DU_ID
+						  , STATION_NAME
+						  , TCD.DU_NAME                                            DU_NAME
+						  , GROUP_CONCAT(STATION.LINE_ID ORDER BY STATION.LINE_ID) LINE_ID
+						FROM
+							TB_CO_DU TCD
+							LEFT OUTER JOIN
+								(
+									SELECT
+										STATION_NAME
+									  , STATION_ID
+									  , SUBSTRING_INDEX (SUBSTRING_INDEX(TB_CO_STATION.LINE_ID,',',NUMBERS.N),',',-1) LINE_ID
+									FROM
+										(
+											SELECT
+												1 N
+											UNION ALL
+											SELECT
+												2
+										)
+										NUMBERS
+										INNER JOIN
+											TB_CO_STATION
+											ON
+												CHAR_LENGTH ( TB_CO_STATION.LINE_ID ) - CHAR_LENGTH ( REPLACE ( TB_CO_STATION.LINE_ID , ',' , '' )) >= NUMBERS.N-1
+								)
+								STATION
+								ON
+									STATION.STATION_ID = TCD.STATION_ID
+							LEFT OUTER JOIN
+								TB_CO_LINE TCL
+								ON
+									STATION.LINE_ID = TCL.LINE_ID
+							GROUP BY
+								STATION.STATION_NAME
+						) t1
+					) AS TCD
+					ON KPI.DU_ID = TCD.DU_ID
+			WHERE
+				KPI.EVENT_TIME  <![CDATA[>=]]>  STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND KPI.EVENT_TIME  <![CDATA[<=]]>  STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				AND KPI.DU_ID IN(SELECT DU_ID FROM TB_CO_DU WHERE OPR_STATUS = 1)
+				<if test="lineId != '' and lineId != null ">
+					AND TCD.LINE_ID LIKE  (CONCAT('%', #{lineId}, '%'))
+				</if>
+			GROUP BY
+				<if test="dayORhour eq '1'.toString()">
+				KPI.DU_ID, DATE_FORMAT(EVENT_TIME,'%Y-%m-%d')
+				</if>
+				<if test="dayORhour eq '2'.toString()">
+				KPI.DU_ID, DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H')
+				</if>
+		) AS KPI_DATA
+		<if test='excelFlag != "Y"'> 
+		JOIN
+		(
+		SELECT COUNT(1) AS TOTAL_COUNT
+		FROM (
+			SELECT
+				COUNT(1) AS TOTAL_COUNT
+			FROM
+				TB_PM_ACCESS_KPI AS KPI
+				LEFT OUTER JOIN
+				TB_PM_THD_DU AS THD
+				ON KPI.WEEKDAY = THD.WEEKDAY AND KPI.HOUR_SCOPE = THD.HOUR_SCOPE
+			WHERE
+				KPI.EVENT_TIME  <![CDATA[>=]]>  STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND KPI.EVENT_TIME  <![CDATA[<=]]>  STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				AND KPI.DU_ID IN(SELECT DU_ID FROM TB_CO_DU WHERE OPR_STATUS = 1)
+			GROUP BY
+				<if test="dayORhour eq '1'.toString()">
+				KPI.DU_ID, DATE_FORMAT(EVENT_TIME,'%Y-%m-%d')
+				</if>
+				<if test="dayORhour eq '2'.toString()">
+				KPI.DU_ID, DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H')
+				</if>
+			) AS COUNT
+		) AS TOTAL
+		</if>
+		ORDER BY
+		<if test = 'sortOption.size() > 0'>
+			<foreach collection="sortOption" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test = 'sortOption.size() == 0'>
+			DU_NAME, EVENT_TIME
+		</if>
+		<if test='excelFlag != "Y"'>
+		LIMIT ${pageNo}, ${pagingNum}
+		</if>
+	</select>
+	
+	<select id="getFailurePerformData_epc" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			<if test="dayORhour eq '1'.toString()">
+			DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+			</if>
+			<if test="dayORhour eq '2'.toString()">
+			DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+			</if>
+			EQUIP_NM AS EQUIP_NM,
+			DATA_TYPE AS DATA_TYPE,
+			ATTEMPT AS ATTEMPT,
+			STD_ATT_5M AS STD_ATT_5M,
+			CASE WHEN LENGTH(ATT_RATE) = 0 THEN '' ELSE FORMAT(ATT_RATE, 2) END AS ATT_RATE,
+			CASE WHEN ATT_RATE_LEVEL = 1 THEN 'CRITICAL' WHEN ATT_RATE_LEVEL = 2 THEN 'MAJOR' WHEN ATT_RATE_LEVEL = 3 THEN 'MINOR' ELSE 'NORMAL' END AS ATT_RATE_LEVEL,
+			SUCCESS ,
+			CASE WHEN LENGTH(SUCC_RATE) = 0 THEN '' ELSE FORMAT(SUCC_RATE, 2) END AS SUCC_RATE,
+			CASE WHEN SUCC_RATE_LEVEL = 1 THEN 'CRITICAL' WHEN SUCC_RATE_LEVEL = 2 THEN 'MAJOR' WHEN SUCC_RATE_LEVEL = 3 THEN 'MINOR' ELSE 'NORMAL' END AS SUCC_RATE_LEVEL,
+			CONNECT,
+			CASE WHEN LENGTH(CONNECT_RATE) = 0 THEN '' ELSE FORMAT(CONNECT_RATE, 2) END AS CONNECT_RATE,
+			CASE WHEN CONNECT_RATE_LEVEL = 1 THEN 'CRITICAL' WHEN CONNECT_RATE_LEVEL = 2 THEN 'MAJOR' WHEN CONNECT_RATE_LEVEL = 3 THEN 'MINOR' WHEN CONNECT_RATE_LEVEL = '' THEN '' ELSE 'NORMAL' END AS CONNECT_RATE_LEVEL
+			<if test='excelFlag != "Y"'> 
+			,TOTAL.TOTAL_COUNT AS TOTAL_COUNT
+			</if>
+		FROM
+			(
+				SELECT
+					SE_ID,
+					SE_NAME,
+					EQUIP_NM,
+					X.DATA_TYPE,
+					EVENT_TIME,
+					X.ATTEMPT,
+					X.STD_ATT_5M,
+					ATT_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+					   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+					   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+					   ELSE 4
+					   END, 4 ) AS ATT_RATE_LEVEL,
+					SUCCESS,
+					SUCC_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN SUCC_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+					   WHEN SUCC_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+					   WHEN SUCC_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+					   ELSE 4
+					   END, 4)  AS SUCC_RATE_LEVEL,
+						'' AS CONNECT,
+						'' AS CONNECT_RATE,
+						'' AS CONNECT_RATE_LEVEL
+				FROM
+					(
+						SELECT
+							PGW_ID AS SE_ID,
+							PGW_NAME AS SE_NAME,
+							'PGW' AS EQUIP_NM,
+							'CREATE' AS DATA_TYPE,
+							EVENT_TIME,
+							ATTEMPT,
+							STD_ATT_5M,
+							CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+							SUCCESS,
+							CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+							WEEKDAY
+						FROM						  
+							(
+								SELECT
+									SUM(ATTEMPT) AS ATTEMPT,
+									SUM(SUCCESS) AS SUCCESS,
+									SUM(STD_ATT_5M) AS STD_ATT_5M,
+									PGW_ID,
+									PGW_NAME,
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+									WEEKDAY
+								FROM
+									TB_PM_PGW_CREATE
+								WHERE
+									EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+									AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+								GROUP BY
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>
+									
+							) AS PGW_SUM
+					) AS X, TB_PM_THD_PGW AS Y
+				WHERE 
+				  X.WEEKDAY = Y.WEEKDAY AND Y.DATA_TYPE = '1'
+			UNION ALL
+				SELECT
+					SE_ID,
+					SE_NAME,
+					EQUIP_NM,
+					X.DATA_TYPE,
+					EVENT_TIME,
+					X.ATTEMPT,
+					X.STD_ATT_5M,
+					ATT_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+					   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+					   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+					   ELSE 4
+					   END, 4 ) AS ATT_RATE_LEVEL,
+					SUCCESS,
+					SUCC_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN SUCC_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+					   WHEN SUCC_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+					   WHEN SUCC_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+					   ELSE 4
+					   END, 4)  AS SUCC_RATE_LEVEL,
+						'' AS CONNECT,
+						'' AS CONNECT_RATE,
+						'' AS CONNECT_RATE_LEVEL
+				FROM
+					(
+						SELECT
+							PGW_ID AS SE_ID,
+							PGW_NAME AS SE_NAME,
+							'PGW' AS EQUIP_NM,
+							'DELETE' AS DATA_TYPE,
+							EVENT_TIME,
+							ATTEMPT,
+							STD_ATT_5M,
+							CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+							SUCCESS,
+							CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+							WEEKDAY
+						FROM						  
+							(
+								SELECT
+									SUM(ATTEMPT) AS ATTEMPT,
+									SUM(SUCCESS) AS SUCCESS,
+									SUM(STD_ATT_5M) AS STD_ATT_5M,
+									PGW_ID,
+									PGW_NAME,
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+									WEEKDAY
+								FROM
+									TB_PM_PGW_DELETE
+								WHERE
+									EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+									AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+								GROUP BY
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>
+							) AS PGW_SUM
+					) AS X, TB_PM_THD_PGW AS Y
+				WHERE 
+				  X.WEEKDAY = Y.WEEKDAY AND Y.DATA_TYPE = '2'
+			UNION ALL
+				SELECT
+					SE_ID,
+					SE_NAME,
+					EQUIP_NM,
+					X.DATA_TYPE,
+					EVENT_TIME,
+					X.ATTEMPT,
+					X.STD_ATT_5M,
+					ATT_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+					   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+					   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+					   ELSE 4
+					   END, 4 ) AS ATT_RATE_LEVEL,
+					SUCCESS,
+					SUCC_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN SUCC_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+					   WHEN SUCC_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+					   WHEN SUCC_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+					   ELSE 4
+					   END, 4)  AS SUCC_RATE_LEVEL,
+						'' AS CONNECT,
+						'' AS CONNECT_RATE,
+						'' AS CONNECT_RATE_LEVEL
+				FROM
+					(
+						SELECT
+							PGW_ID AS SE_ID,
+							PGW_NAME AS SE_NAME,
+							'PGW' AS EQUIP_NM,
+							'MODIFY' AS DATA_TYPE,
+							EVENT_TIME,
+							ATTEMPT,
+							STD_ATT_5M,
+							CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+							SUCCESS,
+							CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+							WEEKDAY
+						FROM						  
+							(
+								SELECT
+									SUM(ATTEMPT) AS ATTEMPT,
+									SUM(SUCCESS) AS SUCCESS,
+									SUM(STD_ATT_5M) AS STD_ATT_5M,
+									PGW_ID,
+									PGW_NAME,
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+									WEEKDAY
+								FROM
+									TB_PM_PGW_MODIFY
+								WHERE
+									EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+									AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+								GROUP BY
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>
+							) AS PGW_SUM
+					) AS X, TB_PM_THD_PGW AS Y
+				WHERE 
+				  X.WEEKDAY = Y.WEEKDAY AND Y.DATA_TYPE = '3'
+			UNION ALL
+				SELECT
+					SE_ID,
+					SE_NAME,
+					EQUIP_NM,
+					X.DATA_TYPE,
+					EVENT_TIME,
+					X.ATTEMPT,
+					X.STD_ATT_5M,
+					ATT_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+					   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+					   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+					   ELSE 4
+					   END, 4 ) AS ATT_RATE_LEVEL,
+					SUCCESS,
+					SUCC_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN SUCC_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+					   WHEN SUCC_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+					   WHEN SUCC_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+					   ELSE 4
+					   END, 4)  AS SUCC_RATE_LEVEL,
+					'' AS CONNECT,
+					'' AS CONNECT_RATE,
+					'' AS CONNECT_RATE_LEVEL
+				FROM
+					(
+						SELECT
+							SGW_ID AS SE_ID,
+							SGW_NAME AS SE_NAME,
+							'SGW' AS EQUIP_NM,
+							'MODIFY' AS DATA_TYPE,
+							EVENT_TIME,
+							ATTEMPT,
+							STD_ATT_5M,
+							CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+							SUCCESS,
+							CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+							WEEKDAY
+						FROM						  
+							(
+								SELECT
+									SUM(ATTEMPT) AS ATTEMPT,
+									SUM(SUCCESS) AS SUCCESS,
+									SUM(STD_ATT_5M) AS STD_ATT_5M,
+									SGW_ID,
+									SGW_NAME,
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+									WEEKDAY
+								FROM
+									TB_PM_SGW_MODIFY
+								WHERE
+									EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+									AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+								GROUP BY
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>
+							) AS SGW_SUM
+					) AS X, TB_PM_THD_SGW AS Y
+				WHERE 
+				  X.WEEKDAY = Y.WEEKDAY AND Y.DATA_TYPE = '2'
+			UNION ALL
+				SELECT
+					SE_ID,
+					SE_NAME,
+					EQUIP_NM,
+					X.DATA_TYPE,
+					EVENT_TIME,
+					X.ATTEMPT,
+					X.STD_ATT_5M,
+					ATT_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+					   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+					   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+					   ELSE 4
+					   END, 4 ) AS ATT_RATE_LEVEL,
+					SUCCESS,
+					SUCC_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN SUCC_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+					   WHEN SUCC_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+					   WHEN SUCC_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+					   ELSE 4
+					   END, 4)  AS SUCC_RATE_LEVEL,
+					'' AS CONNECT,
+					'' AS CONNECT_RATE,
+					'' AS CONNECT_RATE_LEVEL
+				FROM
+					(
+						SELECT
+							SGW_ID AS SE_ID,
+							SGW_NAME AS SE_NAME,
+							'SGW' AS EQUIP_NM,
+							'ATTACH' AS DATA_TYPE,
+							EVENT_TIME,
+							ATTEMPT,
+							STD_ATT_5M,
+							CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+							SUCCESS,
+							CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+							WEEKDAY
+						FROM						  
+							(
+								SELECT
+									SUM(ATTEMPT) AS ATTEMPT,
+									SUM(SUCCESS) AS SUCCESS,
+									SUM(STD_ATT_5M) AS STD_ATT_5M,
+									SGW_ID,
+									SGW_NAME,
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+									WEEKDAY
+								FROM
+									TB_PM_SGW_ATTACH
+								WHERE
+									EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+									AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+								GROUP BY
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>
+							) AS SGW_SUM
+					) AS X, TB_PM_THD_SGW AS Y
+				WHERE 
+				  X.WEEKDAY = Y.WEEKDAY AND Y.DATA_TYPE = '1'
+			UNION ALL
+				SELECT
+					SE_ID,
+					SE_NAME,
+					EQUIP_NM,
+					X.DATA_TYPE,
+					EVENT_TIME,
+					X.ATTEMPT,
+					X.STD_ATT_5M,
+					ATT_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+					   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+					   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+					   ELSE 4
+					   END, 4 ) AS ATT_RATE_LEVEL,
+					SUCCESS,
+					SUCC_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN SUCC_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+					   WHEN SUCC_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+					   WHEN SUCC_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+					   ELSE 4
+					   END, 4)  AS SUCC_RATE_LEVEL,
+						'' AS CONNECT,
+						'' AS CONNECT_RATE,
+						'' AS CONNECT_RATE_LEVEL
+				FROM
+					(
+						SELECT
+							HSS_ID AS SE_ID,
+							HSS_NAME AS SE_NAME,
+							'HSS' AS EQUIP_NM,
+							STATISTICS_TYPE AS DATA_TYPE,
+							EVENT_TIME,
+							ATTEMPT,
+							STD_ATT_5M,
+							CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+							SUCCESS,
+							CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+							WEEKDAY,
+					  GROUP_ID
+						FROM						  
+							(
+								SELECT
+									SUM(ATTEMPT) AS ATTEMPT,
+									SUM(SUCCESS) AS SUCCESS,
+									SUM(STD_ATT_5M) AS STD_ATT_5M,
+									HSS_ID,
+									HSS_NAME,
+									STATISTICS_TYPE,
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+									WEEKDAY,
+									CASE
+										WHEN GROUP_ID = 200 THEN 1
+										WHEN GROUP_ID = 400 THEN 2
+										WHEN GROUP_ID = 300 THEN 3
+										WHEN GROUP_ID = 500 THEN 4
+									END AS GROUP_ID
+								FROM
+									TB_PM_HSS
+								WHERE
+									GROUP_ID IN (200,400,300,500)
+									AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+									AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+								GROUP BY
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>, GROUP_ID
+							) AS HSS_SUM
+					) AS X, TB_PM_THD_HSS AS Y
+				WHERE 
+				  X.WEEKDAY = Y.WEEKDAY
+				  AND X.GROUP_ID = Y.DATA_TYPE
+			UNION ALL
+				SELECT
+					SE_ID,
+					SE_NAME,
+					EQUIP_NM,
+					X.DATA_TYPE,
+					EVENT_TIME,
+					X.ATTEMPT,
+					X.STD_ATT_5M,
+					ATT_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+					   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+					   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+					   ELSE 4
+					   END, 4 ) AS ATT_RATE_LEVEL,
+					SUCCESS,
+					SUCC_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN ANS_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+					   WHEN ANS_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+					   WHEN ANS_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+					   ELSE 4
+					   END, 4)  AS SUCC_RATE_LEVEL,
+					CONNECT,
+					CONNECT_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN SUCC_RATE_CRI <![CDATA[>]]> CONNECT_RATE THEN 1
+					   WHEN SUCC_RATE_MAJ <![CDATA[>]]> CONNECT_RATE THEN 2
+					   WHEN SUCC_RATE_MIN <![CDATA[>]]> CONNECT_RATE THEN 3
+					   ELSE 4
+					   END, 4) AS CONNECT_RATE_LEVEL
+				FROM
+					(
+						SELECT
+							MME_ID AS SE_ID,
+							MME_NAME AS SE_NAME,
+							'MME' AS EQUIP_NM,
+							'ATTACH' AS DATA_TYPE,
+							EVENT_TIME,
+							ATTEMPT,
+							STD_ATT_5M,
+							CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+							SUCCESS AS CONNECT,
+							CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(ANSWER / ATTEMPT * 100,100) END AS CONNECT_RATE,
+							ANSWER AS SUCCESS,
+							CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+							WEEKDAY
+						FROM						  
+							(
+								SELECT
+									SUM(ATTEMPT) AS ATTEMPT,
+									SUM(SUCCESS) AS SUCCESS,
+									SUM(ANSWER) AS ANSWER,
+									SUM(STD_ATT_5M) AS STD_ATT_5M,
+									MME_ID,
+									MME_NAME,
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+									WEEKDAY
+								FROM
+									TB_PM_MME_ATTACH
+								WHERE
+									EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+									AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+								GROUP BY
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>
+							) AS MME_SUM
+					) AS X, TB_PM_THD_MME AS Y
+				WHERE 
+				  X.WEEKDAY = Y.WEEKDAY AND Y.DATA_TYPE = '1'
+			UNION ALL
+				SELECT
+					SE_ID,
+					SE_NAME,
+					EQUIP_NM,
+					X.DATA_TYPE,
+					EVENT_TIME,
+					X.ATTEMPT,
+					X.STD_ATT_5M,
+					ATT_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+					   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+					   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+					   ELSE 4
+					   END, 4 ) AS ATT_RATE_LEVEL,
+					SUCCESS,
+					SUCC_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN ANS_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+					   WHEN ANS_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+					   WHEN ANS_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+					   ELSE 4
+					   END, 4)  AS SUCC_RATE_LEVEL,
+					CONNECT,
+					CONNECT_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN SUCC_RATE_CRI <![CDATA[>]]> CONNECT_RATE THEN 1
+					   WHEN SUCC_RATE_MAJ <![CDATA[>]]> CONNECT_RATE THEN 2
+					   WHEN SUCC_RATE_MIN <![CDATA[>]]> CONNECT_RATE THEN 3
+					   ELSE 4
+					   END, 4) AS CONNECT_RATE_LEVEL
+				FROM
+					(
+						SELECT
+							MME_ID AS SE_ID,
+							MME_NAME AS SE_NAME,
+							'MME' AS EQUIP_NM,
+							'SR' AS DATA_TYPE,
+							EVENT_TIME,
+							ATTEMPT,
+							STD_ATT_5M,
+							CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+							SUCCESS AS CONNECT,
+							CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(ANSWER / ATTEMPT * 100,100) END AS CONNECT_RATE,
+							ANSWER AS SUCCESS,
+							CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+							WEEKDAY
+						FROM						  
+							(
+								SELECT
+									SUM(ATTEMPT) AS ATTEMPT,
+									SUM(SUCCESS) AS SUCCESS,
+									SUM(ANSWER) AS ANSWER,
+									SUM(STD_ATT_5M) AS STD_ATT_5M,
+									MME_ID,
+									MME_NAME,
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+									WEEKDAY
+								FROM
+									TB_PM_MME_SR
+								WHERE
+									EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+									AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+								GROUP BY
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>
+							) AS MME_SUM
+					) AS X, TB_PM_THD_MME AS Y
+				WHERE 
+				  X.WEEKDAY = Y.WEEKDAY AND Y.DATA_TYPE = '3'
+			UNION ALL
+				SELECT
+					SE_ID,
+					SE_NAME,
+					EQUIP_NM,
+					X.DATA_TYPE,
+					EVENT_TIME,
+					X.ATTEMPT,
+					X.STD_ATT_5M,
+					ATT_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+					   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+					   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+					   ELSE 4
+					   END, 4 ) AS ATT_RATE_LEVEL,
+					SUCCESS,
+					SUCC_RATE,
+					IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+					   CASE
+					   WHEN SUCC_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+					   WHEN SUCC_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+					   WHEN SUCC_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+					   ELSE 4
+					   END, 4)  AS SUCC_RATE_LEVEL,
+						'' AS CONNECT,
+						'' AS CONNECT_RATE,
+						'' AS CONNECT_RATE_LEVEL
+				FROM
+					(
+						SELECT
+							PCRF_ID AS SE_ID,
+							PCRF_NAME AS SE_NAME,
+							'PCRF' AS EQUIP_NM,
+							KPI_TYPE AS DATA_TYPE,
+							EVENT_TIME,
+							ATTEMPT,
+							STD_ATT_5M,
+							CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+							SUCCESS,
+							CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+							WEEKDAY,
+					  PCRF_TYPE
+						FROM						  
+							(
+								SELECT
+									SUM(ATTEMPT) AS ATTEMPT,
+									SUM(SUCCESS) AS SUCCESS,
+									SUM(STD_ATT_5M) AS STD_ATT_5M,
+									PCRF_ID,
+									PCRF_NAME,
+									KPI_TYPE,
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+									WEEKDAY,
+									CASE
+										WHEN KPI_TYPE = 'PCEF' THEN 1
+										WHEN KPI_TYPE = 'SPR' THEN 2
+									END AS PCRF_TYPE
+								FROM
+									TB_PM_PCRF
+								WHERE
+									KPI_TYPE IN ('PCEF','SPR')
+									AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+									AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+								GROUP BY
+									<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>, KPI_TYPE
+							) AS PCRF_SUM
+					) AS X, TB_PM_THD_PCRF AS Y
+				WHERE 
+				  X.WEEKDAY = Y.WEEKDAY
+				  AND X.PCRF_TYPE = Y.DATA_TYPE
+			) AS SE
+			<if test='excelFlag != "Y"'> 
+			JOIN
+			(
+				SELECT COUNT(1) AS TOTAL_COUNT
+				FROM
+				(
+					SELECT
+						SE_ID,
+						SE_NAME,
+						EQUIP_NM,
+						X.DATA_TYPE,
+						EVENT_TIME,
+						X.ATTEMPT,
+						X.STD_ATT_5M,
+						ATT_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+						   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+						   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+						   ELSE 4
+						   END, 4 ) AS ATT_RATE_LEVEL,
+						SUCCESS,
+						SUCC_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN SUCC_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+						   WHEN SUCC_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+						   WHEN SUCC_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+						   ELSE 4
+						   END, 4)  AS SUCC_RATE_LEVEL,
+							'' AS CONNECT,
+							'' AS CONNECT_RATE,
+							'' AS CONNECT_RATE_LEVEL
+					FROM
+						(
+							SELECT
+								PGW_ID AS SE_ID,
+								PGW_NAME AS SE_NAME,
+								'PGW' AS EQUIP_NM,
+								'CREATE' AS DATA_TYPE,
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+								SUCCESS,
+								CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+								WEEKDAY
+							FROM						  
+								(
+									SELECT
+										SUM(ATTEMPT) AS ATTEMPT,
+										SUM(SUCCESS) AS SUCCESS,
+										SUM(STD_ATT_5M) AS STD_ATT_5M,
+										PGW_ID,
+										PGW_NAME,
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+										WEEKDAY
+									FROM
+										TB_PM_PGW_CREATE
+									WHERE
+										EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+										AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+									GROUP BY
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>
+								) AS PGW_SUM
+						) AS X, TB_PM_THD_PGW AS Y
+					WHERE 
+					  X.WEEKDAY = Y.WEEKDAY AND Y.DATA_TYPE = '1'
+				UNION ALL
+					SELECT
+						SE_ID,
+						SE_NAME,
+						EQUIP_NM,
+						X.DATA_TYPE,
+						EVENT_TIME,
+						X.ATTEMPT,
+						X.STD_ATT_5M,
+						ATT_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+						   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+						   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+						   ELSE 4
+						   END, 4 ) AS ATT_RATE_LEVEL,
+						SUCCESS,
+						SUCC_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN SUCC_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+						   WHEN SUCC_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+						   WHEN SUCC_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+						   ELSE 4
+						   END, 4)  AS SUCC_RATE_LEVEL,
+							'' AS CONNECT,
+							'' AS CONNECT_RATE,
+							'' AS CONNECT_RATE_LEVEL
+					FROM
+						(
+							SELECT
+								PGW_ID AS SE_ID,
+								PGW_NAME AS SE_NAME,
+								'PGW' AS EQUIP_NM,
+								'DELETE' AS DATA_TYPE,
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+								SUCCESS,
+								CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+								WEEKDAY
+							FROM						  
+								(
+									SELECT
+										SUM(ATTEMPT) AS ATTEMPT,
+										SUM(SUCCESS) AS SUCCESS,
+										SUM(STD_ATT_5M) AS STD_ATT_5M,
+										PGW_ID,
+										PGW_NAME,
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+										WEEKDAY
+									FROM
+										TB_PM_PGW_DELETE
+									WHERE
+										EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+										AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+									GROUP BY
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>
+								) AS PGW_SUM
+						) AS X, TB_PM_THD_PGW AS Y
+					WHERE 
+					  X.WEEKDAY = Y.WEEKDAY AND Y.DATA_TYPE = '2'
+				UNION ALL
+					SELECT
+						SE_ID,
+						SE_NAME,
+						EQUIP_NM,
+						X.DATA_TYPE,
+						EVENT_TIME,
+						X.ATTEMPT,
+						X.STD_ATT_5M,
+						ATT_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+						   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+						   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+						   ELSE 4
+						   END, 4 ) AS ATT_RATE_LEVEL,
+						SUCCESS,
+						SUCC_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN SUCC_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+						   WHEN SUCC_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+						   WHEN SUCC_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+						   ELSE 4
+						   END, 4)  AS SUCC_RATE_LEVEL,
+							'' AS CONNECT,
+							'' AS CONNECT_RATE,
+							'' AS CONNECT_RATE_LEVEL
+					FROM
+						(
+							SELECT
+								PGW_ID AS SE_ID,
+								PGW_NAME AS SE_NAME,
+								'PGW' AS EQUIP_NM,
+								'MODIFY' AS DATA_TYPE,
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+								SUCCESS,
+								CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+								WEEKDAY
+							FROM						  
+								(
+									SELECT
+										SUM(ATTEMPT) AS ATTEMPT,
+										SUM(SUCCESS) AS SUCCESS,
+										SUM(STD_ATT_5M) AS STD_ATT_5M,
+										PGW_ID,
+										PGW_NAME,
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+										WEEKDAY
+									FROM
+										TB_PM_PGW_MODIFY
+									WHERE
+										EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+										AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+									GROUP BY
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>
+								) AS PGW_SUM
+						) AS X, TB_PM_THD_PGW AS Y
+					WHERE 
+					  X.WEEKDAY = Y.WEEKDAY AND Y.DATA_TYPE = '3'
+				UNION ALL
+					SELECT
+						SE_ID,
+						SE_NAME,
+						EQUIP_NM,
+						X.DATA_TYPE,
+						EVENT_TIME,
+						X.ATTEMPT,
+						X.STD_ATT_5M,
+						ATT_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+						   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+						   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+						   ELSE 4
+						   END, 4 ) AS ATT_RATE_LEVEL,
+						SUCCESS,
+						SUCC_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN SUCC_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+						   WHEN SUCC_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+						   WHEN SUCC_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+						   ELSE 4
+						   END, 4)  AS SUCC_RATE_LEVEL,
+						'' AS CONNECT,
+						'' AS CONNECT_RATE,
+						'' AS CONNECT_RATE_LEVEL
+					FROM
+						(
+							SELECT
+								SGW_ID AS SE_ID,
+								SGW_NAME AS SE_NAME,
+								'SGW' AS EQUIP_NM,
+								'MODIFY' AS DATA_TYPE,
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+								SUCCESS,
+								CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+								WEEKDAY
+							FROM						  
+								(
+									SELECT
+										SUM(ATTEMPT) AS ATTEMPT,
+										SUM(SUCCESS) AS SUCCESS,
+										SUM(STD_ATT_5M) AS STD_ATT_5M,
+										SGW_ID,
+										SGW_NAME,
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+										WEEKDAY
+									FROM
+										TB_PM_SGW_MODIFY
+									WHERE
+										EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+										AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+									GROUP BY
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>
+								) AS SGW_SUM
+						) AS X, TB_PM_THD_SGW AS Y
+					WHERE 
+					  X.WEEKDAY = Y.WEEKDAY AND Y.DATA_TYPE = '2'
+				UNION ALL
+					SELECT
+						SE_ID,
+						SE_NAME,
+						EQUIP_NM,
+						X.DATA_TYPE,
+						EVENT_TIME,
+						X.ATTEMPT,
+						X.STD_ATT_5M,
+						ATT_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+						   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+						   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+						   ELSE 4
+						   END, 4 ) AS ATT_RATE_LEVEL,
+						SUCCESS,
+						SUCC_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN SUCC_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+						   WHEN SUCC_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+						   WHEN SUCC_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+						   ELSE 4
+						   END, 4)  AS SUCC_RATE_LEVEL,
+						'' AS CONNECT,
+						'' AS CONNECT_RATE,
+						'' AS CONNECT_RATE_LEVEL
+					FROM
+						(
+							SELECT
+								SGW_ID AS SE_ID,
+								SGW_NAME AS SE_NAME,
+								'SGW' AS EQUIP_NM,
+								'ATTACH' AS DATA_TYPE,
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+								SUCCESS,
+								CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+								WEEKDAY
+							FROM						  
+								(
+									SELECT
+										SUM(ATTEMPT) AS ATTEMPT,
+										SUM(SUCCESS) AS SUCCESS,
+										SUM(STD_ATT_5M) AS STD_ATT_5M,
+										SGW_ID,
+										SGW_NAME,
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+										WEEKDAY
+									FROM
+										TB_PM_SGW_ATTACH
+									WHERE
+										EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+										AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+									GROUP BY
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>
+								) AS SGW_SUM
+						) AS X, TB_PM_THD_SGW AS Y
+					WHERE 
+					  X.WEEKDAY = Y.WEEKDAY AND Y.DATA_TYPE = '1'
+				UNION ALL
+					SELECT
+						SE_ID,
+						SE_NAME,
+						EQUIP_NM,
+						X.DATA_TYPE,
+						EVENT_TIME,
+						X.ATTEMPT,
+						X.STD_ATT_5M,
+						ATT_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+						   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+						   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+						   ELSE 4
+						   END, 4 ) AS ATT_RATE_LEVEL,
+						SUCCESS,
+						SUCC_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN SUCC_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+						   WHEN SUCC_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+						   WHEN SUCC_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+						   ELSE 4
+						   END, 4)  AS SUCC_RATE_LEVEL,
+							'' AS CONNECT,
+							'' AS CONNECT_RATE,
+							'' AS CONNECT_RATE_LEVEL
+					FROM
+						(
+							SELECT
+								HSS_ID AS SE_ID,
+								HSS_NAME AS SE_NAME,
+								'HSS' AS EQUIP_NM,
+								STATISTICS_TYPE AS DATA_TYPE,
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+								SUCCESS,
+								CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+								WEEKDAY,
+						  GROUP_ID
+							FROM						  
+								(
+									SELECT
+										SUM(ATTEMPT) AS ATTEMPT,
+										SUM(SUCCESS) AS SUCCESS,
+										SUM(STD_ATT_5M) AS STD_ATT_5M,
+										HSS_ID,
+										HSS_NAME,
+										STATISTICS_TYPE,
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+										WEEKDAY,
+										CASE
+											WHEN GROUP_ID = 200 THEN 1
+											WHEN GROUP_ID = 400 THEN 2
+											WHEN GROUP_ID = 300 THEN 3
+											WHEN GROUP_ID = 500 THEN 4
+										END AS GROUP_ID
+									FROM
+										TB_PM_HSS
+									WHERE
+										GROUP_ID IN (200,400,300,500)
+										AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+										AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+									GROUP BY
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>, GROUP_ID
+								) AS HSS_SUM
+						) AS X, TB_PM_THD_HSS AS Y
+					WHERE 
+					  X.WEEKDAY = Y.WEEKDAY
+					  AND X.GROUP_ID = Y.DATA_TYPE
+				UNION ALL
+					SELECT
+						SE_ID,
+						SE_NAME,
+						EQUIP_NM,
+						X.DATA_TYPE,
+						EVENT_TIME,
+						X.ATTEMPT,
+						X.STD_ATT_5M,
+						ATT_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+						   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+						   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+						   ELSE 4
+						   END, 4 ) AS ATT_RATE_LEVEL,
+						SUCCESS,
+						SUCC_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN ANS_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+						   WHEN ANS_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+						   WHEN ANS_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+						   ELSE 4
+						   END, 4)  AS SUCC_RATE_LEVEL,
+						CONNECT,
+						CONNECT_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN SUCC_RATE_CRI <![CDATA[>]]> CONNECT_RATE THEN 1
+						   WHEN SUCC_RATE_MAJ <![CDATA[>]]> CONNECT_RATE THEN 2
+						   WHEN SUCC_RATE_MIN <![CDATA[>]]> CONNECT_RATE THEN 3
+						   ELSE 4
+						   END, 4) AS CONNECT_RATE_LEVEL
+					FROM
+						(
+							SELECT
+								MME_ID AS SE_ID,
+								MME_NAME AS SE_NAME,
+								'MME' AS EQUIP_NM,
+								'ATTACH' AS DATA_TYPE,
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+								SUCCESS AS CONNECT,
+								CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(ANSWER / ATTEMPT * 100,100) END AS CONNECT_RATE,
+								ANSWER AS SUCCESS,
+								CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+								WEEKDAY
+							FROM						  
+								(
+									SELECT
+										SUM(ATTEMPT) AS ATTEMPT,
+										SUM(SUCCESS) AS SUCCESS,
+										SUM(ANSWER) AS ANSWER,
+										SUM(STD_ATT_5M) AS STD_ATT_5M,
+										MME_ID,
+										MME_NAME,
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+										WEEKDAY
+									FROM
+										TB_PM_MME_ATTACH
+									WHERE
+										EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+										AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+									GROUP BY
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>
+								) AS MME_SUM
+						) AS X, TB_PM_THD_MME AS Y
+					WHERE 
+					  X.WEEKDAY = Y.WEEKDAY AND Y.DATA_TYPE = '1'
+				UNION ALL
+					SELECT
+						SE_ID,
+						SE_NAME,
+						EQUIP_NM,
+						X.DATA_TYPE,
+						EVENT_TIME,
+						X.ATTEMPT,
+						X.STD_ATT_5M,
+						ATT_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+						   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+						   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+						   ELSE 4
+						   END, 4 ) AS ATT_RATE_LEVEL,
+						SUCCESS,
+						SUCC_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN ANS_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+						   WHEN ANS_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+						   WHEN ANS_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+						   ELSE 4
+						   END, 4)  AS SUCC_RATE_LEVEL,
+						CONNECT,
+						CONNECT_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN SUCC_RATE_CRI <![CDATA[>]]> CONNECT_RATE THEN 1
+						   WHEN SUCC_RATE_MAJ <![CDATA[>]]> CONNECT_RATE THEN 2
+						   WHEN SUCC_RATE_MIN <![CDATA[>]]> CONNECT_RATE THEN 3
+						   ELSE 4
+						   END, 4) AS CONNECT_RATE_LEVEL
+					FROM
+						(
+							SELECT
+								MME_ID AS SE_ID,
+								MME_NAME AS SE_NAME,
+								'MME' AS EQUIP_NM,
+								'SR' AS DATA_TYPE,
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+								SUCCESS AS CONNECT,
+								CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(ANSWER / ATTEMPT * 100,100) END AS CONNECT_RATE,
+								ANSWER AS SUCCESS,
+								CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+								WEEKDAY
+							FROM						  
+								(
+									SELECT
+										SUM(ATTEMPT) AS ATTEMPT,
+										SUM(SUCCESS) AS SUCCESS,
+										SUM(ANSWER) AS ANSWER,
+										SUM(STD_ATT_5M) AS STD_ATT_5M,
+										MME_ID,
+										MME_NAME,
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+										WEEKDAY
+									FROM
+										TB_PM_MME_SR
+									WHERE
+										EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+										AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+									GROUP BY
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>
+								) AS MME_SUM
+						) AS X, TB_PM_THD_MME AS Y
+					WHERE 
+					  X.WEEKDAY = Y.WEEKDAY AND Y.DATA_TYPE = '3'
+				UNION ALL
+					SELECT
+						SE_ID,
+						SE_NAME,
+						EQUIP_NM,
+						X.DATA_TYPE,
+						EVENT_TIME,
+						X.ATTEMPT,
+						X.STD_ATT_5M,
+						ATT_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN ATT_RATE_CRI <![CDATA[<]]> ATT_RATE THEN 1
+						   WHEN ATT_RATE_MAJ <![CDATA[<]]> ATT_RATE THEN 2
+						   WHEN ATT_RATE_MIN <![CDATA[<]]> ATT_RATE THEN 3
+						   ELSE 4
+						   END, 4 ) AS ATT_RATE_LEVEL,
+						SUCCESS,
+						SUCC_RATE,
+						IF(Y.ATTEMPT <![CDATA[<=]]> X.ATTEMPT,
+						   CASE
+						   WHEN SUCC_RATE_CRI <![CDATA[>]]> SUCC_RATE THEN 1
+						   WHEN SUCC_RATE_MAJ <![CDATA[>]]> SUCC_RATE THEN 2
+						   WHEN SUCC_RATE_MIN <![CDATA[>]]> SUCC_RATE THEN 3
+						   ELSE 4
+						   END, 4)  AS SUCC_RATE_LEVEL,
+							'' AS CONNECT,
+							'' AS CONNECT_RATE,
+							'' AS CONNECT_RATE_LEVEL
+					FROM
+						(
+							SELECT
+								PCRF_ID AS SE_ID,
+								PCRF_NAME AS SE_NAME,
+								'PCRF' AS EQUIP_NM,
+								KPI_TYPE AS DATA_TYPE,
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								CASE WHEN STD_ATT_5M IS NULL OR ATTEMPT <![CDATA[<]]> STD_ATT_5M THEN 0 ELSE IFNULL(((ATTEMPT - STD_ATT_5M)/STD_ATT_5M*100),0) END AS ATT_RATE,
+								SUCCESS,
+								CASE WHEN ATTEMPT=0 THEN 100 ELSE IFNULL(SUCCESS / ATTEMPT * 100,100) END AS SUCC_RATE,
+								WEEKDAY,
+						  PCRF_TYPE
+							FROM						  
+								(
+									SELECT
+										SUM(ATTEMPT) AS ATTEMPT,
+										SUM(SUCCESS) AS SUCCESS,
+										SUM(STD_ATT_5M) AS STD_ATT_5M,
+										PCRF_ID,
+										PCRF_NAME,
+										KPI_TYPE,
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+									</if>
+										WEEKDAY,
+										CASE
+											WHEN KPI_TYPE = 'PCEF' THEN 1
+											WHEN KPI_TYPE = 'SPR' THEN 2
+										END AS PCRF_TYPE
+									FROM
+										TB_PM_PCRF
+									WHERE
+										KPI_TYPE IN ('PCEF','SPR')
+										AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime}, '%Y%m%d%H%i')
+										AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime}, '%Y%m%d%H%i')
+									GROUP BY
+										<if test="dayORhour eq '1'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d')
+									</if>
+									<if test="dayORhour eq '2'.toString()">
+									DATE_FORMAT(EVENT_TIME,'%Y%m%d%H')
+									</if>, KPI_TYPE
+								) AS PCRF_SUM
+						) AS X, TB_PM_THD_PCRF AS Y
+					WHERE 
+					  X.WEEKDAY = Y.WEEKDAY
+					  AND X.PCRF_TYPE = Y.DATA_TYPE
+				) AS COUNT
+			) AS TOTAL
+			</if>
+		ORDER BY
+			<if test="sortOption.size() &gt; 0">
+				<foreach collection="sortOption" item="option" separator=",">
+					${option.colName} ${option.order}
+				</foreach>
+			</if>
+			<if test="sortOption.size() == 0">
+				EQUIP_NM DESC, DATA_TYPE, EVENT_TIME
+			</if>
+			<if test='excelFlag != "Y"'>
+			LIMIT ${pageNo}, ${pagingNum}
+			</if>
+				
+	</select>
+	
+	<sql id="sqlFailurePerformData_rec">
+		SELECT
+			EQUIP.VIEW_NAME AS EQUIP_NAME
+			,REC.EVENT_TIME
+			,IFNULL(REC.CALL_ATTEMPT, 0) AS CALL_ATTEMPT
+			,IFNULL(REC.CALL_STD_ATT_5M, 0) AS CALL_STD_ATT_5M
+			,FORMAT(IFNULL(REC.CALL_ATT_RATE, 0), 2) AS CALL_ATT_RATE
+			,IF(THD_C.ATTEMPT <![CDATA[<=]]> REC.CALL_ATTEMPT
+				,CASE
+					WHEN THD_C.ATT_RATE_CRI  <![CDATA[<]]> REC.CALL_ATT_RATE THEN 'CRITICAL'
+					WHEN THD_C.ATT_RATE_MAJ  <![CDATA[<]]> REC.CALL_ATT_RATE THEN 'MAJOR'
+					WHEN THD_C.ATT_RATE_MIN  <![CDATA[<]]> REC.CALL_ATT_RATE THEN 'MINOR'
+					ELSE 'NORMAL'
+				END
+				, 'NORMAL'
+			) AS CALL_ATT_RATE_LEVEL
+			,IFNULL(REC.CALL_SUCCESS, 0) AS CALL_SUCCESS
+			,FORMAT(IFNULL(REC.CALL_SUCC_RATE, 0), 2) AS CALL_SUCC_RATE
+			,IF(THD_C.ATTEMPT <![CDATA[<=]]> REC.CALL_ATTEMPT
+				,CASE
+					WHEN THD_C.SUCC_RATE_CRI  <![CDATA[>]]> REC.CALL_SUCC_RATE THEN 'CRITICAL'
+					WHEN THD_C.SUCC_RATE_MAJ  <![CDATA[>]]> REC.CALL_SUCC_RATE THEN 'MAJOR'
+					WHEN THD_C.SUCC_RATE_MIN  <![CDATA[>]]> REC.CALL_SUCC_RATE THEN 'MINOR'
+					ELSE 'NORMAL'
+				END
+				,'NORMAL'
+			) AS CALL_SUCC_RATE_LEVEL
+			,IFNULL(REC.PTT_ATTEMPT, 0) AS PTT_ATTEMPT
+			,IFNULL(REC.PTT_STD_ATT_5M, 0) AS PTT_STD_ATT_5M
+			,FORMAT(IFNULL(REC.PTT_ATT_RATE, 0), 2) AS PTT_ATT_RATE
+			,IF(THD_P.ATTEMPT <![CDATA[<=]]> REC.PTT_ATTEMPT
+				,CASE
+					WHEN THD_P.ATT_RATE_CRI <![CDATA[<]]> REC.PTT_ATT_RATE THEN 'CRITICAL'
+					WHEN THD_P.ATT_RATE_MAJ <![CDATA[<]]> REC.PTT_ATT_RATE THEN 'MAJOR'
+					WHEN THD_P.ATT_RATE_MIN <![CDATA[<]]> REC.PTT_ATT_RATE THEN 'MINOR'
+					ELSE 'NORMAL'
+				END
+				,'NORMAL'
+			) AS PTT_ATT_RATE_LEVEL
+			,IFNULL(REC.PTT_SUCCESS, 0) AS PTT_SUCCESS
+			,FORMAT(IFNULL(REC.PTT_SUCC_RATE, 0), 2) AS PTT_SUCC_RATE
+			,IF(THD_P.ATTEMPT <![CDATA[<=]]> REC.PTT_ATTEMPT
+				,CASE
+					WHEN THD_P.SUCC_RATE_CRI <![CDATA[>]]> REC.PTT_SUCC_RATE THEN 'CRITICAL'
+					WHEN THD_P.SUCC_RATE_MAJ <![CDATA[>]]> REC.PTT_SUCC_RATE THEN 'MAJOR'
+					WHEN THD_P.SUCC_RATE_MIN <![CDATA[>]]> REC.PTT_SUCC_RATE THEN 'MINOR'
+					ELSE 'NORMAL'
+				END
+				,'NORMAL'
+			) AS PTT_SUCC_RATE_LEVEL
+		FROM
+			(
+				SELECT
+					<if test="dayORhour eq '1'.toString()">
+						DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME
+					</if>
+					<if test="dayORhour eq '2'.toString()">
+						DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME
+					</if>
+					,SYSTEM_ID
+					,WEEKDAY
+
+					,SUM(CALL_ATTEMPT) AS CALL_ATTEMPT
+					,SUM(CALL_STD_ATT_5M) AS CALL_STD_ATT_5M
+					,CASE
+						WHEN SUM(CALL_STD_ATT_5M) IS NULL OR SUM(CALL_ATTEMPT) <![CDATA[<]]> SUM(CALL_STD_ATT_5M) THEN 0
+						ELSE IFNULL(((SUM(CALL_ATTEMPT) - SUM(CALL_STD_ATT_5M)) / SUM(CALL_STD_ATT_5M) * 100), 0)
+					END AS CALL_ATT_RATE
+					,SUM(CALL_SUCCESS) AS CALL_SUCCESS
+					,IFNULL(SUM(CALL_SUCCESS)/SUM(CALL_ATTEMPT)*100,100) AS CALL_SUCC_RATE
+
+					,SUM(PTT_ATTEMPT) AS PTT_ATTEMPT
+					,SUM(PTT_STD_ATT_5M) AS PTT_STD_ATT_5M
+					,CASE
+						WHEN SUM(PTT_STD_ATT_5M) IS NULL OR SUM(PTT_ATTEMPT) <![CDATA[<]]> SUM(PTT_STD_ATT_5M) THEN 0
+						ELSE IFNULL(((SUM(PTT_ATTEMPT) - SUM(PTT_STD_ATT_5M)) / SUM(PTT_STD_ATT_5M) * 100), 0)
+					END AS PTT_ATT_RATE
+					,SUM(PTT_SUCCESS) AS PTT_SUCCESS
+					,IFNULL(SUM(PTT_SUCCESS)/SUM(PTT_ATTEMPT)*100,100) AS PTT_SUCC_RATE
+				FROM
+					TB_PM_REC
+				WHERE
+					EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+					AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				GROUP BY
+					<if test="dayORhour eq '1'.toString()">
+						DATE_FORMAT(EVENT_TIME,'%Y-%m-%d')
+					</if>
+					<if test="dayORhour eq '2'.toString()">
+						DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H')
+					</if>
+					,SYSTEM_ID
+					,WEEKDAY
+			) REC
+			LEFT JOIN TB_PM_THD_REC THD_C
+				ON REC.WEEKDAY = THD_C.WEEKDAY
+					AND THD_C.DATA_TYPE = '1'
+			LEFT JOIN TB_PM_THD_REC THD_P
+				ON REC.WEEKDAY = THD_P.WEEKDAY
+					AND THD_P.DATA_TYPE = '2'
+			LEFT JOIN TB_CO_EQUIP_ACT EQUIP
+				ON REC.SYSTEM_ID = EQUIP.SYSTEM_ID
+	</sql>
+	<select id="getFailurePerformData_rec" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			T1.EQUIP_NAME
+			,T1.EVENT_TIME
+			,T1.CALL_ATTEMPT
+			,T1.CALL_STD_ATT_5M
+			,T1.CALL_ATT_RATE
+			,T1.CALL_ATT_RATE_LEVEL
+			,T1.CALL_SUCCESS
+			,T1.CALL_SUCC_RATE
+			,T1.CALL_SUCC_RATE_LEVEL
+			,T1.PTT_ATTEMPT
+			,T1.PTT_STD_ATT_5M
+			,T1.PTT_ATT_RATE
+			,T1.PTT_ATT_RATE_LEVEL
+			,T1.PTT_SUCCESS
+			,T1.PTT_SUCC_RATE
+			,T1.PTT_SUCC_RATE_LEVEL
+			,T2.TOTAL_COUNT
+		FROM
+			(
+				<include refid="sqlFailurePerformData_rec" />
+			) T1
+			INNER JOIN (
+				SELECT
+					COUNT(*) AS TOTAL_COUNT
+				FROM
+					(
+						<include refid="sqlFailurePerformData_rec" />
+					) A
+			) T2
+			ORDER BY
+				<if test = 'sortOption.size() > 0'>
+					<foreach collection="sortOption" item="option" separator=",">
+						${option.colName} ${option.order}
+					</foreach>
+				</if>
+				<if test = 'sortOption.size() == 0'>
+					EVENT_TIME DESC, EQUIP_NAME
+				</if>
+			<if test='excelFlag != "Y"'>
+				LIMIT ${pageNo}, ${pagingNum}
+			</if>
+			
+	</select>
+	
+	
+	
+</mapper>

@@ -1,0 +1,194 @@
+{
+    "LOCATIONS" : [{
+        "LOCATION" : "1.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-750.4321495327085",
+        "POSITION_Y" : "246.64579439252336"
+    }, {
+        "LOCATION" : "2.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-694.5235226455786",
+        "POSITION_Y" : "246.64579439252336"
+    }, {
+        "LOCATION" : "3.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-630.4018619698049",
+        "POSITION_Y" : "246.64579439252336"
+    }, {
+        "LOCATION" : "4.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-570.4929978432766",
+        "POSITION_Y" : "246.64579439252336"
+    }, {
+        "LOCATION" : "5.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-507.3713371675053",
+        "POSITION_Y" : "246.64579439252336"
+    }, {
+        "LOCATION" : "6.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-445.6199137311286",
+        "POSITION_Y" : "246.64579439252336"
+    }, {
+        "LOCATION" : "7.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-383.1833716750544",
+        "POSITION_Y" : "246.64579439252336"
+    },  {
+        "LOCATION" : "8.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-320.746829618979",
+        "POSITION_Y" : "246.64579439252336"
+    }, {
+        "LOCATION" : "9.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-259.99540618260244",
+        "POSITION_Y" : "246.64579439252336"
+    }, {
+        "LOCATION" : "10.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-197.5588641265276",
+        "POSITION_Y" : "246.64579439252336"
+    }, {
+        "LOCATION" : "11.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-135.80744069015086",
+        "POSITION_Y" : "246.64579439252336"
+    }, {
+        "LOCATION" : "12.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-73.02280373831779",
+        "POSITION_Y" : "246.64579439252336"
+    }, {
+        "LOCATION" : "13.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-11.333493889288269",
+        "POSITION_Y" : "246.64579439252336"
+    }, {
+        "LOCATION" : "14.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "50.754953271028015",
+        "POSITION_Y" : "246.64579439252336"
+    }, {
+        "LOCATION" : "15.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "113.44426312005743",
+        "POSITION_Y" : "246.64579439252336"
+    }, {
+        "LOCATION" : "16.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "174.5173831775701",
+        "POSITION_Y" : "246.64579439252333"
+    }, {
+        "LOCATION" : "17.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "238.18523364485924",
+        "POSITION_Y" : "246.26710280373857"
+    }, {
+        "LOCATION" : "18.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "282.28168224299117",
+        "POSITION_Y" : "196.93383177570087"
+    }, {
+        "LOCATION" : "19.5",
+        "CELL_ID" : "",
+        "transfer" : "true",
+        "POSITION_X" : "282.28168224299117",
+        "POSITION_Y" : "139.21794392523398"
+    }, {
+        "LOCATION" : "20.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "282.28168224299117",
+        "POSITION_Y" : "96.36000000000001"
+    }, {
+        "LOCATION" : "21.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "282.28168224299117",
+        "POSITION_Y" : "54.7394392523365"
+    }, {
+        "LOCATION" : "22.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "282.28168224299117",
+        "POSITION_Y" : "11.238224299065484"
+    }, {
+        "LOCATION" : "23.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "282.28168224299117",
+        "POSITION_Y" : "-33.12037383177563"
+    }, {
+        "LOCATION" : "24.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "282.28168224299117",
+        "POSITION_Y" : "-86.96028037383185"
+    }, {
+        "LOCATION" : "25.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "282.2816822429909",
+        "POSITION_Y" : "-150.20345794392523"
+    }, {
+        "LOCATION" : "26.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "315.7836448598134",
+        "POSITION_Y" : "-220.61869158878505"
+    }, {
+        "LOCATION" : "27.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "387.0761682242995",
+        "POSITION_Y" : "-220.61869158878505"
+    }, {
+        "LOCATION" : "28.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "462.70934579439245",
+        "POSITION_Y" : "-220.61869158878505"
+    }, {
+        "LOCATION" : "29.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "536.3425233644866",
+        "POSITION_Y" : "-220.61869158878505"
+    }, {
+        "LOCATION" : "30.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "605.5943925233648",
+        "POSITION_Y" : "-220.61869158878505"
+    }, {
+        "LOCATION" : "31.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "679.1322429906558",
+        "POSITION_Y" : "-220.61869158878505"
+    }, {
+        "LOCATION" : "32.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "752.5747663551416",
+        "POSITION_Y" : "-220.61869158878505"
+    }, {
+        "LOCATION" : "33.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "822.8266355140182",
+        "POSITION_Y" : "-220.61869158878505"
+    }, {
+        "LOCATION" : "35.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-804.4167936736153",
+        "POSITION_Y" : "199.04550682961894"
+    }, {
+        "LOCATION" : "36.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-804.4167936736155",
+        "POSITION_Y" : "120.34313443565779"
+    }, {
+        "LOCATION" : "37.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-804.4167936736153",
+        "POSITION_Y" : "36.16843997124389"
+    }, {
+        "LOCATION" : "38.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-804.4167936736153",
+        "POSITION_Y" : "-53.48720345075467"
+    }, {
+        "LOCATION" : "39.5",
+        "CELL_ID" : "",
+        "POSITION_X" : "-804.4167936736153",
+        "POSITION_Y" : "-143.77260963335712"
+    }]
+}

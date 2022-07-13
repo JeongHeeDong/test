@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<title>1호선 열차무선설비 통합관리장치</title>
+	<meta charset="UTF-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<!--[if lt IE 9]>
+	<script src="js/html5.js"></script>
+	<script src="js/respond.min.js"></script>
+	<![endif]-->
+	<link href="../css/common.css" rel="stylesheet" type="text/css" />
+	<link href="../css/layout_top.css" rel="stylesheet" type="text/css" />
+	<link href="../css/style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+	<!-- GNB -->
+	<header>
+		<h1 class="fl"><span>1호선 열차무선설비 통합관리장치</span></h1>
+		<nav class="mu-gnb fl">
+			<ul class="mu-hMenu fl">
+				<li><a href="#"><i class="mu-icon-img gnb01"></i><span>통합감시</span></a>
+					<ul class="mu-list">
+						<li><a href="#"><span>네트워크 토폴로지</span></a></li>
+						<li><a href="#"><span>역사별 통합 감시</span></a></li>
+						<li><a href="#"><span>서비스 장비 통합 감시</span></a></li>
+						<li><a href="#"><span>열차 운행 감시</span></a></li>
+						<li><a href="#"><span>단말 위치 감시</span></a></li>
+					</ul>
+				</li>
+				<li class="active"><a href="#"><i class="mu-icon-img gnb02"></i><span>성능감시</span></a>
+					<ul class="mu-list">
+						<li><a href="#"><span>감시</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>Core망 감시</span></a></li>
+								<li><a href="#"><span>Access망 감시</span></a></li>
+							</ul>
+						</li>
+						<li class="active"><a href="#"><span>분석</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>Trend 분석</span></a></li>
+								<li><a href="#"><span>장비 상세 내역 조회</span></a></li>
+								<li><a href="#"><span>기지국 정보 조회</span></a></li>
+							</ul>
+						</li>
+						<li><a href="#"><span>설정</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>임계치 설정</span></a></li>
+								<li><a href="#"><span>감시 장비 설정</span></a></li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+				<li><a href="#"><i class="mu-icon-img gnb03"></i><span>성능통계</span></a>
+					<ul class="mu-list">
+						<li><a href="#"><span>RAN통계</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>호처리 통계</span></a></li>
+								<li><a href="#"><span>Packet 통계</span></a></li>
+							</ul>
+						</li>
+						<li><a href="#"><span>Core통계</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>MME</span></a>
+									<ul class="mu-list">
+										<li><a href="#"><span>호처리 통계</span></a></li>
+										<li><a href="#"><span>SP(Signaling Protocal) 통계</span></a></li>
+										<li><a href="#"><span>SM(Session Management) 통계</span></a></li>
+									</ul>
+								</li>
+								<li><a href="#"><span>SGW</span></a>
+									<ul class="mu-list">
+										<li><a href="#"><span>호처리 통계</span></a></li>
+										<li><a href="#"><span>SP(Signaling Protocal) 통계</span></a></li>
+										<li><a href="#"><span>SM(Session Management) 통계</span></a></li>
+									</ul>
+								</li>
+								<li><a href="#"><span>PGW</span></a>
+									<ul class="mu-list">
+										<li><a href="#"><span>호처리 통계</span></a></li>
+										<li><a href="#"><span>SP(Signaling Protocal) 통계</span></a></li>
+										<li><a href="#"><span>SM(Session Management) 통계</span></a></li>
+										<li><a href="#"><span>트래픽 통계</span></a></li>
+									</ul>
+								</li>
+								<li><a href="#"><span>HSS통계</span></a></li>
+								<li><a href="#"><span>PCRF통계</span></a></li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+				<li><a href="#"><i class="mu-icon-img gnb04"></i><span>고장감시</span></a>
+					<ul class="mu-list">
+						<li><a href="#"><span>감시</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>메인감시</span></a></li>
+							</ul>
+						</li>
+						<li><a href="#"><span>설정</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>알람 등급 필터 설정</span></a></li>
+								<li><a href="#"><span>알람 코드 필터 설정</span></a></li>
+								<li><a href="#"><span>감시 장비 필터 설정</span></a></li>
+								<li><a href="#"><span>다발 고장 설정</span></a></li>
+								<li><a href="#"><span>미복구 알람 설정</span></a></li>
+								<li><a href="#"><span>가청 설정</span></a></li>
+								<li><a href="#"><span>조치사례 관리</span></a></li>
+							</ul>
+						</li>
+						<li><a href="#"><span>분석</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>고장이력 조회</span></a></li>
+								<li><a href="#"><span>다발고장 이력조회</span></a></li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+				<li><a href="#"><i class="mu-icon-img gnb05"></i><span>고장통계</span></a>
+					<ul class="mu-list">
+						<li><a href="#"><span>고장조회</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>일일고장조회</span></a></li>
+								<li><a href="#"><span>기지국 정보 조회</span></a></li>
+							</ul>
+						</li>
+						<li><a href="#"><span>고장분석</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>장비별 알람분석</span></a></li>
+								<li><a href="#"><span>시간별 알람분석</span></a></li>
+								<li><a href="#"><span>조치코드별 알람분석</span></a></li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+				<li><a href="#"><i class="mu-icon-img gnb06"></i><span>구성관리</span></a>
+					<ul class="mu-list">
+						<li><a href="#"><span>DU/RU 관리</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>eNB 기지국 관리</span></a></li>
+								<li><a href="#"><span>RU 기지국 관리</span></a></li>
+								<li><a href="#"><span>DU ChanelCard 현황조회</span></a></li>
+							</ul>
+						</li>
+						<li><a href="#"><span>CORE망 관리</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>MME 관리</span></a></li>
+								<li><a href="#"><span>SGW 관리</span></a></li>
+								<li><a href="#"><span>PGW 관리</span></a></li>
+								<li><a href="#"><span>PCRF 관리</span></a></li>
+								<li><a href="#"><span>HSS 관리</span></a></li>
+								<li><a href="#"><span>CN-EMS 관리</span></a></li>
+								<li><a href="#"><span>HSS-EMS 관리</span></a></li>
+								<li><a href="#"><span>RAN-EMS 관리</span></a></li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+				<li><a href="#"><i class="mu-icon-img gnb07"></i><span>시스템</span></a>
+					<ul class="mu-list">
+						<li><a href="#"><span>서버 상태 관리</span></a></li>
+						<li><a href="#"><span>서버 프로세스 관리</span></a></li>
+						<li><a href="#"><span>DB 백업 관리</span></a></li>
+						<li><a href="#"><span>수집 관리</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>구성정보 수집</span></a></li>
+								<li><a href="#"><span>성능정보 수집</span></a></li>
+								<li><a href="#"><span>고장정보 수집</span></a></li>
+							</ul>
+						</li>
+						<li><a href="#"><span>장애정보알림 관리</span></a>
+							<ul class="mu-list">
+								<li><a href="#"><span>SMS 발행 권한 설정</span></a></li>
+								<li><a href="#"><span>SMS 발행 이력 조회</span></a></li>
+							</ul>
+						</li>
+						<li><a href="#"><span>공지사항 관리</span></a></li>
+					</ul>
+				</li>
+				<li><a href="#"><i class="mu-icon-img gnb08"></i><span>보안</span></a>
+					<ul class="mu-list">
+						<li><a href="#"><span>계정 관리</span></a></li>
+						<li><a href="#"><span>접속 이력 관리</span></a></li>
+						<li><a href="#"><span>메뉴 권한 관리</span></a></li>
+					</ul>
+				</li>
+			</ul>
+			<div class="mu-topMenu fr">
+				<div class="userInfo">
+					<i class="iconUser mu-icon user"></i>
+					<b class="userName">admin</b>
+					<button class="btnSetting mu-btn mu-btn-icon mu-btn-bg-non"><i class="mu-icon setting"></i></button>
+				</div>
+				<button type="button" class="btnLogout mu-btn mu-btn-icon mu-btn-bg-non" ><i class="mu-icon logout2"></i></button>
+			</div>
+		</nav>
+	</header>
+	<!--// GNB -->
+
+	<div class="mu-container dashboard">
+		<section>
+			<!-- 네트워크 토폴로지 Top -->
+			<div class="nwTopologyWrap">
+				<div class="nwTopology">
+					<h3 class="mu-title">네트워크 토폴로지</h3>
+					<div class="timeWrap">감시시간 : 2015/12/25 12:25:25</div>
+					<div class="totalAlram">
+						<div class="tit">성능 고장<br>통합 알람</div>
+						<ul>
+							<li><i class="mu-icon alram critical"></i><span class="num">0</span></li>
+							<li><i class="mu-icon alram major"></i><span class="num">4</span></li>
+							<li><i class="mu-icon alram minor"></i><span class="num">5</span></li>
+						</ul>
+					</div>
+					<div class="fr">
+						<button type="button" class="mu-btn mu-toggle-btn "><i class="mu-icon filter"></i>알람필터</button>
+						<button type="button" class="mu-btn mu-toggle-btn mu-toggle-on"><i class="mu-icon sound"></i>가청</button>
+						<button type="button" class="mu-btn mu-toggle-btn mu-toggle-on"><i class="mu-icon watch"></i>감시중</button>
+					</div>
+				</div>
+			</div>
+
+			<!-- Main Monitoring -->
+			<div class="monitoring">
+				<ul>
+					<li>
+						<br>
+						<div class="mu-title">고장 감시</div>
+						<ul class="device">
+							<li>
+								<div class="deviceTit"><span>주 제어 장치</span></div>
+								<div class="mu-row">
+									<div class="mu-col mu-col-2"><span class="mme">mme</span></div>
+									<!--<div class="mu-col mu-col-2"><span class="mme major">mme</span></div>
+									<div class="mu-col mu-col-2"><span class="mme critical">mme</span></div>
+									<div class="mu-col mu-col-2"><span class="mme disabled">mme</span></div>-->
+									<div class="mu-col mu-col-2"><span class="gw minor">GW</span></div>
+									<div class="mu-col mu-col-2"><span class="hss major">HSS</span></div>
+									<div class="mu-col mu-col-2"><span class="pcrf critical">PCRF</span></div>
+								</div>
+							</li>
+							<li>
+								<div class="deviceTit"><span>기지국 장치</span></div>
+								<div class="mu-row">
+									<div class="mu-col mu-col-2"><span class="base disabled">기지국</span></div>
+									<div class="mu-col mu-col-2"><span class="repeater">중계기</span></div>
+								</div>
+							</li>
+							<li>
+								<div class="deviceTit"><span>서비스</span></div>
+								<div class="mu-row">
+									<div class="mu-col mu-col-2"><span class="call">Call</span></div>
+									<div class="mu-col mu-col-2"><span class="ptt">PTT</span></div>
+									<div class="mu-col mu-col-2"><span class="storage">저장장치</span></div>
+									<div class="mu-col mu-col-2"><span class="order">지령</span></div>
+									<div class="mu-col mu-col-2"><span class="power">전원감시장치</span></div>
+									<div class="mu-col mu-col-2"><span class="mdm">MDM</span></div>
+								</div>
+							</li>
+							<li>
+								<div class="deviceTit"><span>스위치</span></div>
+								<div class="mu-row">
+									<div class="mu-col mu-col-2"><span class="backbone">BackBone</span></div>
+									<div class="mu-col mu-col-2"><span class="innerSwitch">내부스위치</span></div>
+									<div class="mu-col mu-col-2"><span class="duSwitch">DU스위치</span></div>
+								</div>
+							</li>
+						</ul>
+					</li>
+					<li>
+						<br><br><br><br><br>
+						<div class="mu-title">성능 감시</div>
+						<ul class="device">
+							<li>
+								<div class="deviceTit"><span>주 제어 장치</span></div>
+								<div class="mu-row">
+									<div class="mu-col mu-col-2"><span class="mme">MME</span></div>
+									<div class="mu-col mu-col-2"><span class="pgw">P-GW</span></div>
+									<div class="mu-col mu-col-2"><span class="sgw">S-GW</span></div>
+									<div class="mu-col mu-col-2"><span class="hss">HSS</span></div>
+									<div class="mu-col mu-col-2"><span class="pcrf">PCRF</span></div>
+								</div>
+							</li>
+							<li>
+								<div class="deviceTit"><span>기지국 장치</span></div>
+								<div class="mu-row">
+									<div class="mu-col mu-col-2"><span class="base">기지국</span></div>
+									<div class="mu-col mu-col-2"><span class="repeater">중계기</span></div>
+								</div>
+							</li>
+						</ul>
+					</li>
+				</ul>
+			</div>
+		</section>
+	</div>
+</body>
+</html>

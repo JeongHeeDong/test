@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.SwitchDAO">
+	<select id="getSwitchList" resultType="java.util.HashMap">
+		SELECT
+			ACT.VIEW_NAME AS SYSTEM_NAME,
+			TCSE.SYSTEM_ID,
+			TCSI.CATEGORY
+		FROM
+			TB_CO_SYSTEM_ETC AS TCSE
+			LEFT JOIN TB_CO_SWITCH_INFO AS TCSI
+				ON TCSE.SYSTEM_ID = TCSI.SWITCH_ID
+		  LEFT JOIN TB_CO_EQUIP_ACT AS ACT
+		    ON TCSE.SYSTEM_ID = ACT.SYSTEM_ID
+		WHERE TCSE.EQUIP_TYPE = '11'
+		GROUP BY SYSTEM_ID
+	</select>
+
+	<select id="getSwitchDetail" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			TCSE.SYSTEM_ID,
+			TCSI.SWITCH_ID,
+			LINE_NAME.LINE_ID,
+			LINE_NAME.LINE_NAME,
+			CASE WHEN TCSI.CATEGORY = 'BB' THEN CONCAT(ACT.VIEW_NAME, ' (SLOT: ', TCSI.SLOT, ')') 
+				 ELSE ACT.VIEW_NAME 
+				 END AS SWITCH_NAME,
+			TCSI.SIZE,
+			TCSI.TYPE,
+			TCSI.SHELF,
+			TCSI.CATEGORY,
+			TCSI.SLOT, 
+			TCSI.SORT_FLAG,
+			TCSI.PORT_01,
+			TCSI.PORT_02,
+			TCSI.PORT_03,
+			TCSI.PORT_04,
+			TCSI.PORT_05,
+			TCSI.PORT_06,
+			TCSI.PORT_07,
+			TCSI.PORT_08,
+			TCSI.PORT_09,
+			TCSI.PORT_10,
+			TCSI.PORT_11,
+			TCSI.PORT_12,
+			TCSI.PORT_13,
+			TCSI.PORT_14,
+			TCSI.PORT_15,
+			TCSI.PORT_16,
+			TCSI.PORT_17,
+			TCSI.PORT_18,
+			TCSI.PORT_19,
+			TCSI.PORT_20,
+			TCSI.PORT_21,
+			TCSI.PORT_22,
+			TCSI.PORT_23,
+			TCSI.PORT_24,
+			TCSI.PORT_25,
+			TCSI.PORT_26,
+			TCSI.PORT_27,
+			TCSI.PORT_28,
+			TCSI.PORT_29,
+			TCSI.PORT_30,
+			TCSI.PORT_31,
+			TCSI.PORT_32,
+			TCSI.PORT_33,
+			TCSI.PORT_34,
+			TCSI.PORT_35,
+			TCSI.PORT_36,
+			TCSI.PORT_37,
+			TCSI.PORT_38,
+			TCSI.PORT_39,
+			TCSI.PORT_40,
+			TCSI.PORT_41,
+			TCSI.PORT_42,
+			TCSI.PORT_43,
+			TCSI.PORT_44,
+			TCSI.PORT_45,
+			TCSI.PORT_46,
+			TCSI.PORT_47,
+			TCSI.PORT_48,
+			TCSI.PORT_01_NAME,
+			TCSI.PORT_02_NAME,
+			TCSI.PORT_03_NAME,
+			TCSI.PORT_04_NAME,
+			TCSI.PORT_05_NAME,
+			TCSI.PORT_06_NAME,
+			TCSI.PORT_07_NAME,
+			TCSI.PORT_08_NAME,
+			TCSI.PORT_09_NAME,
+			TCSI.PORT_10_NAME,
+			TCSI.PORT_11_NAME,
+			TCSI.PORT_12_NAME,
+			TCSI.PORT_13_NAME,
+			TCSI.PORT_14_NAME,
+			TCSI.PORT_15_NAME,
+			TCSI.PORT_16_NAME,
+			TCSI.PORT_17_NAME,
+			TCSI.PORT_18_NAME,
+			TCSI.PORT_19_NAME,
+			TCSI.PORT_20_NAME,
+			TCSI.PORT_21_NAME,
+			TCSI.PORT_22_NAME,
+			TCSI.PORT_23_NAME,
+			TCSI.PORT_24_NAME,
+			TCSI.PORT_25_NAME,
+			TCSI.PORT_26_NAME,
+			TCSI.PORT_27_NAME,
+			TCSI.PORT_28_NAME,
+			TCSI.PORT_29_NAME,
+			TCSI.PORT_30_NAME,
+			TCSI.PORT_31_NAME,
+			TCSI.PORT_32_NAME,
+			TCSI.PORT_33_NAME,
+			TCSI.PORT_34_NAME,
+			TCSI.PORT_35_NAME,
+			TCSI.PORT_36_NAME,
+			TCSI.PORT_37_NAME,
+			TCSI.PORT_38_NAME,
+			TCSI.PORT_39_NAME,
+			TCSI.PORT_40_NAME,
+			TCSI.PORT_41_NAME,
+			TCSI.PORT_42_NAME,
+			TCSI.PORT_43_NAME,
+			TCSI.PORT_44_NAME,
+			TCSI.PORT_45_NAME,
+			TCSI.PORT_46_NAME,
+			TCSI.PORT_47_NAME,
+			TCSI.PORT_48_NAME
+		FROM
+			TB_CO_SYSTEM_ETC AS TCSE
+			INNER JOIN TB_CO_SWITCH_INFO AS TCSI
+			  ON TCSE.SYSTEM_ID = TCSI.SWITCH_ID
+			LEFT JOIN TB_CO_EQUIP_ACT AS ACT 
+			  ON TCSE.SYSTEM_ID = ACT.SYSTEM_ID
+			LEFT OUTER JOIN 
+	          ( select 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, group_concat(TCL.LINE_NAME) AS LINE_NAME
+		            , group_concat(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          group by STATION_ID) LINE_NAME
+   		    ON TCSE.LAREA_ID = LINE_NAME.STATION_ID
+		WHERE TCSE.OPR_STATUS = 1
+			<if test="category != null and category != '' and category != 'ALL'">
+				AND TCSI.CATEGORY LIKE CONCAT ('%',#{category},'%')
+			</if>
+			<if test="name != null and name != '' and name != 'ALL'">
+				AND TCSI.SWITCH_ID LIKE CONCAT ('%',#{name},'%')
+			</if> 
+			<if test="lineId != null and lineId != ''">
+				AND LINE_NAME.LINE_ID LIKE CONCAT ('%',#{lineId},'%')
+			</if>
+		ORDER BY  
+			LINE_NAME.LINE_ID ASC
+			,CATEGORY ASC
+			,SWITCH_NAME ASC
+			,SLOT ASC
+			,SHELF ASC
+	</select> 
+	
+	<update id="switchModify" parameterType="java.util.HashMap">
+		UPDATE 
+			TB_CO_SWITCH_INFO
+		SET
+			PORT_01 = #{port01},
+			PORT_02 = #{port02},
+			PORT_03 = #{port03},
+			PORT_04 = #{port04},
+			PORT_05 = #{port05},
+			PORT_06 = #{port06},
+			PORT_07 = #{port07},
+			PORT_08 = #{port08},
+			PORT_09 = #{port09},
+			PORT_10 = #{port10},
+			PORT_11 = #{port11},
+			PORT_12 = #{port12},
+			PORT_13 = #{port13},
+			PORT_14 = #{port14},
+			PORT_15 = #{port15},
+			PORT_16 = #{port16},
+			PORT_17 = #{port17},
+			PORT_18 = #{port18},
+			PORT_19 = #{port19},
+			PORT_20 = #{port20},
+			PORT_21 = #{port21},
+			PORT_22 = #{port22},
+			PORT_23 = #{port23},
+			PORT_24 = #{port24}
+			<if test="size == 48">
+			,PORT_25 = #{port25},
+			PORT_26 = #{port26},
+			PORT_27 = #{port27},
+			PORT_28 = #{port28},
+			PORT_29 = #{port29},
+			PORT_30 = #{port30},
+			PORT_31 = #{port31},
+			PORT_32 = #{port32},
+			PORT_33 = #{port33},
+			PORT_34 = #{port34},
+			PORT_35 = #{port35},
+			PORT_36 = #{port36},
+			PORT_37 = #{port37},
+			PORT_38 = #{port38},
+			PORT_39 = #{port39},
+			PORT_40 = #{port40},
+			PORT_41 = #{port41},
+			PORT_42 = #{port42},
+			PORT_43 = #{port43},
+			PORT_44 = #{port44},
+			PORT_45 = #{port45},
+			PORT_46 = #{port46},
+			PORT_47 = #{port47},
+			PORT_48 = #{port48}
+			</if>
+		WHERE
+			SWITCH_ID = #{switchId}
+			AND SLOT = #{slot}
+	</update>
+	
+	
+	<select id="getSwitchDescDetail" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			TCSE.SYSTEM_ID,
+			TCSI.SWITCH_ID,
+			LINE_NAME.LINE_ID,
+			LINE_NAME.LINE_NAME,
+			CASE WHEN TCSI.CATEGORY = 'BB' THEN CONCAT(ACT.VIEW_NAME, ' (SLOT: ', TCSI.SLOT, ')') ELSE ACT.VIEW_NAME END AS SWITCH_NAME,
+			TCSI.SIZE,
+			TCSI.TYPE,
+			TCSI.SHELF,
+			TCSI.CATEGORY,
+			TCSI.SLOT,
+			TCSI.SORT_FLAG,
+			TCSI.PORT_01_DESC,
+			TCSI.PORT_02_DESC,
+			TCSI.PORT_03_DESC,
+			TCSI.PORT_04_DESC,
+			TCSI.PORT_05_DESC,
+			TCSI.PORT_06_DESC,
+			TCSI.PORT_07_DESC,
+			TCSI.PORT_08_DESC,
+			TCSI.PORT_09_DESC,
+			TCSI.PORT_10_DESC,
+			TCSI.PORT_11_DESC,
+			TCSI.PORT_12_DESC,
+			TCSI.PORT_13_DESC,
+			TCSI.PORT_14_DESC,
+			TCSI.PORT_15_DESC,
+			TCSI.PORT_16_DESC,
+			TCSI.PORT_17_DESC,
+			TCSI.PORT_18_DESC,
+			TCSI.PORT_19_DESC,
+			TCSI.PORT_20_DESC,
+			TCSI.PORT_21_DESC,
+			TCSI.PORT_22_DESC,
+			TCSI.PORT_23_DESC,
+			TCSI.PORT_24_DESC,
+			TCSI.PORT_25_DESC,
+			TCSI.PORT_26_DESC,
+			TCSI.PORT_27_DESC,
+			TCSI.PORT_28_DESC,
+			TCSI.PORT_29_DESC,
+			TCSI.PORT_30_DESC,
+			TCSI.PORT_31_DESC,
+			TCSI.PORT_32_DESC,
+			TCSI.PORT_33_DESC,
+			TCSI.PORT_34_DESC,
+			TCSI.PORT_35_DESC,
+			TCSI.PORT_36_DESC,
+			TCSI.PORT_37_DESC,
+			TCSI.PORT_38_DESC,
+			TCSI.PORT_39_DESC,
+			TCSI.PORT_40_DESC,
+			TCSI.PORT_41_DESC,
+			TCSI.PORT_42_DESC,
+			TCSI.PORT_43_DESC,
+			TCSI.PORT_44_DESC,
+			TCSI.PORT_45_DESC,
+			TCSI.PORT_46_DESC,
+			TCSI.PORT_47_DESC,
+			TCSI.PORT_48_DESC,
+			TCSI.PORT_01_NAME,
+			TCSI.PORT_02_NAME,
+			TCSI.PORT_03_NAME,
+			TCSI.PORT_04_NAME,
+			TCSI.PORT_05_NAME,
+			TCSI.PORT_06_NAME,
+			TCSI.PORT_07_NAME,
+			TCSI.PORT_08_NAME,
+			TCSI.PORT_09_NAME,
+			TCSI.PORT_10_NAME,
+			TCSI.PORT_11_NAME,
+			TCSI.PORT_12_NAME,
+			TCSI.PORT_13_NAME,
+			TCSI.PORT_14_NAME,
+			TCSI.PORT_15_NAME,
+			TCSI.PORT_16_NAME,
+			TCSI.PORT_17_NAME,
+			TCSI.PORT_18_NAME,
+			TCSI.PORT_19_NAME,
+			TCSI.PORT_20_NAME,
+			TCSI.PORT_21_NAME,
+			TCSI.PORT_22_NAME,
+			TCSI.PORT_23_NAME,
+			TCSI.PORT_24_NAME,
+			TCSI.PORT_25_NAME,
+			TCSI.PORT_26_NAME,
+			TCSI.PORT_27_NAME,
+			TCSI.PORT_28_NAME,
+			TCSI.PORT_29_NAME,
+			TCSI.PORT_30_NAME,
+			TCSI.PORT_31_NAME,
+			TCSI.PORT_32_NAME,
+			TCSI.PORT_33_NAME,
+			TCSI.PORT_34_NAME,
+			TCSI.PORT_35_NAME,
+			TCSI.PORT_36_NAME,
+			TCSI.PORT_37_NAME,
+			TCSI.PORT_38_NAME,
+			TCSI.PORT_39_NAME,
+			TCSI.PORT_40_NAME,
+			TCSI.PORT_41_NAME,
+			TCSI.PORT_42_NAME,
+			TCSI.PORT_43_NAME,
+			TCSI.PORT_44_NAME,
+			TCSI.PORT_45_NAME,
+			TCSI.PORT_46_NAME,
+			TCSI.PORT_47_NAME,
+			TCSI.PORT_48_NAME
+		FROM TB_CO_SYSTEM_ETC AS TCSE
+			INNER JOIN TB_CO_SWITCH_INFO AS TCSI
+			  ON TCSE.SYSTEM_ID = TCSI.SWITCH_ID
+			LEFT JOIN TB_CO_EQUIP_ACT AS ACT 
+			  ON TCSE.SYSTEM_ID = ACT.SYSTEM_ID
+			LEFT OUTER JOIN 
+	          ( SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID) LINE_NAME
+   		    ON TCSE.LAREA_ID = LINE_NAME.STATION_ID
+		<where>
+			TCSE.OPR_STATUS = 1
+			<if test="category != null and category != '' and category != 'ALL'">
+				AND TCSI.CATEGORY LIKE CONCAT ('%',#{category},'%')
+			</if>
+			<if test="name != null and name != '' and name != 'ALL'">
+				AND TCSI.SWITCH_ID LIKE CONCAT ('%',#{name},'%')
+			</if>
+			<if test="lineId != null and lineId != ''">
+				AND LINE_NAME.LINE_ID LIKE CONCAT ('%',#{lineId},'%')
+			</if>
+		</where>
+		ORDER BY
+			LINE_NAME.LINE_ID ASC
+			,CATEGORY ASC
+			,SWITCH_NAME ASC
+			,SLOT ASC
+			,SHELF ASC
+	</select>
+	
+	<update id="switchDescSave" parameterType="java.util.HashMap">
+		UPDATE
+			TB_CO_SWITCH_INFO
+		SET
+			<foreach collection="SETVALUE" item="item" separator=",">
+			${item}
+			</foreach>
+		WHERE
+			SWITCH_ID = #{SWID}
+			AND SLOT = #{SLOT}
+			AND SHELF = #{SHELF}
+			AND CATEGORY = #{CATEGORY}
+	</update>
+	
+	<select id="getCategoryList" resultType="java.lang.String">
+		SELECT
+			DISTINCT CATEGORY
+		FROM
+			TB_CO_SWITCH_INFO
+		ORDER BY
+			CATEGORY
+	</select>
+</mapper>

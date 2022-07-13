@@ -1,0 +1,567 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.SystemStateManagerDAO">
+
+	<select id="getSessionipList" parameterType="java.lang.String" resultType = "java.util.HashMap">
+		SELECT
+		  SYSTEM_NAME,IP,EQUIP_NAME,EQUIP_TYPE
+		FROM
+		  VW_SYSTEM
+		WHERE
+		  IP IN(SELECT DISTINCT HOST_IP FROM TB_SM_SYSTEM_LOG)
+			<if test='pageFlag == "2"'>
+				AND EQUIP_TYPE = 0
+			</if>
+			<if test='pageFlag == "1"'>
+				AND EQUIP_TYPE NOT IN(0,2,3)
+			</if>
+		  
+	</select>
+	<select id="getMaxDateTime" parameterType="java.util.HashMap" resultType="java.lang.String">
+		SELECT
+			DATE_FORMAT(MAX(EVENT_TIME),'%Y-%m-%d %H:%i:%s') AS EVENT_TIME
+		FROM
+			TB_SM_SYSTEM_LOG_CUR
+			JOIN
+			(
+			<if test='pageFlag == "2"'>
+				SELECT SYSTEM_NAME,IP,EQUIP_TYPE FROM VW_SYSTEM WHERE EQUIP_TYPE = 0
+			</if>
+			<if test='pageFlag == "1"'>
+				SELECT SYSTEM_NAME,IP,EQUIP_TYPE FROM VW_SYSTEM WHERE EQUIP_TYPE NOT IN(0,2,3) AND VW_SYSTEM.IP != ''
+			</if>
+			) AS SYSTEM_ETC
+			ON
+			TB_SM_SYSTEM_LOG.HOST_IP = SYSTEM_ETC.IP
+	</select>
+
+	<select id="getStateData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT DATE_FORMAT(TB_SM_SYSTEM_LOG_CUR.EVENT_TIME,'%Y-%m-%d %H:%i:%s') AS EVENT_TIME
+			 , EQUIP_LINE.LINE_ID
+			 , EQUIP_LINE.LINE_NAME
+			 , TB_SM_SYSTEM_LOG_CUR.HOST_NAME
+			 , SYSTEM_ETC.EQUIP_NAME AS HOST_TYPE
+			 , TB_SM_SYSTEM_LOG_CUR.HOST_IP
+			 , TB_SM_SYSTEM_LOG_CUR.CPU_EA
+			 , TB_SM_SYSTEM_LOG_CUR.MEM_SIZE
+			 , TB_SM_SYSTEM_LOG_CUR.DISK_SIZE
+			 , TB_SM_SYSTEM_LOG_CUR.CPU_RATE
+			 , TB_SM_SYSTEM_LOG_CUR.MEMORY_USED
+			 , TB_SM_SYSTEM_LOG_CUR.DISK_USED
+			 , SYSTEM_ETC.EQUIP_TYPE
+			 , CASE
+				WHEN TB_SM_SYSTEM_LOG_CUR.CPU_RATE <![CDATA[>=]]> THD.CRITICAL_1
+					THEN 1
+				WHEN TB_SM_SYSTEM_LOG_CUR.CPU_RATE <![CDATA[>=]]> THD.MAJOR_1
+					THEN 2
+				WHEN TB_SM_SYSTEM_LOG_CUR.CPU_RATE <![CDATA[>=]]> THD.MINOR_1
+					THEN 3
+					ELSE 4
+			 END AS CPU_LEVEL
+			 , CASE
+			 	WHEN TB_SM_SYSTEM_LOG_CUR.MEMORY_USED <![CDATA[>=]]> THD.CRITICAL_2
+			 		THEN 1
+			 	WHEN TB_SM_SYSTEM_LOG_CUR.MEMORY_USED <![CDATA[>=]]> THD.MAJOR_2
+			 		THEN 2
+			 	WHEN TB_SM_SYSTEM_LOG_CUR.MEMORY_USED <![CDATA[>=]]> THD.MINOR_2
+			 		THEN 3
+			 		ELSE 4
+			 END            AS MEMORY_LEVEL
+			 , THD.CRITICAL_3 AS DISK_CRITICAL
+			 , THD.MAJOR_3    AS DISK_MAJOR
+			 , THD.MINOR_3    AS DISK_MINOR
+			 , ACT.VIEW_NAME
+		FROM
+			TB_SM_SYSTEM_LOG_CUR
+			JOIN  
+			(
+				SELECT
+					HOST_IP,
+					MAX(EVENT_TIME) AS EVENT_TIME
+				FROM
+					TB_SM_SYSTEM_LOG_CUR
+				GROUP BY
+					HOST_IP
+			) AS MAX_TIME
+			ON TB_SM_SYSTEM_LOG_CUR.HOST_IP = MAX_TIME.HOST_IP 
+				AND TB_SM_SYSTEM_LOG_CUR.EVENT_TIME = MAX_TIME.EVENT_TIME
+			JOIN
+			(
+			<if test='pageFlag == "2"'>
+				SELECT SYSTEM_NAME
+					 , IP
+					 , EQUIP_NAME
+					 , EQUIP_TYPE 
+				  FROM VW_SYSTEM 
+				 WHERE EQUIP_TYPE = 0
+			</if>
+			<if test='pageFlag == "1"'>
+				SELECT SYSTEM_NAME
+				     , IP
+				     , EQUIP_NAME
+				     , EQUIP_TYPE 
+				  FROM VW_SYSTEM 
+				 WHERE EQUIP_TYPE NOT IN(0,2,3)
+			</if>
+			) AS SYSTEM_ETC
+			ON
+			TB_SM_SYSTEM_LOG_CUR.HOST_IP = SYSTEM_ETC.IP
+			JOIN 
+			(
+				SELECT
+					NE_TYPE
+					,MAX(CASE WHEN DATA_TYPE = 1 THEN CRITICAL	END) AS CRITICAL_1
+					,MAX(CASE WHEN DATA_TYPE = 1 THEN MAJOR		END) AS MAJOR_1
+					,MAX(CASE WHEN DATA_TYPE = 1 THEN MINOR		END) AS MINOR_1
+					,MAX(CASE WHEN DATA_TYPE = 2 THEN CRITICAL	END) AS CRITICAL_2
+					,MAX(CASE WHEN DATA_TYPE = 2 THEN MAJOR		END) AS MAJOR_2
+					,MAX(CASE WHEN DATA_TYPE = 2 THEN MINOR		END) AS MINOR_2
+					,MAX(CASE WHEN DATA_TYPE = 3 THEN CRITICAL	END) AS CRITICAL_3
+					,MAX(CASE WHEN DATA_TYPE = 3 THEN MAJOR		END) AS MAJOR_3
+					,MAX(CASE WHEN DATA_TYPE = 3 THEN MINOR		END) AS MINOR_3
+				FROM
+					TB_SM_SYSTEM_THD
+				GROUP BY
+					NE_TYPE
+			) THD
+			ON
+			SYSTEM_ETC.EQUIP_TYPE = THD.NE_TYPE
+			JOIN
+		      (
+				SELECT 
+				SYSTEM_ID
+				, SYSTEM_NAME
+				, EQUIP_TYPE
+				, LINE.LINE_ID
+				, LINE.LINE_NAME
+				, EQUIP.STATION_ID
+				FROM
+				(
+				SELECT
+					VW.SYSTEM_ID
+					,VW.SYSTEM_NAME 
+					,VW.EQUIP_TYPE
+         			 ,EQUIPLINE.STATION_ID
+					FROM
+					VW_SYSTEM VW
+
+		  			LEFT OUTER JOIN 
+		  				(
+		  					SELECT
+								MME_ID AS SYSTEM_ID
+								,'1' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_MME
+					        
+							UNION ALL
+					    
+							SELECT
+								PGW_ID AS SYSTEM_ID
+								,'4' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_PGW 
+					        
+							UNION ALL
+					    
+							SELECT
+								PCRF_ID AS SYSTEM_ID
+								,'7' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_PCRF
+					        
+					    UNION ALL    
+					    
+					    SELECT
+							SYSTEM_ID AS SYSTEM_ID
+					      	,EQUIP_TYPE AS EQUIP_TYPE
+					      	,LAREA_ID AS STATION_ID
+							FROM
+							  TB_CO_SYSTEM_ETC AS TCSE
+					      
+							UNION ALL
+							 
+							SELECT
+								EMS_ID AS SYSTEM_ID
+					      ,EQUIP_TYPE AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_EMS TCE
+					
+					    UNION ALL
+					    
+					    SELECT
+					      DU_ID AS SYSTEM_ID
+					      ,'2' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+								
+							FROM
+								TB_CO_DU TCD
+    
+		  				) EQUIPLINE
+		  				ON VW.SYSTEM_ID = EQUIPLINE.SYSTEM_ID
+		  				AND VW.EQUIP_TYPE = EQUIPLINE.EQUIP_TYPE
+              			  WHERE VW.EQUIP_TYPE != '3'
+              ) EQUIP  
+              LEFT OUTER JOIN
+              (
+               SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID
+              ) LINE 
+              ON EQUIP.STATION_ID = LINE.STATION_ID
+              ) EQUIP_LINE       
+              ON TB_SM_SYSTEM_LOG_CUR.HOST_NAME = EQUIP_LINE.SYSTEM_NAME
+              LEFT JOIN
+				(
+					SELECT SYSTEM_ID
+						 , MIN(VIEW_NAME) AS VIEW_NAME
+						 , EQUIP_TYPE
+					  FROM TB_CO_EQUIP_ACT
+					 GROUP BY SYSTEM_ID, EQUIP_TYPE
+				) AS ACT
+         	  ON ACT.SYSTEM_ID = EQUIP_LINE.SYSTEM_ID
+			 AND ACT.EQUIP_TYPE = EQUIP_LINE.EQUIP_TYPE
+        WHERE 
+        	1=1
+        	<if test="lineId != '' and lineId != null ">
+				AND EQUIP_LINE.LINE_ID LIKE  (CONCAT('%', #{lineId}, '%'))
+			</if>
+		ORDER BY
+			HOST_TYPE,HOST_NAME
+	</select>
+	
+	<select id="getVmStateData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT DATE_FORMAT(TSSL.EVENT_TIME,'%Y-%m-%d %H:%i:%s') AS EVENT_TIME
+			 , EQUIP_LINE.LINE_ID
+			 , EQUIP_LINE.LINE_NAME
+			 , TSSL.HOST_NAME
+			 , ACT.VIEW_NAME
+			 , ETC.EQUIP_NAME AS HOST_TYPE
+			 , TSSL.HOST_IP
+			 , TSSL.NODE
+			 , TSSL.CPU_RATE
+			 , TSSL.MEMORY_USED
+			 , TSSL.DISK_USED
+			 , ETC.EQUIP_TYPE
+			 , CASE
+			 	WHEN TSSL.CPU_RATE <![CDATA[>=]]> THD.CRITICAL_1
+			 		THEN 1
+			 	WHEN TSSL.CPU_RATE <![CDATA[>=]]> THD.MAJOR_1
+			 		THEN 2
+			 	WHEN TSSL.CPU_RATE <![CDATA[>=]]> THD.MINOR_1
+			 		THEN 3
+			 		ELSE 4
+			 END AS CPU_LEVEL
+			 , CASE
+			 	WHEN TSSL.MEMORY_USED <![CDATA[>=]]> THD.CRITICAL_2
+			 		THEN 1
+			 	WHEN TSSL.MEMORY_USED <![CDATA[>=]]> THD.MAJOR_2
+			 		THEN 2
+			 	WHEN TSSL.MEMORY_USED <![CDATA[>=]]> THD.MINOR_2
+			 		THEN 3
+			 		ELSE 4
+			 END            AS MEMORY_LEVEL
+			 , THD.CRITICAL_3 AS DISK_CRITICAL
+			 , THD.MAJOR_3    AS DISK_MAJOR
+			 , THD.MINOR_3    AS DISK_MINOR
+		FROM
+			TB_SM_VM_SYSTEM_LOG_CUR TSSL
+                        JOIN
+                        (
+                                SELECT
+                                        HOST_NAME
+                                        ,HOST_IP
+                                        ,NODE
+                                        ,MAX(EVENT_TIME) AS EVENT_TIME
+                                FROM
+                                        TB_SM_VM_SYSTEM_LOG_CUR
+                                WHERE
+                                        (HOST_NAME, HOST_IP) IN (
+                                                SELECT
+                                                        SYSTEM_NAME
+                                                        ,IP
+                                                FROM
+                                                        VW_SYSTEM
+                                                WHERE
+                                                        EQUIP_TYPE not in (0,3)
+                                        )
+                                GROUP BY
+                                        HOST_NAME
+                                        ,HOST_IP
+                                        ,NODE
+                                           
+                        ) MAX_TIME
+				ON
+					TSSL.HOST_NAME = MAX_TIME.HOST_NAME
+					AND TSSL.HOST_IP =  MAX_TIME.HOST_IP
+					AND TSSL.NODE = MAX_TIME.NODE
+					AND TSSL.EVENT_TIME = MAX_TIME.EVENT_TIME
+	                
+	                        JOIN
+	                        (
+	                                SELECT SYSTEM_NAME,IP,EQUIP_NAME, EQUIP_TYPE FROM VW_SYSTEM WHERE EQUIP_TYPE NOT IN (0, 3)
+	                        ) ETC
+	                        ON
+                                TSSL.HOST_IP = ETC.IP 
+			LEFT JOIN
+			(
+				SELECT 
+					NE_TYPE 
+					,MAX(CASE WHEN DATA_TYPE = 1 THEN CRITICAL	END) AS CRITICAL_1
+					,MAX(CASE WHEN DATA_TYPE = 1 THEN MAJOR		END) AS MAJOR_1
+					,MAX(CASE WHEN DATA_TYPE = 1 THEN MINOR		END) AS MINOR_1
+					,MAX(CASE WHEN DATA_TYPE = 2 THEN CRITICAL	END) AS CRITICAL_2
+					,MAX(CASE WHEN DATA_TYPE = 2 THEN MAJOR		END) AS MAJOR_2
+					,MAX(CASE WHEN DATA_TYPE = 2 THEN MINOR		END) AS MINOR_2
+					,MAX(CASE WHEN DATA_TYPE = 3 THEN CRITICAL	END) AS CRITICAL_3
+					,MAX(CASE WHEN DATA_TYPE = 3 THEN MAJOR		END) AS MAJOR_3
+					,MAX(CASE WHEN DATA_TYPE = 3 THEN MINOR		END) AS MINOR_3
+				FROM
+					TB_SM_SYSTEM_THD
+				GROUP BY
+					NE_TYPE
+			) THD
+			ON
+				ETC.EQUIP_TYPE = THD.NE_TYPE
+			left join
+      		(
+				SELECT 
+				SYSTEM_ID
+				, SYSTEM_NAME
+				, EQUIP_TYPE
+				, LINE.LINE_ID
+				, LINE.LINE_NAME
+				, EQUIP.STATION_ID
+				FROM
+				(
+				SELECT
+					VW.SYSTEM_ID
+					,VW.SYSTEM_NAME
+					,VW.EQUIP_TYPE
+         			 ,EQUIPLINE.STATION_ID
+					FROM
+					VW_SYSTEM VW
+
+		  			LEFT OUTER JOIN 
+		  				(
+		  					SELECT
+								MME_ID AS SYSTEM_ID
+								,'1' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_MME
+					        
+							UNION ALL
+					    
+							SELECT
+								PGW_ID AS SYSTEM_ID
+								,'4' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_PGW 
+					        
+							UNION ALL
+					    
+							SELECT
+								PCRF_ID AS SYSTEM_ID
+								,'7' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_PCRF
+					        
+					    UNION ALL    
+					    
+					    SELECT
+							SYSTEM_ID AS SYSTEM_ID
+					      	,EQUIP_TYPE AS EQUIP_TYPE
+					      	,LAREA_ID AS STATION_ID
+							FROM
+							  TB_CO_SYSTEM_ETC AS TCSE
+					      
+						UNION ALL
+							
+						SELECT
+							EMS_ID AS SYSTEM_ID
+				     		 ,EQUIP_TYPE AS EQUIP_TYPE
+							 ,STATION_ID AS STATION_ID
+						FROM
+							TB_CO_EMS TCE
+					
+					    UNION ALL
+					    
+					    SELECT
+					      DU_ID AS SYSTEM_ID
+					      ,'2' AS EQUIP_TYPE
+								,STATION_ID AS STATION_ID
+							FROM
+								TB_CO_DU TCD
+    
+		  				) EQUIPLINE
+		  				ON VW.SYSTEM_ID = EQUIPLINE.SYSTEM_ID
+		  				AND VW.EQUIP_TYPE = EQUIPLINE.EQUIP_TYPE
+              			  WHERE VW.EQUIP_TYPE != '3'
+              ) EQUIP  
+              LEFT OUTER JOIN
+              (
+              SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID
+              ) LINE
+              ON EQUIP.STATION_ID = LINE.STATION_ID
+              ) EQUIP_LINE      
+              ON TSSL.HOST_NAME = EQUIP_LINE.SYSTEM_NAME
+			LEFT JOIN
+				(
+					SELECT SYSTEM_ID
+						 , MIN(VIEW_NAME) AS VIEW_NAME
+						 , EQUIP_TYPE
+					  FROM TB_CO_EQUIP_ACT
+					 GROUP BY SYSTEM_ID, EQUIP_TYPE
+				) AS ACT
+         	  ON ACT.SYSTEM_ID = EQUIP_LINE.SYSTEM_ID
+			 AND ACT.EQUIP_TYPE = EQUIP_LINE.EQUIP_TYPE
+        WHERE  
+        	1=1
+        	<!-- AND EVENT_TIME  = (select max(event_time) from TB_SM_VM_SYSTEM_LOG) -->
+        	<if test="lineId != '' and lineId != null ">
+				AND EQUIP_LINE.LINE_ID LIKE  (CONCAT('%', #{lineId}, '%'))
+			</if>
+		ORDER BY
+			HOST_TYPE ASC
+			,HOST_NAME ASC
+	</select>
+	
+	<select id = "getTrendData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i%s') AS EVENT_TIME,
+			SYSTEM_ETC.SYSTEM_NAME AS HOST_NAME,
+			HOST_IP,
+			CPU_RATE,
+			MEMORY_USED,
+			DISK_USED
+		FROM
+			TB_SM_SYSTEM_LOG
+			LEFT OUTER JOIN
+			(
+			<if test='pageFlag == "2"'>
+				SELECT SYSTEM_NAME,IP FROM VW_SYSTEM WHERE EQUIP_TYPE = 0 AND IP = #{host_ip}
+			</if>
+			<if test='pageFlag == "1"'>
+				SELECT SYSTEM_NAME,IP FROM VW_SYSTEM WHERE EQUIP_TYPE NOT IN(0,2,3) AND IP = #{host_ip}
+			</if>
+			) AS SYSTEM_ETC
+			ON
+			TB_SM_SYSTEM_LOG.HOST_IP = SYSTEM_ETC.IP
+		WHERE
+			1=1
+			AND HOST_IP = #{host_ip}
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime},'%Y%m%d%H%i%s')
+			AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endTime},'%Y%m%d%H%i%s')
+		ORDER BY 
+			EVENT_TIME
+	</select>
+	
+	<select id = "getVmTrendData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			DATE_FORMAT(TSVSL.EVENT_TIME,'%Y%m%d%H%i%s') AS EVENT_TIME,
+			ETC.SYSTEM_NAME AS HOST_NAME,
+			TSVSL.HOST_IP,
+			TSVSL.NODE,
+			TSVSL.CPU_RATE,
+			TSVSL.MEMORY_USED,
+			TSVSL.DISK_USED
+		FROM
+			TB_SM_VM_SYSTEM_LOG TSVSL
+			LEFT OUTER JOIN
+			(
+				SELECT SYSTEM_NAME,IP,EQUIP_NAME,EQUIP_TYPE FROM VW_SYSTEM WHERE EQUIP_TYPE NOT IN (0) AND IP = #{host_ip}
+			) ETC
+			ON
+			TSVSL.HOST_IP = ETC.IP
+		WHERE
+			1=1
+			AND TSVSL.HOST_IP = #{host_ip}
+			AND TSVSL.NODE = #{node}
+			AND TSVSL.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime},'%Y%m%d%H%i%s')
+			AND TSVSL.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endTime},'%Y%m%d%H%i%s')
+		ORDER BY 
+			EVENT_TIME
+	</select>
+	
+	<select id = "getSysThOption" parameterType="java.util.HashMap" resultType = "java.util.HashMap">
+		SELECT
+			EQUIP.EQUIP_TYPE AS NE_TYPE, EQUIP.EQUIP_NAME AS NE_TYPE_NAME
+		FROM
+			(SELECT * FROM TB_CO_EQUIP WHERE EQUIP_SM = 'Y') AS EQUIP
+			LEFT OUTER JOIN
+			TB_SM_SYSTEM_THD
+			ON TB_SM_SYSTEM_THD.NE_TYPE = EQUIP.EQUIP_TYPE
+		WHERE
+			<if test='pageFlag == "1"'>
+				EQUIP.EQUIP_TYPE NOT IN(0)
+			</if>
+			<if test='pageFlag == "2"'>
+				EQUIP.EQUIP_TYPE = 0 
+			</if>
+		GROUP BY
+			EQUIP.EQUIP_TYPE, EQUIP.EQUIP_NAME
+		ORDER BY
+			NE_TYPE_NAME ASC
+	</select>
+	
+	<select id = "getEquipTypeData" parameterType="java.util.HashMap" resultType = "java.util.HashMap">
+		SELECT
+			IFNULL(CRITICAL,0) AS CRITICAL,
+			IFNULL(MAJOR,0) AS MAJOR,
+			IFNULL(MINOR,0) AS MINOR
+		FROM
+			TB_SM_SYSTEM_THD
+		WHERE
+			DATA_TYPE = #{data_type}
+			AND NE_TYPE = #{equip_type}
+	</select>
+	
+	<update id="thresholdEdit" parameterType="java.util.HashMap">
+	
+		INSERT INTO TB_SM_SYSTEM_THD 
+            ( 
+                        NE_TYPE, 
+                        DATA_TYPE, 
+                        MINOR, 
+                        MAJOR,
+                        CRITICAL 
+            ) 
+            VALUES 
+            ( 
+                        #{equip_type}, 
+                        #{data_type}, 
+                        #{minor}, 
+                        #{major},
+                        #{critical}
+            ) 
+		ON DUPLICATE KEY UPDATE
+				MINOR = #{minor},
+				MAJOR = #{major},
+				CRITICAL = #{critical}
+	</update>
+</mapper>

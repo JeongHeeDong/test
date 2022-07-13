@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.EtcDAO">
+	
+	<select id="getEtcSearch" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+		  NE_ID,
+		  NE_NAME,
+		  IP,
+		  VENDOR_NAME,
+		  INSTALL_DATE,
+		  EQUIP_NAME,
+		  EQUIP_TYPE,
+		  IFNULL(ACCESS_ID,'') AS ACCESS_ID,
+		  COUNT.TOTAL_COUNT
+		FROM
+		  (
+		    SELECT
+		    	EMS_ID AS NE_ID,
+		    	EMS_NAME AS NE_NAME,
+		    	IP_ADDRESS AS IP,
+		    	IFNULL(TB_CO_VENDOR.VENDOR_NAME,'-') AS VENDOR_NAME,
+		    	IFNULL(DATE_FORMAT(TB_CO_EMS.INSTALL_DATE,'%Y-%m-%d %H:%i:%s'),'-') AS INSTALL_DATE,
+		    	'EMS' AS EQUIP_NAME,
+		    	EQUIP_TYPE,
+		    	ACCESS_ID
+		    FROM
+		    	TB_CO_EMS
+		    	LEFT OUTER JOIN
+		    	TB_CO_VENDOR
+		    	ON TB_CO_EMS.VENDOR_ID = TB_CO_VENDOR.VENDOR_ID
+		    WHERE OPR_STATUS = 1
+	    UNION ALL
+		    SELECT
+		    	SYSTEM_ID AS NE_ID,
+		    	SYSTEM_NAME AS NE_NAME,
+		      	IP,
+		    	IFNULL(TB_CO_VENDOR.VENDOR_NAME,'-') AS VENDOR_NAME,
+		    	IFNULL(DATE_FORMAT(TB_CO_SYSTEM_ETC.INSTALL_DATE,'%Y-%m-%d %H:%i:%s'),'-') AS INSTALL_DATE,
+	      		IFNULL(TB_CO_EQUIP.EQUIP_NAME,'-') AS EQUIP_NAME,
+	      		TB_CO_SYSTEM_ETC.EQUIP_TYPE,
+	      		ACCESS_ID
+		    FROM
+		    	TB_CO_SYSTEM_ETC
+		      LEFT OUTER JOIN
+		      TB_CO_EQUIP
+		      ON TB_CO_EQUIP.EQUIP_TYPE = TB_CO_SYSTEM_ETC.EQUIP_TYPE
+		    	LEFT OUTER JOIN
+		    	TB_CO_VENDOR
+		    	ON TB_CO_SYSTEM_ETC.VENDOR_ID = TB_CO_VENDOR.VENDOR_ID
+		    WHERE
+		    	TB_CO_SYSTEM_ETC.EQUIP_TYPE IN (SELECT EQUIP_TYPE FROM TB_CO_EQUIP WHERE EQUIP_DESC = 'APP')
+		    	AND OPR_STATUS = 1
+		  ) AS ETC_DATA,
+		  (
+		    SELECT
+		      COUNT(1) AS TOTAL_COUNT
+		    FROM
+		      (
+		        SELECT
+		        	EMS_ID AS NE_ID,
+		        	EMS_NAME AS NE_NAME,
+		        	OPR_STATUS AS OPR_STATUS
+		        FROM
+		        	TB_CO_EMS 
+		        UNION ALL
+		        SELECT
+		        	SYSTEM_ID AS NE_ID,
+		        	SYSTEM_NAME AS NE_NAME,
+		        	OPR_STATUS AS OPR_STATUS
+		        FROM
+		        	TB_CO_SYSTEM_ETC
+		        WHERE
+		        	EQUIP_TYPE IN (SELECT EQUIP_TYPE FROM TB_CO_EQUIP WHERE EQUIP_DESC = 'APP')
+		      ) AS ETC_DATA
+		    WHERE
+		      1=1
+		      AND OPR_STATUS = 1
+		      <if test="etc_name != ''">
+		      AND NE_NAME LIKE (CONCAT('%', #{etc_name}, '%'))
+		      </if>    
+		  ) AS COUNT
+		WHERE
+		  1=1
+		<if test="etc_name != ''">
+			AND NE_NAME LIKE (CONCAT('%', #{etc_name}, '%'))
+		</if>
+		ORDER BY
+		  EQUIP_NAME, NE_NAME
+		LIMIT #{pageNo}, #{pagingNum}
+	</select>
+	
+	<select id="getEtcDetail" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			TB_CO_SYSTEM_ETC.SYSTEM_ID AS NE_ID,
+			TB_CO_SYSTEM_ETC.SYSTEM_NAME AS NE_NAME,
+			TB_CO_EQUIP.EQUIP_TYPE,
+			IFNULL(TB_CO_EQUIP.EQUIP_NAME,'-') AS EQUIP_NAME,
+			TB_CO_SYSTEM_ETC.VENDOR_ID,
+			IFNULL(TB_CO_VENDOR.VENDOR_NAME,'-') AS VENDOR_NAME,
+			DATE_FORMAT(TB_CO_SYSTEM_ETC.INSTALL_DATE,'%Y-%m-%d') AS INSTALL_DATE,
+			DATE_FORMAT(TB_CO_SYSTEM_ETC.UPDATE_DATE,'%Y-%m-%d') AS UPDATE_DATE,
+			IFNULL(IP,'-') AS IP,
+			IFNULL(TB_CO_SYSTEM_ETC.OPR_STATUS,'0') AS OPR_STATUS
+		FROM
+			TB_CO_SYSTEM_ETC
+			LEFT OUTER JOIN
+            TB_CO_EQUIP
+            ON TB_CO_EQUIP.EQUIP_TYPE = TB_CO_SYSTEM_ETC.EQUIP_TYPE
+			LEFT OUTER JOIN
+			TB_CO_VENDOR
+			ON TB_CO_SYSTEM_ETC.VENDOR_ID = TB_CO_VENDOR.VENDOR_ID
+		WHERE
+			TB_CO_SYSTEM_ETC.SYSTEM_ID = #{etc_id}
+	</select>
+	
+	<select id="getEtcEmsDetail" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			TB_CO_EMS.EMS_ID AS NE_ID,
+			TB_CO_EMS.EMS_NAME AS NE_NAME,
+			TB_CO_EMS.EQUIP_TYPE,
+			TB_CO_EMS.EMS_NAME AS EQUIP_NAME,
+			TB_CO_EMS.VENDOR_ID,
+			IFNULL(TB_CO_VENDOR.VENDOR_NAME,'-') AS VENDOR_NAME,
+			DATE_FORMAT(TB_CO_EMS.INSTALL_DATE,'%Y-%m-%d') AS INSTALL_DATE,
+			DATE_FORMAT(TB_CO_EMS.UPDATE_DATE,'%Y-%m-%d') AS UPDATE_DATE,
+			IFNULL(IP_ADDRESS,'-') AS IP
+		FROM
+			TB_CO_EMS
+			LEFT OUTER JOIN
+			TB_CO_VENDOR
+			ON TB_CO_EMS.VENDOR_ID = TB_CO_VENDOR.VENDOR_ID
+		WHERE
+			TB_CO_EMS.EMS_ID = #{etc_id}
+			AND TB_CO_EMS.EQUIP_TYPE = #{etc_type}
+	</select>
+	
+	<select id="getEquipName" resultType="java.util.HashMap"> 
+		<!-- 기존에 사용하지않는 장비 나타냄 -->
+		SELECT
+			EQUIP_NAME, EQUIP_TYPE
+		FROM
+		(
+			SELECT
+				EQUIP_NAME, EQUIP_TYPE
+			FROM
+				TB_CO_EQUIP
+			WHERE
+				EQUIP_DESC = 'APP'
+			GROUP BY
+				EQUIP_NAME, EQUIP_TYPE
+			UNION ALL
+			SELECT
+				EMS_NAME AS EQUIP_NAME, EQUIP_TYPE
+			FROM 
+				TB_CO_EMS
+		) AS EQUIP_DATA
+		ORDER BY
+			EQUIP_NAME ASC 
+			
+		<!-- SELECT EQUIP_NAME, EQUIP_TYPE 
+		FROM
+			(SELECT
+		    	'EMS' AS EQUIP_NAME, 
+		    	'14' AS EQUIP_TYPE
+		    UNION ALL
+			    SELECT
+		      		TB_CO_EQUIP.EQUIP_NAME AS EQUIP_NAME,
+		      		TB_CO_SYSTEM_ETC.EQUIP_TYPE AS EQUIP_TYPE
+			    FROM
+			    	TB_CO_SYSTEM_ETC
+			      LEFT OUTER JOIN
+			      TB_CO_EQUIP 
+			      ON TB_CO_EQUIP.EQUIP_TYPE = TB_CO_SYSTEM_ETC.EQUIP_TYPE
+			    WHERE
+			    	TB_CO_SYSTEM_ETC.EQUIP_TYPE IN (SELECT EQUIP_TYPE FROM TB_CO_EQUIP WHERE EQUIP_DESC = 'APP')
+			    	AND OPR_STATUS = 1
+	        GROUP BY EQUIP_NAME, EQUIP_TYPE) etc
+		ORDER BY EQUIP_NAME  -->
+		
+		
+	</select>
+	
+	<select id="getVendor" resultType="java.util.HashMap"> 
+		SELECT
+			VENDOR_ID,
+			VENDOR_NAME
+		FROM
+			TB_CO_VENDOR
+		GROUP BY
+			VENDOR_ID,VENDOR_NAME
+		ORDER BY
+			VENDOR_NAME DESC
+	</select>
+	
+	<update id="etcDetailupdate" parameterType="java.util.HashMap">
+		UPDATE 
+			TB_CO_SYSTEM_ETC
+		SET
+			SYSTEM_NAME = #{etc_name},
+			EQUIP_TYPE = #{equip_type},
+			VENDOR_ID = #{vendor_id},
+			<if test="install_date != ''">
+				INSTALL_DATE = DATE_FORMAT(#{install_date},'%Y%m%d'),
+			</if>
+			<if test="update_date != ''">
+				UPDATE_DATE = DATE_FORMAT(#{update_date},'%Y%m%d'),
+			</if>
+			UPDATE_USER_ID = #{update_user_id},
+			IP = #{ip}
+		WHERE
+			SYSTEM_ID = #{etc_id}
+	</update>
+	
+	<update id="etcEmsDetailupdate" parameterType="java.util.HashMap">
+		UPDATE 
+			TB_CO_EMS
+		SET
+			EMS_NAME = #{etc_name},
+			VENDOR_ID = #{vendor_id},
+			<if test="install_date != ''">
+				INSTALL_DATE = DATE_FORMAT(#{install_date},'%Y%m%d'),
+			</if>
+			<if test="update_date != ''">
+				UPDATE_DATE = DATE_FORMAT(#{update_date},'%Y%m%d'),
+			</if>
+			IP_ADDRESS = #{ip},
+			UPDATE_USER_ID = #{update_user_id}
+		WHERE
+			EMS_ID = #{etc_id}
+			AND EQUIP_TYPE = #{equip_type}
+	</update>
+	
+	<delete id="etcDetaildelete" parameterType="java.util.HashMap">
+        DELETE FROM  
+            TB_CO_SYSTEM_ETC
+        WHERE
+            SYSTEM_ID = #{etc_id}
+    </delete>
+    
+    <delete id="etcEmsDetaildelete" parameterType="java.util.HashMap">
+        DELETE FROM  
+            TB_CO_EMS
+        WHERE
+            EMS_ID = #{etc_id}
+            AND EQUIP_TYPE = #{equip_type}
+    </delete>
+	
+	<update id="rtfIpUpdate" parameterType="java.util.HashMap">
+		
+		<foreach collection="rtf_ips" item="option" separator=";">
+			UPDATE
+				TB_CO_RTF
+			SET
+				SYSTEM_IP = #{option.after_rtf_ips}
+			WHERE
+				SYSTEM_IP = #{option.before_rtf_ips}
+		</foreach>
+	</update>
+	
+	<update id="rtfStationUpdate" parameterType="java.util.HashMap">
+		
+		<foreach collection="rtf_station" item="option" separator=";">
+			UPDATE
+				TB_CO_RTF
+			SET
+				STATION_NAME = #{option.after_rtf_station}
+			WHERE
+				STATION_NAME = #{option.before_rtf_station}
+		</foreach>
+	</update>
+	
+    <delete id="rtfIpDelete" parameterType="java.util.HashMap">
+        
+        <foreach collection="rtf_ips" item="option" separator=";">
+            DELETE FROM TB_CO_RTF
+            WHERE
+                SYSTEM_IP = #{option.before_rtf_ips}
+        </foreach>
+    </delete>
+    
+    <delete id="rtfStationDelete" parameterType="java.util.HashMap">
+        
+        <foreach collection="rtf_station" item="option" separator=";">
+            DELETE FROM TB_CO_RTF
+            WHERE
+                STATION_NAME = #{option.before_rtf_station}
+        </foreach>
+    </delete>
+	
+	<select id="etcIdCheckResult" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT
+			COUNT(1) AS COUNT
+		FROM
+			TB_CO_SYSTEM_ETC
+		WHERE
+			SYSTEM_ID = #{etc_id}
+	</select>
+	
+	<select id="etcEmsIdCheckResult" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT
+			COUNT(1) AS COUNT
+		FROM
+			TB_CO_EMS
+		WHERE
+			EMS_ID = #{etc_id}
+			AND EQUIP_TYPE = #{equip_type}
+	</select>
+	
+	<insert id="etcAdd" parameterType="java.util.HashMap">
+		INSERT
+		INTO TB_CO_SYSTEM_ETC
+		(SYSTEM_ID,SYSTEM_NAME,VENDOR_ID,INSTALL_DATE,UPDATE_USER_ID,EQUIP_TYPE,IP,OPR_STATUS)
+		VALUES
+		(#{etc_id},#{etc_name},#{vendor_id},DATE_FORMAT(#{install_date},'%Y%m%d%H%i%s'),#{update_user_id},#{equip_type},#{ip},"1")
+	</insert>
+	 
+	<insert id="etcEmsAdd" parameterType="java.util.HashMap">
+		INSERT 
+		INTO TB_CO_EMS
+		(EMS_ID,EMS_NAME,IP_ADDRESS,VENDOR_ID,INSTALL_DATE,UPDATE_USER_ID,EQUIP_TYPE,OPR_STATUS)
+		VALUES
+		(#{etc_id},#{etc_name},#{ip},#{vendor_id},DATE_FORMAT(#{install_date},'%Y%m%d%H%i%s'),#{update_user_id},#{equip_type},"1")
+	</insert>
+	
+	<insert id="rtfInsert" parameterType="java.util.HashMap">
+		<foreach collection="rtf_data" item="option" separator=";">
+			INSERT
+			INTO TB_CO_RTF
+			(SYSTEM_ID,STATION_NAME,SYSTEM_IP,SYSTEM_NAME)
+			VALUES
+			(#{option.system_id},#{option.station_name},#{option.ip},#{option.system_name})
+		</foreach>
+	</insert>
+	
+	<select id = "getRtfDetailData" parameterType = "java.util.HashMap" resultType = "java.util.HashMap">
+		SELECT
+			SYSTEM_ID,
+			STATION_NAME,
+			SYSTEM_IP
+		FROM
+			TB_CO_RTF
+		WHERE
+			SYSTEM_ID = #{ne_id}
+	</select>
+</mapper>

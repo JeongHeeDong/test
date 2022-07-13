@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.EpcDAO">
+	
+	<select id="getEpcSearch" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+		  NE_ID, 
+		  NE_IP,
+		  NE_NAME,
+		  <!-- IFNULL(EMS_INFO.EMS_NAME,'-') AS EMS_NAME, -->
+			IFNULL(TB_CO_VENDOR.VENDOR_NAME,'-') AS VENDOR_NAME,
+			IFNULL(DATE_FORMAT(EPC_DATA.INSTALL_DATE,'%Y-%m-%d %H:%i:%s'),'-') AS INSTALL_DATE,
+		  TYPE,
+		  IFNULL(ACCESS_ID,'') AS ACCESS_ID,
+		  COUNT.TOT_COUNT
+		FROM (
+		  SELECT
+		    MME_ID AS NE_ID,
+		    MME_IP AS NE_IP,
+		    MME_NAME AS NE_NAME,
+		    EMS_ID,
+		    VENDOR_ID,
+		    INSTALL_DATE,
+		    'MME' AS TYPE,
+		    ACCESS_ID
+		  FROM
+		    TB_CO_MME
+		  UNION ALL
+		  SELECT
+		    PGW_ID AS NE_ID,
+		    PGW_IP AS NE_IP,
+		    PGW_NAME AS NE_NAME,
+		    EMS_ID,
+		    VENDOR_ID,
+		    INSTALL_DATE,
+		    'GW' AS TYPE,
+		    ACCESS_ID
+		  FROM
+		    TB_CO_PGW
+		  UNION ALL
+		  SELECT
+		    SYSTEM_ID AS NE_ID,
+		    IP AS NE_IP,
+		    SYSTEM_NAME AS NE_NAME,
+		    EMS_ID,
+		    VENDOR_ID,
+		    INSTALL_DATE,
+		    'HSS' AS TYPE,
+		    ACCESS_ID
+		  FROM
+		    TB_CO_SYSTEM_ETC
+		  WHERE
+		    EQUIP_TYPE = 6
+		  UNION ALL
+		  SELECT
+		    PCRF_ID AS NE_ID,
+		    PCRF_IP AS NE_IP,
+		    PCRF_NAME AS NE_NAME,
+		    EMS_ID,
+		    VENDOR_ID,
+		    INSTALL_DATE,
+		    'PCRF' AS TYPE,
+		    ACCESS_ID
+		  FROM
+		    TB_CO_PCRF
+		) AS EPC_DATA
+		<!-- LEFT OUTER JOIN
+		(SELECT * FROM TB_CO_EMS ) AS EMS_INFO
+		ON EPC_DATA.EMS_ID = EMS_INFO.EMS_ID -->
+		LEFT OUTER JOIN
+		TB_CO_VENDOR
+		ON EPC_DATA.VENDOR_ID = TB_CO_VENDOR.VENDOR_ID,
+		  (
+		    SELECT
+		      COUNT(1) AS TOT_COUNT
+		    FROM (
+		      SELECT
+		        MME_ID AS NE_ID,
+		        MME_IP AS NE_IP,
+		        MME_NAME AS NE_NAME,
+		        EMS_ID,
+		        VENDOR_ID,
+		        INSTALL_DATE,
+		        'MME' AS TYPE
+		      FROM
+		        TB_CO_MME
+		      UNION ALL
+		      SELECT
+		        PGW_ID AS NE_ID,
+		        PGW_IP AS NE_IP,
+		        PGW_NAME AS NE_NAME,
+		        EMS_ID,
+		        VENDOR_ID,
+		        INSTALL_DATE,
+		        'GW' AS TYPE
+		      FROM
+		        TB_CO_PGW
+		      UNION ALL
+		      SELECT
+		        SYSTEM_ID AS NE_ID,
+		        IP AS NE_IP,
+		        SYSTEM_NAME AS NE_NAME,
+		        EMS_ID,
+		        VENDOR_ID,
+		        INSTALL_DATE,
+		        'HSS' AS TYPE
+		      FROM
+		        TB_CO_SYSTEM_ETC
+		      WHERE
+		        EQUIP_TYPE = 6
+		      UNION ALL
+		      SELECT
+		        PCRF_ID AS NE_ID,
+		        PCRF_IP AS NE_IP,
+		        PCRF_NAME AS NE_NAME,
+		        EMS_ID,
+		        VENDOR_ID,
+		        INSTALL_DATE,
+		        'PCRF' AS TYPE
+		      FROM
+		        TB_CO_PCRF
+		    ) AS EPC_DATA
+		   WHERE
+			1=1
+			<if test="epc_name != ''">
+				AND NE_NAME LIKE (CONCAT('%', #{epc_name}, '%'))
+			</if>
+		  ) AS COUNT
+		WHERE
+			1=1
+			<if test="epc_name != ''">
+				AND NE_NAME LIKE (CONCAT('%', #{epc_name}, '%'))
+			</if>
+		ORDER BY
+			NE_ID DESC
+		LIMIT #{pageNo}, #{pagingNum}
+	</select>
+	
+	<select id="getEmsName" resultType="java.util.HashMap"> 
+		SELECT
+			EMSB.EMS_ID, 
+			(
+				SELECT GROUP_CONCAT(EMS_NAME SEPARATOR ', ')
+				FROM TB_CO_EMS AS EMSA
+				WHERE EMSA.EMS_ID = EMSB.EMS_ID
+			) AS EMS_NAME
+			
+		FROM
+			TB_CO_EMS AS EMSB
+		GROUP BY
+			 EMSB.EMS_ID
+		ORDER BY
+			EMS_NAME DESC
+	</select>
+	
+	<select id="getVendor" resultType="java.util.HashMap"> 
+		SELECT
+			VENDOR_ID,
+			VENDOR_NAME
+		FROM
+			TB_CO_VENDOR
+		GROUP BY
+			VENDOR_ID,VENDOR_NAME
+		ORDER BY
+			VENDOR_NAME DESC
+	</select>
+</mapper>

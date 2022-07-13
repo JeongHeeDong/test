@@ -1,0 +1,1231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.PmEpcMonitorDAO">
+	<select id = "getMaxDateTime" resultType="java.lang.String">
+		SELECT 
+			MAX(EVENT_TIME) AS UPDATE_DATE
+		FROM 
+			TB_SM_COLLECT_LOG 
+		WHERE 
+			DATA_NAME IN 
+			(
+			'TB_PM_MME_ATTACH' , 'TB_PM_MME_SR' , 'TB_PM_MME_SRMT', 'TB_PM_MME_SGSAP', 'TB_PM_PGW_CREATE', 'TB_PM_PGW_DELETE',
+			'TB_PM_PGW_MODIFY', 'TB_PM_SGW_ATTACH', 'TB_PM_SGW_MODIFY', 'TB_PM_HSS_S6A', 'TB_PM_HSS_CX', 'TB_PM_PCRF_GX', 'TB_PM_PCRF_RX'  
+			)
+	</select>
+	
+	<select id = "getMmeSearchData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			<foreach collection = "mmeArrayTime" item="value">
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(ATTACH_TIME,'%Y%m%d%H%i') = #{value} THEN  ATTACH_ATTEMPT END),'-') 			AS MAA_${value},	-- ATTACH 시도호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(ATTACH_TIME,'%Y%m%d%H%i') = #{value} THEN  ATTACH_STD_ATT END),'-') 			AS MAAS_${value},	-- ATTACH 기준 시도호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(ATTACH_TIME,'%Y%m%d%H%i') = #{value} THEN  ATTACH_ATT_RATE END),'-') 			AS MAR_${value},	-- ATTACH 시도호 증감율
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(ATTACH_TIME,'%Y%m%d%H%i') = #{value} THEN  ATTACH_ATT_RATE_LEVEL END),'-') 	AS MARL_${value},	-- ATTACH 시도호 증감율 임계치
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(ATTACH_TIME,'%Y%m%d%H%i') = #{value} THEN  ATTACH_SUCCESS END),'-')			AS MAS_${value},	-- ATTATCH 성공호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(ATTACH_TIME,'%Y%m%d%H%i') = #{value} THEN  ATTACH_SUCC_RATE END),'-') 			AS MASR_${value},	-- ATTACH 성공율
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(ATTACH_TIME,'%Y%m%d%H%i') = #{value} THEN  ATTACH_SUCC_LEVEL END),'-')			AS MASRL_${value},	-- ATTACH 성공율 임계치 
+				
+				 
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(SR_TIME,'%Y%m%d%H%i') = #{value} THEN  SR_ATTEMPT END),'-') 					AS MSA_${value},	-- SR 시도호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(SR_TIME,'%Y%m%d%H%i') = #{value} THEN  SR_STD_ATT END),'-') 					AS MSAS_${value},	-- SR 기준 시도호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(SR_TIME,'%Y%m%d%H%i') = #{value} THEN  SR_ATT_RATE END),'-') 					AS MSAR_${value},	-- SR 시도호 증감율
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(SR_TIME,'%Y%m%d%H%i') = #{value} THEN  SR_ATT_RATE_LEVEL END),'-') 			AS MSARL_${value},	-- SR 시도호 증감율 임계치
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(SR_TIME,'%Y%m%d%H%i') = #{value} THEN  SR_SUCCESS END),'-') 					AS MSS_${value},	-- SR 성공호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(SR_TIME,'%Y%m%d%H%i') = #{value} THEN  SR_SUCC_RATE END),'-') 					AS MSSR_${value},	-- SR 성공율
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(SR_TIME,'%Y%m%d%H%i') = #{value} THEN  SR_SUCC_LEVEL END),'-') 				AS MSSRL_${value},	-- SR 성공율 임계치
+				
+				
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(SRMT_TIME,'%Y%m%d%H%i') = #{value} THEN  SRMT_ATTEMPT END),'-') 				AS MTA_${value},	-- SRMT 시도호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(SRMT_TIME,'%Y%m%d%H%i') = #{value} THEN  SRMT_STD_ATT END),'-') 				AS MTSA_${value},	-- SRMT 기준 시도호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(SRMT_TIME,'%Y%m%d%H%i') = #{value} THEN  SRMT_ATT_RATE END),'-') 				AS MTAR_${value},	-- SRMT 시도호 증감율
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(SRMT_TIME,'%Y%m%d%H%i') = #{value} THEN  SRMT_ATT_RATE_LEVEL END),'-') 		AS MTARL_${value},	-- SRMT 시도호 증감율 임계치
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(SRMT_TIME,'%Y%m%d%H%i') = #{value} THEN  SRMT_SUCCESS END),'-') 				AS MTS_${value},	-- SRMT 성공호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(SRMT_TIME,'%Y%m%d%H%i') = #{value} THEN  SRMT_SUCC_RATE END),'-') 				AS MTSR_${value},	-- SRMT 성공율
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(SRMT_TIME,'%Y%m%d%H%i') = #{value} THEN  SRMT_SUCC_LEVEL END),'-') 			AS MTSRL_${value},	-- SRMT 성공율 임계치
+				
+			</foreach>
+			IFNULL(MME_ID,'-') AS MME_ID,
+			IFNULL(MME_NAME,'-') AS MME_NAME
+		FROM
+			(
+				SELECT
+					MME_ID,
+					MME_NAME,
+					EVENT_TIME 		AS ATTACH_TIME,
+					WEEKDAY	 		AS ATTACH_WEEKDAY,
+					MIN 			AS ATTACH_MIN,
+					ATTEMPT 		AS ATTACH_ATTEMPT,                 -- ATTACH 시도호      //
+					STD_ATT_5M 		AS ATTACH_STD_ATT,            -- ATTACH 기준 시도호   //
+					ATT_RATE 		AS ATTACH_ATT_RATE,               -- ATTACH 전주대비 시도호 증감율
+					ATT_RATE_LEVEL 	AS ATTACH_ATT_RATE_LEVEL,   -- ATTACH 시도호 증감율 임계치 등급
+					SUCCESS 		AS ATTACH_SUCCESS,                 -- ATTACH 성공호      //
+					SUCC_RATE 		AS ATTACH_SUCC_RATE,             -- ATTACH 성공율
+					SUCC_RATE_LEVEL AS ATTACH_SUCC_LEVEL,      -- ATTACH 성공율 임계치 등급
+					ANSWER			AS ATTACH_ANSWER,                  -- ATTACH 완료호      //
+					ANS_RATE 		AS ATTACH_ANS_RATE,               -- ATTACH 완료율
+					ANS_RATE_LEVEL 	AS ATTACH_ANS_LEVEL,        -- ATTACH 완료율 임계치 등금
+					
+					'' AS SR_TIME,
+					'' AS SR_WEEKDAY,
+					'' AS SR_MIN,
+					'' AS SR_ATTEMPT,  -- SR 시도호        //
+					'' AS SR_STD_ATT,  -- SR 기준 시도호     //
+					'' AS SR_ATT_RATE,
+					'' AS SR_ATT_RATE_LEVEL,
+					'' AS SR_SUCCESS,  -- SR 성공호        //
+					'' AS SR_SUCC_RATE,
+					'' AS SR_SUCC_LEVEL,
+					'' AS SR_ANSWER,    -- SR 완료호        //
+					'' AS SR_ANS_RATE,
+					'' AS SR_ANS_LEVEL,  
+					
+					'' AS SRMT_TIME,
+					'' AS SRMT_WEEKDAY,
+					'' AS SRMT_MIN,
+					'' AS SRMT_ATTEMPT, 	-- SRMT 시도호        //
+					'' AS SRMT_STD_ATT,  	-- SRMT 기준 시도호     //
+					'' AS SRMT_ATT_RATE,
+					'' AS SRMT_ATT_RATE_LEVEL,
+					'' AS SRMT_SUCCESS,  	--  SRMT 성공호        //
+					'' AS SRMT_SUCC_RATE,
+					'' AS SRMT_SUCC_LEVEL,
+					'' AS SRMT_ANSWER,    	-- SRMT 완료호        //
+					'' AS SRMT_ANS_RATE,
+					'' AS SRMT_ANS_LEVEL
+					
+				FROM
+					TB_PM_MME_ATTACH
+				WHERE
+					EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{mmeStartTime},'%Y%m%d%H%i')
+					AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{mmeEndTime},'%Y%m%d%H%i')
+			UNION ALL
+				SELECT
+					MME_ID,
+					MME_NAME,
+					'' AS ATTACH_TIME,
+					'' AS ATTACH_WEEKDAY,
+					'' AS ATTACH_MIN,
+					'' AS ATTACH_ATTEMPT,              -- ATTACH 시도호      //
+					'' AS ATTACH_STD_ATT,              -- ATTACH 기준 시도호   //
+					'' AS ATTACH_ATT_RATE,
+					'' AS ATTACH_ATT_RATE_LEVEL,
+					'' AS ATTACH_SUCCESS,                 -- ATTACH 성공호      //
+					'' AS ATTACH_SUCC_RATE,
+					'' AS ATTACH_SUCC_LEVEL,
+					'' AS ATTACH_ANSWER,                  -- ATTACH 완료호      //
+					'' AS ATTACH_ANS_RATE,
+					'' AS ATTACH_ANS_LEVEL,
+					
+					EVENT_TIME 		AS SR_TIME,
+					WEEKDAY 		AS SR_WEEKDAY,
+					MIN 			AS SR_MIN,
+					ATTEMPT 		AS SR_ATTEMPT,                -- SR 시도호        //
+					STD_ATT_5M 		AS SR_STD_ATT,             -- SR 기준 시도호     //
+					ATT_RATE 		AS SR_ATT_RATE,              -- SR 시도호 증감율
+					ATT_RATE_LEVEL 	AS SR_ATT_RATE_LEVEL,  -- SR 시도호 증감율 임계치 등급
+					SUCCESS 		AS SR_SUCCESS,                -- SR 성공호        //
+					SUCC_RATE 		AS SR_SUCC_RATE,            -- SR 성공율
+					SUCC_RATE_LEVEL AS SR_SUCC_LEVEL,     -- SR 성공율 임계치 등급
+					ANSWER 			AS SR_ANSWER,                  -- SR 완료호        //
+					ANS_RATE 		AS SR_ANS_RATE,              -- SR 완료율
+					ANS_RATE_LEVEL	AS SR_ANS_LEVEL,       -- SR 완료율 임계치 등급
+					
+					'' AS SRMT_TIME,
+					'' AS SRMT_WEEKDAY,
+					'' AS SRMT_MIN,
+					'' AS SRMT_ATTEMPT, 	-- SRMT 시도호        //
+					'' AS SRMT_STD_ATT,  	-- SRMT 기준 시도호     //
+					'' AS SRMT_ATT_RATE,
+					'' AS SRMT_ATT_RATE_LEVEL,
+					'' AS SRMT_SUCCESS,  	--  SRMT 성공호        //
+					'' AS SRMT_SUCC_RATE,
+					'' AS SRMT_SUCC_LEVEL,
+					'' AS SRMT_ANSWER,    	-- SRMT 완료호        //
+					'' AS SRMT_ANS_RATE,
+					'' AS SRMT_ANS_LEVEL
+				FROM
+					TB_PM_MME_SR
+				WHERE
+					EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{mmeStartTime},'%Y%m%d%H%i')
+					AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{mmeEndTime},'%Y%m%d%H%i')
+			UNION ALL
+				SELECT
+					MME_ID,
+					MME_NAME,
+					'' AS ATTACH_TIME,
+					'' AS ATTACH_WEEKDAY,
+					'' AS ATTACH_MIN,
+					'' AS ATTACH_ATTEMPT,              -- ATTACH 시도호      //
+					'' AS ATTACH_STD_ATT,              -- ATTACH 기준 시도호   //
+					'' AS ATTACH_ATT_RATE,
+					'' AS ATTACH_ATT_RATE_LEVEL,
+					'' AS ATTACH_SUCCESS,                 -- ATTACH 성공호      //
+					'' AS ATTACH_SUCC_RATE,
+					'' AS ATTACH_SUCC_LEVEL,
+					'' AS ATTACH_ANSWER,                  -- ATTACH 완료호      //
+					'' AS ATTACH_ANS_RATE,
+					'' AS ATTACH_ANS_LEVEL,
+					
+					'' AS SR_TIME,
+					'' AS SR_WEEKDAY,
+					'' AS SR_MIN,
+					'' AS SR_ATTEMPT,  -- SR 시도호        //
+					'' AS SR_STD_ATT,  -- SR 기준 시도호     //
+					'' AS SR_ATT_RATE,
+					'' AS SR_ATT_RATE_LEVEL,
+					'' AS SR_SUCCESS,  -- SR 성공호        //
+					'' AS SR_SUCC_RATE,
+					'' AS SR_SUCC_LEVEL,
+					'' AS SR_ANSWER,    -- SR 완료호        //
+					'' AS SR_ANS_RATE,
+					'' AS SR_ANS_LEVEL,
+					
+					
+					EVENT_TIME	 	AS SRMT_TIME,
+					WEEKDAY 		AS SRMT_WEEKDAY,
+					MIN 			AS SRMT_MIN,
+					ATTEMPT 		AS SRMT_ATTEMPT, 	-- SRMT 시도호        //
+					STD_ATT_5M 		AS SRMT_STD_ATT,  	-- SRMT 기준 시도호     //
+					ATT_RATE 		AS SRMT_ATT_RATE,
+					ATT_RATE_LEVEL 	AS SRMT_ATT_RATE_LEVEL,
+					SUCCESS 		AS SRMT_SUCCESS,  	--  SRMT 성공호        //
+					SUCC_RATE 		AS SRMT_SUCC_RATE,
+					SUCC_RATE_LEVEL AS SRMT_SUCC_LEVEL,
+					ANSWER 			AS SRMT_ANSWER,    	-- SRMT 완료호        //
+					ANS_RATE 		AS SRMT_ANS_RATE,
+					ANS_RATE_LEVEL 	AS SRMT_ANS_LEVEL
+
+				FROM
+					TB_PM_MME_SRMT
+				WHERE
+					EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{mmeStartTime},'%Y%m%d%H%i')
+					AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{mmeEndTime},'%Y%m%d%H%i')
+			
+			) AS MME
+		GROUP BY
+			MME_ID
+	</select>
+	
+	<select id = "getPgwSearchData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			<foreach collection = "pgwArrayTime" item="value">
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(CRE_TIME,'%Y%m%d%H%i') = #{value} THEN  CRE_ATT END),'-') 					AS PCA_${value},			-- 시도호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(CRE_TIME,'%Y%m%d%H%i') = #{value} THEN  CRE_ATT_STD END),'-') 				AS PCAS_${value},	-- 기준 시도호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(CRE_TIME,'%Y%m%d%H%i') = #{value} THEN  CRE_ATT_RATE END),'-') 			AS PCAR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(CRE_TIME,'%Y%m%d%H%i') = #{value} THEN  CRE_ATT_RATE_LEVEL END),'-') 		AS PCARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(CRE_TIME,'%Y%m%d%H%i') = #{value} THEN  CRE_SUCC END),'-') 				AS PCS_${value},		-- 성공호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(CRE_TIME,'%Y%m%d%H%i') = #{value} THEN  FORMAT(CRE_SUCC_RATE,2) END),'-') 	AS PCSR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(CRE_TIME,'%Y%m%d%H%i') = #{value} THEN  CRE_SUCC_LEVEL END),'-') 			AS PCSRL_${value},
+				
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(DEL_TIME,'%Y%m%d%H%i') = #{value} THEN  DEL_ATT END),'-') 					AS PDA_${value},			-- 시도호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(DEL_TIME,'%Y%m%d%H%i') = #{value} THEN  DEL_ATT_STD END),'-') 				AS PDAS_${value},	-- 기준 시도호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(DEL_TIME,'%Y%m%d%H%i') = #{value} THEN  DEL_ATT_RATE END),'-') 			AS PDAR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(DEL_TIME,'%Y%m%d%H%i') = #{value} THEN  DEL_ATT_RATE_LEVEL END),'-') 		AS PDARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(DEL_TIME,'%Y%m%d%H%i') = #{value} THEN  DEL_SUCC END),'-') 				AS PDS_${value},		-- 성공호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(DEL_TIME,'%Y%m%d%H%i') = #{value} THEN  FORMAT(DEL_SUCC_RATE,2) END),'-') 	AS PDSR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(DEL_TIME,'%Y%m%d%H%i') = #{value} THEN  DEL_SUCC_LEVEL END),'-') 			AS PDSRL_${value},
+				
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(MODIFY_TIME,'%Y%m%d%H%i') = #{value} THEN  MODIFY_ATT END),'-') 			AS PMA_${value},			-- 시도호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(MODIFY_TIME,'%Y%m%d%H%i') = #{value} THEN  MODIFY_ATT_STD END),'-') 		AS PMAS_${value},		-- 기준 시도호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(MODIFY_TIME,'%Y%m%d%H%i') = #{value} THEN  MODIFY_ATT_RATE END),'-') 		AS PMAR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(MODIFY_TIME,'%Y%m%d%H%i') = #{value} THEN  MODIFY_ATT_RATE_LEVEL END),'-') AS PMARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(MODIFY_TIME,'%Y%m%d%H%i') = #{value} THEN  MODIFY_SUCC END),'-') 			AS PMS_${value},			-- 성공호
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(MODIFY_TIME,'%Y%m%d%H%i') = #{value} THEN  FORMAT(MODIFY_SUCC_RATE,2) END),'-') AS PMSR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(MODIFY_TIME,'%Y%m%d%H%i') = #{value} THEN  MODIFY_SUCC_LEVEL END),'-')		 AS PMSRL_${value},
+			</foreach>
+			IFNULL(PGW_ID,'-') AS PGW_ID,
+			IFNULL(PGW_NAME,'-') AS PGW_NAME
+		FROM
+			(
+				SELECT
+					PGW_ID,
+					PGW_NAME,
+					EVENT_TIME AS CRE_TIME,
+					WEEKDAY AS CRE_WEEKDAY,
+					MIN AS CRE_MIN,
+					ATTEMPT AS CRE_ATT,
+					STD_ATT_5M AS CRE_ATT_STD,                                           --
+					ATT_RATE AS CRE_ATT_RATE,
+					ATT_RATE_LEVEL AS CRE_ATT_RATE_LEVEL,
+					SUCCESS AS CRE_SUCC,                                                 --
+					FORMAT(SUCC_RATE, 2) AS CRE_SUCC_RATE,
+					SUCC_RATE_LEVEL AS CRE_SUCC_LEVEL,
+					'' AS DEL_TIME,
+					'' AS DEL_WEEKDAY,
+					'' AS DEL_MIN,
+					'' AS DEL_ATT,                                                       --
+					'' AS DEL_ATT_STD,                                                   --
+					'' AS DEL_ATT_RATE,
+					'' AS DEL_ATT_RATE_LEVEL,
+					'' AS DEL_SUCC,                                                      --
+					'' AS DEL_SUCC_RATE,
+					'' AS DEL_SUCC_LEVEL,
+					'' AS MODIFY_TIME,
+					'' AS MODIFY_WEEKDAY,
+					'' AS MODIFY_MIN,
+					'' AS MODIFY_ATT,                                                    --
+					'' AS MODIFY_ATT_STD,                                                --
+					'' AS MODIFY_ATT_RATE,
+					'' AS MODIFY_ATT_RATE_LEVEL,
+					'' AS MODIFY_SUCC,                                                   --
+					'' AS MODIFY_SUCC_RATE,
+					'' AS MODIFY_SUCC_LEVEL
+				FROM
+					TB_PM_PGW_CREATE
+				WHERE
+					EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{pgwStartTime},'%Y%m%d%H%i')
+					AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{pgwEndTime},'%Y%m%d%H%i')
+			UNION ALL
+				SELECT
+					PGW_ID,
+					PGW_NAME,
+					'' AS CRE_TIME,
+					'' AS CRE_WEEKDAY,
+					'' AS CRE_MIN,
+					'' AS CRE_ATT,                                                       --
+					'' AS CRE_ATT_STD,                                                   --
+					'' AS CRE_ATT_RATE,
+					'' AS CRE_ATT_RATE_LEVEL,
+					'' AS CRE_SUCC,                                                      --
+					'' AS CRE_SUCC_RATE,
+					'' AS CRE_SUCC_LEVEL,
+					EVENT_TIME AS DEL_TIME,
+					WEEKDAY AS DEL_WEEKDAY,
+					MIN AS DEL_MIN,
+					ATTEMPT AS DEL_ATT,                                                  --
+					STD_ATT_5M AS DEL_ATT_STD,                                           --
+					ATT_RATE AS DEL_ATT_RATE,
+					ATT_RATE_LEVEL AS DEL_ATT_RATE_LEVEL,
+					SUCCESS AS DEL_SUCC,                                                 --
+					FORMAT(SUCC_RATE, 2) AS DEL_SUCC_RATE,
+					SUCC_RATE_LEVEL AS DEL_SUCC_LEVEL,
+					'' AS MODIFY_TIME,
+					'' AS MODIFY_WEEKDAY,
+					'' AS MODIFY_MIN,
+					'' AS MODIFY_ATT,                                                    --
+					'' AS MODIFY_ATT_STD,                                                --
+					'' AS MODIFY_ATT_RATE,
+					'' AS MODIFY_ATT_RATE_LEVEL,
+					'' AS MODIFY_SUCC,                                                   --
+					'' AS MODIFY_SUCC_RATE,
+					'' AS MODIFY_SUCC_LEVEL
+				FROM
+					TB_PM_PGW_DELETE
+				WHERE
+					EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{pgwStartTime},'%Y%m%d%H%i')
+					AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{pgwEndTime},'%Y%m%d%H%i')
+			UNION ALL
+				SELECT
+					PGW_ID,
+					PGW_NAME,
+					'' AS CRE_TIME,
+					'' AS CRE_WEEKDAY,
+					'' AS CRE_MIN,
+					'' AS CRE_ATT,      --
+					'' AS CRE_ATT_STD,  --
+					'' AS CRE_ATT_RATE,
+					'' AS CRE_ATT_RATE_LEVEL,
+					'' AS CRE_SUCC,      -- 
+					'' AS CRE_SUCC_RATE,
+					'' AS CRE_SUCC_LEVEL,
+					'' AS DEL_TIME,
+					'' AS DEL_WEEKDAY,
+					'' AS DEL_MIN,
+					'' AS DEL_ATT,      --
+					'' AS DEL_ATT_STD,  --
+					'' AS DEL_ATT_RATE,
+					'' AS DEL_ATT_RATE_LEVEL,
+					'' AS DEL_SUCC,  --
+					'' AS DEL_SUCC_RATE,
+					'' AS DEL_SUCC_LEVEL,
+					EVENT_TIME           AS MODIFY_TIME,
+					WEEKDAY              AS MODIFY_WEEKDAY,
+					MIN                  AS MODIFY_MIN,
+					ATTEMPT              AS MODIFY_ATT,      --
+					STD_ATT_5M           AS MODIFY_ATT_STD,  --
+					ATT_RATE             AS MODIFY_ATT_RATE,
+					ATT_RATE_LEVEL       AS MODIFY_ATT_RATE_LEVEL,
+					SUCCESS              AS MODIFY_SUCC,  --
+					FORMAT(SUCC_RATE, 2) AS MODIFY_SUCC_RATE,
+					SUCC_RATE_LEVEL      AS MODIFY_SUCC_LEVEL
+				FROM
+					TB_PM_PGW_MODIFY
+				WHERE
+					EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{pgwStartTime},'%Y%m%d%H%i')
+					AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{pgwEndTime},'%Y%m%d%H%i')
+			) AS PGW
+		GROUP BY
+			PGW_ID
+	</select>
+	
+	<select id = "getSgwSearchData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			<foreach collection = "sgwArrayTime" item="value">
+				
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(ATTACH_TIME,'%Y%m%d%H%i') = #{value} THEN  ATTACH_ATT END),'-') 					AS SAA_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(ATTACH_TIME,'%Y%m%d%H%i') = #{value} THEN  ATTACH_ATT_STD END),'-') 				AS SAAS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(ATTACH_TIME,'%Y%m%d%H%i') = #{value} THEN  ATTACH_ATT_RATE END),'-') 				AS SAAR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(ATTACH_TIME,'%Y%m%d%H%i') = #{value} THEN  ATTACH_ATT_RATE_LEVEL END),'-') 		AS SAARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(ATTACH_TIME,'%Y%m%d%H%i') = #{value} THEN  ATTACH_SUCC END),'-') 					AS SAS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(ATTACH_TIME,'%Y%m%d%H%i') = #{value} THEN  FORMAT(ATTACH_SUCC_RATE,2) END),'-') 	AS SASR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(ATTACH_TIME,'%Y%m%d%H%i') = #{value} THEN  ATTACH_SUCC_LEVEL END),'-') 			AS SASRL_${value},
+				
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(MODIFY_TIME,'%Y%m%d%H%i') = #{value} THEN  MODIFY_ATT END),'-') 					AS SMA_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(MODIFY_TIME,'%Y%m%d%H%i') = #{value} THEN  MODIFY_ATT_STD END),'-') 				AS SMAS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(MODIFY_TIME,'%Y%m%d%H%i') = #{value} THEN  MODIFY_ATT_RATE END),'-') 				AS SMAR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(MODIFY_TIME,'%Y%m%d%H%i') = #{value} THEN  MODIFY_ATT_RATE_LEVEL END),'-') 		AS SMARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(MODIFY_TIME,'%Y%m%d%H%i') = #{value} THEN  MODIFY_SUCC END),'-') 					AS SMS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(MODIFY_TIME,'%Y%m%d%H%i') = #{value} THEN  FORMAT(MODIFY_SUCC_RATE,2) END),'-') 	AS SMSR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(MODIFY_TIME,'%Y%m%d%H%i') = #{value} THEN  MODIFY_SUCC_LEVEL END),'-') 			AS SMSRL_${value},
+				
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(DELETE_TIME,'%Y%m%d%H%i') = #{value} THEN  DELETE_ATT END),'-') 					AS SDA_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(DELETE_TIME,'%Y%m%d%H%i') = #{value} THEN  DELETE_ATT_STD END),'-') 				AS SDAS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(DELETE_TIME,'%Y%m%d%H%i') = #{value} THEN  DELETE_ATT_RATE END),'-') 				AS SDAR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(DELETE_TIME,'%Y%m%d%H%i') = #{value} THEN  DELETE_ATT_RATE_LEVEL END),'-') 		AS SDARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(DELETE_TIME,'%Y%m%d%H%i') = #{value} THEN  DELETE_SUCC END),'-') 					AS SDS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(DELETE_TIME,'%Y%m%d%H%i') = #{value} THEN  FORMAT(DELETE_SUCC_RATE,2) END),'-') 	AS SDSR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(DELETE_TIME,'%Y%m%d%H%i') = #{value} THEN  DELETE_SUCC_LEVEL END),'-') 			AS SDSRL_${value},
+			</foreach>
+			IFNULL(SGW_ID,'-') AS SGW_ID,
+			IFNULL(SGW_NAME,'-') AS SGW_NAME
+		FROM
+			(
+				SELECT
+					SGW_ID,
+					SGW_NAME,
+					EVENT_TIME 					AS ATTACH_TIME,
+					WEEKDAY 					AS ATTACH_WEEKDAY,
+					MIN 						AS ATTACH_MIN,
+					ATTEMPT						AS ATTACH_ATT,							--
+					STD_ATT_5M					AS ATTACH_ATT_STD,						--
+					ATT_RATE 					AS ATTACH_ATT_RATE,
+					ATT_RATE_LEVEL 				AS ATTACH_ATT_RATE_LEVEL,
+					SUCCESS						AS ATTACH_SUCC,							--
+					FORMAT(SUCC_RATE,2) 		AS ATTACH_SUCC_RATE,
+					SUCC_RATE_LEVEL 			AS ATTACH_SUCC_LEVEL,
+					'' AS MODIFY_TIME,
+					'' AS MODIFY_WEEKDAY,
+					'' AS MODIFY_MIN,
+					'' AS MODIFY_ATT,							--
+					'' AS MODIFY_ATT_STD,						--
+					'' AS MODIFY_ATT_RATE,
+					'' AS MODIFY_ATT_RATE_LEVEL,
+					'' AS MODIFY_SUCC,							--
+					'' AS MODIFY_SUCC_RATE,
+					'' AS MODIFY_SUCC_LEVEL,
+					'' AS DELETE_TIME,
+					'' AS DELETE_WEEKDAY,
+					'' AS DELETE_MIN,
+					'' AS DELETE_ATT,							--
+					'' AS DELETE_ATT_STD,						--
+					'' AS DELETE_ATT_RATE,
+					'' AS DELETE_ATT_RATE_LEVEL,
+					'' AS DELETE_SUCC,							--
+					'' AS DELETE_SUCC_RATE,
+					'' AS DELETE_SUCC_LEVEL
+				FROM
+					TB_PM_SGW_ATTACH
+				WHERE
+					EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{sgwStartTime},'%Y%m%d%H%i')
+					AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{sgwEndTime},'%Y%m%d%H%i')
+			UNION ALL
+				SELECT
+					SGW_ID,
+					SGW_NAME,
+					'' AS ATTACH_TIME,
+					'' AS ATTACH_WEEKDAY,
+					'' AS ATTACH_MIN,
+					'' AS ATTACH_ATT,							--
+					'' AS ATTACH_ATT_STD,						--
+					'' AS ATTACH_ATT_RATE,
+					'' AS ATTACH_ATT_RATE_LEVEL,
+					'' AS ATTACH_SUCC,							--
+					'' AS ATTACH_SUCC_RATE,
+					'' AS ATTACH_SUCC_LEVEL,
+					EVENT_TIME 		AS MODIFY_TIME,
+					WEEKDAY 		AS MODIFY_WEEKDAY,
+					MIN 			AS MODIFY_MIN,
+					ATTEMPT 		AS MODIFY_ATT,					--
+					STD_ATT_5M 		AS MODIFY_ATT_STD,				--
+					ATT_RATE 		AS MODIFY_ATT_RATE,
+					ATT_RATE_LEVEL 	AS MODIFY_ATT_RATE_LEVEL,
+					SUCCESS 		AS MODIFY_SUCC,					--
+					FORMAT(SUCC_RATE,2) 	AS MODIFY_SUCC_RATE,
+					SUCC_RATE_LEVEL 		AS MODIFY_SUCC_LEVEL,
+					'' AS DELETE_TIME,
+					'' AS DELETE_WEEKDAY,
+					'' AS DELETE_MIN,
+					'' AS DELETE_ATT,							--
+					'' AS DELETE_ATT_STD,						--
+					'' AS DELETE_ATT_RATE,
+					'' AS DELETE_ATT_RATE_LEVEL,
+					'' AS DELETE_SUCC,							--
+					'' AS DELETE_SUCC_RATE,
+					'' AS DELETE_SUCC_LEVEL
+				FROM
+					TB_PM_SGW_MODIFY
+				WHERE
+					EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{sgwStartTime},'%Y%m%d%H%i')
+					AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{sgwEndTime},'%Y%m%d%H%i')
+			UNION ALL
+				SELECT
+					SGW_ID,
+					SGW_NAME,
+					'' AS ATTACH_TIME,
+					'' AS ATTACH_WEEKDAY,
+					'' AS ATTACH_MIN,
+					'' AS ATTACH_ATT,							--
+					'' AS ATTACH_ATT_STD,						--
+					'' AS ATTACH_ATT_RATE,
+					'' AS ATTACH_ATT_RATE_LEVEL,
+					'' AS ATTACH_SUCC,							--
+					'' AS ATTACH_SUCC_RATE,
+					'' AS ATTACH_SUCC_LEVEL,
+					'' AS MODIFY_TIME,
+					'' AS MODIFY_WEEKDAY,
+					'' AS MODIFY_MIN,
+					'' AS MODIFY_ATT,							--
+					'' AS MODIFY_ATT_STD,						--
+					'' AS MODIFY_ATT_RATE,
+					'' AS MODIFY_ATT_RATE_LEVEL,
+					'' AS MODIFY_SUCC,							--
+					'' AS MODIFY_SUCC_RATE,
+					'' AS MODIFY_SUCC_LEVEL,
+					EVENT_TIME 		AS DELETE_TIME,
+					WEEKDAY 		AS DELETE_WEEKDAY,
+					MIN 			AS DELETE_MIN,
+					ATTEMPT 		AS DELETE_ATT,					--
+					STD_ATT_5M 		AS DELETE_ATT_STD,				--
+					ATT_RATE 		AS DELETE_ATT_RATE,
+					ATT_RATE_LEVEL 	AS DELETE_ATT_RATE_LEVEL,
+					SUCCESS 		AS DELETE_SUCC,					--
+					FORMAT(SUCC_RATE,2) 	AS DELETE_SUCC_RATE,
+					SUCC_RATE_LEVEL 		AS DELETE_SUCC_LEVEL
+				FROM
+					TB_PM_SGW_DELETE
+				WHERE
+					EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{sgwStartTime},'%Y%m%d%H%i')
+					AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{sgwEndTime},'%Y%m%d%H%i')
+			) AS SGW
+		GROUP BY
+			SGW_ID
+	</select>
+	
+	<select id = "getHssSearchData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			<foreach collection = "hssArrayTime" item="value">
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(H6A_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  H6A_ATTEMPT END),'-') 				AS H6A_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(H6A_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  H6A_STD_ATT_5M END),'-') 			AS H6SA_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(H6A_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  H6A_ATT_RATE END),'-') 				AS H6AR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(H6A_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  H6A_ATT_RATE_LEVEL END),'-') 		AS H6ARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(H6A_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  H6A_SUCCESS END),'-') 				AS H6S_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(H6A_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  H6A_SUCC_RATE END),'-') 				AS H6SR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(H6A_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  H6A_SUCC_RATE_LEVEL END),'-') 		AS H6SRL_${value},
+				
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(CX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  CX_ATTEMPT END),'-') 					AS CA_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(CX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  CX_STD_ATT_5M END),'-') 				AS CSA_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(CX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  CX_ATT_RATE END),'-') 				AS CAR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(CX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  CX_ATT_RATE_LEVEL END),'-') 			AS CARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(CX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  CX_SUCCESS END),'-') 					AS CS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(CX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  CX_SUCC_RATE END),'-') 				AS CSR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(CX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  CX_SUCC_RATE_LEVEL END),'-') 			AS CSRL_${value},
+			</foreach>
+			IFNULL(HSS_ID, '-') AS HSS_ID,
+			IFNULL(HSS_NAME, '-') AS HSS_NAME  
+		FROM
+			(
+				SELECT
+					HSS_ID,
+					HSS_NAME,
+					EVENT_TIME AS H6A_EVENT_TIME,
+					ATTEMPT AS H6A_ATTEMPT,
+					STD_ATT_5M AS H6A_STD_ATT_5M,
+					ATT_RATE AS H6A_ATT_RATE,
+					ATT_RATE_LEVEL AS H6A_ATT_RATE_LEVEL,
+					SUCCESS AS H6A_SUCCESS,
+					SUCC_RATE AS H6A_SUCC_RATE,
+					SUCC_RATE_LEVEL AS H6A_SUCC_RATE_LEVEL,
+					
+					'' AS CX_EVENT_TIME,
+					'' AS CX_ATTEMPT,
+					'' AS CX_STD_ATT_5M,
+					'' AS CX_ATT_RATE,
+					'' AS CX_ATT_RATE_LEVEL,
+					'' AS CX_SUCCESS,
+					'' AS CX_SUCC_RATE,
+					'' AS CX_SUCC_RATE_LEVEL
+				FROM
+					TB_PM_HSS_S6A
+				WHERE
+					EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{hssStartTime},'%Y%m%d%H%i')
+					AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{hssEndTime},'%Y%m%d%H%i')
+					
+			UNION ALL
+				SELECT
+					HSS_ID,
+					HSS_NAME,
+					'' AS H6A_EVENT_TIME,
+					'' AS H6A_ATTEMPT, 
+					'' AS H6A_STD_ATT_5M,
+					'' AS H6A_ATT_RATE,
+					'' AS H6A_ATT_RATE_LEVEL,
+					'' AS H6A_SUCCESS,
+					'' AS H6A_SUCC_RATE,
+					'' AS H6A_SUCC_RATE_LEVEL,
+					
+					EVENT_TIME AS CX_EVENT_TIME,
+					ATTEMPT AS CX_ATTEMPT,
+					STD_ATT_5M AS CX_STD_ATT_5M,
+					ATT_RATE AS CX_ATT_RATE,
+					ATT_RATE_LEVEL AS CX_ATT_RATE_LEVEL,
+					SUCCESS AS CX_SUCCESS,
+					SUCC_RATE AS CX_SUCC_RATE,
+					SUCC_RATE_LEVEL AS CX_SUCC_RATE_LEVEL
+				FROM
+					TB_PM_HSS_CX
+				WHERE
+					
+					EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{hssStartTime},'%Y%m%d%H%i')
+					AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{hssEndTime},'%Y%m%d%H%i')
+			
+			) AS HSS
+	</select>
+	
+	<!-- TB_PM_HSS 테이블 사용안함 -->
+	<!-- <select id = "getHssSearchData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			<foreach collection = "hssArrayTime" item="value">
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 200 THEN  ATTEMPT END),'-') 			AS HDA_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 200 THEN  STD_ATT_5M END),'-') 			AS HDAS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 200 THEN  ATT_RATE END),'-') 			AS HDAR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 200 THEN  ATT_RATE_LEVEL END),'-') 		AS HDARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 200 THEN  SUCCESS END),'-') 			AS HDS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 200 THEN  SUCC_RATE END),'-') 			AS HDR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 200 THEN  SUCC_RATE_LEVEL END),'-') 	AS HDRL_${value},
+				
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 400 THEN  ATTEMPT END),'-') 			AS H6A_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 400 THEN  STD_ATT_5M END),'-') 			AS H6AS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 400 THEN  ATT_RATE END),'-') 			AS H6AR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 400 THEN  ATT_RATE_LEVEL END),'-') 		AS H6ARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 400 THEN  SUCCESS END),'-') 			AS H6S_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 400 THEN  SUCC_RATE END),'-') 			AS H6R_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 400 THEN  SUCC_RATE_LEVEL END),'-') 	AS H6RL_${value},
+				
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 300 THEN  ATTEMPT END),'-') 			AS H13A_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 300 THEN  STD_ATT_5M END),'-') 			AS H13AS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 300 THEN  ATT_RATE END),'-') 			AS H13AR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 300 THEN  ATT_RATE_LEVEL END),'-') 		AS H13ARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 300 THEN  SUCCESS END),'-') 			AS H13S_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 300 THEN  SUCC_RATE END),'-') 			AS H13R_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 300 THEN  SUCC_RATE_LEVEL END),'-') 	AS H13RL_${value},
+				
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 500 THEN  ATTEMPT END),'-') 			AS HSA_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 500 THEN  STD_ATT_5M END),'-') 			AS HSAS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 500 THEN  ATT_RATE END),'-') 			AS HSAR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 500 THEN  ATT_RATE_LEVEL END),'-') 		AS HSARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 500 THEN  SUCCESS END),'-') 			AS HSS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 500 THEN  SUCC_RATE END),'-') 			AS HSR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND GROUP_ID = 500 THEN  SUCC_RATE_LEVEL END),'-') 	AS HSRL_${value},
+			</foreach>
+			'HSS' AS HSS_NAME
+		FROM
+			(
+				SELECT
+					EVENT_TIME,
+					STATISTICS_TYPE,
+					ATTEMPT,
+					STD_ATT_5M,
+					ATT_RATE,
+					ATT_RATE_LEVEL,
+					SUCCESS,
+					SUCC_RATE,
+					SUCC_RATE_LEVEL,
+					GROUP_ID
+				FROM
+					TB_PM_HSS
+				WHERE
+					GROUP_ID IN (200,400,300,500)
+					AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{hssStartTime},'%Y%m%d%H%i')
+					AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{hssEndTime},'%Y%m%d%H%i')
+			) AS HSS
+	</select> -->
+	
+	<select id = "getPcrfSearchData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			<foreach collection = "pcrfArrayTime" item="value">
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(GX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  GX_ATTEMPT END),'-') 				AS GA_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(GX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  GX_STD_ATT_5M END),'-') 			AS GSA_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(GX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  GX_ATT_RATE END),'-') 			AS GAR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(GX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  GX_ATT_RATE_LEVEL END),'-') 		AS GARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(GX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  GX_SUCCESS END),'-') 				AS GS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(GX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  FORMAT(GX_SUCC_RATE,2) END),'-') 	AS GSR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(GX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  GX_SUCC_RATE_LEVEL END),'-') 		AS GSRL_${value}, 
+				
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(RX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  RX_ATTEMPT END),'-') 				AS RA_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(RX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  RX_STD_ATT_5M END),'-') 			AS RSA_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(RX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  RX_ATT_RATE END),'-') 			AS RAR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(RX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  RX_ATT_RATE_LEVEL END),'-') 		AS RARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(RX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  RX_SUCCESS END),'-') 				AS RS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(RX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  FORMAT(RX_SUCC_RATE,2) END),'-') 	AS RSR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(RX_EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  RX_SUCC_RATE_LEVEL END),'-') 		AS RSRL_${value},
+			</foreach>
+			IFNULL(PCRF_ID,'-') AS PCRF_ID,
+			IFNULL(PCRF_NAME,'-') AS PCRF_NAME
+		FROM
+			(
+				SELECT
+					EVENT_TIME AS GX_EVENT_TIME,
+					ATTEMPT AS GX_ATTEMPT,
+					STD_ATT_5M AS GX_STD_ATT_5M,
+					ATT_RATE AS GX_ATT_RATE,
+					ATT_RATE_LEVEL AS GX_ATT_RATE_LEVEL,
+					SUCCESS AS GX_SUCCESS,
+					SUCC_RATE AS GX_SUCC_RATE,
+					SUCC_RATE_LEVEL AS GX_SUCC_RATE_LEVEL,
+					
+					'' AS RX_EVENT_TIME,
+					'' AS RX_ATTEMPT,
+					'' AS RX_STD_ATT_5M,
+					'' AS RX_ATT_RATE,
+					'' AS RX_ATT_RATE_LEVEL,
+					'' AS RX_SUCCESS,
+					'' AS RX_SUCC_RATE,
+					'' AS RX_SUCC_RATE_LEVEL,
+					PCRF_ID,
+					PCRF_NAME
+				FROM
+					TB_PM_PCRF_GX
+				WHERE
+					EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{pcrfStartTime},'%Y%m%d%H%i')
+					AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{pcrfEndTime},'%Y%m%d%H%i')
+					
+			UNION ALL
+				SELECT
+					'' AS GX_EVENT_TIME,
+					'' AS GX_ATTEMPT,
+					'' AS GX_STD_ATT_5M,
+					'' AS GX_ATT_RATE,
+					'' AS GX_ATT_RATE_LEVEL,
+					'' AS GX_SUCCESS,
+					'' AS GX_SUCC_RATE,
+					'' AS GX_SUCC_RATE_LEVEL,
+
+					EVENT_TIME AS RX_EVENT_TIME,
+					ATTEMPT AS RX_ATTEMPT,  
+					STD_ATT_5M AS RX_STD_ATT_5M,
+					ATT_RATE AS RX_ATT_RATE,
+					ATT_RATE_LEVEL AS RX_ATT_RATE_LEVEL,
+					SUCCESS AS RX_SUCCESS,
+					SUCC_RATE AS RX_SUCC_RATE,
+					SUCC_RATE_LEVEL AS RX_SUCC_RATE_LEVEL,
+					PCRF_ID,
+					PCRF_NAME
+				FROM
+					TB_PM_PCRF_RX
+				WHERE
+					EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{pcrfStartTime},'%Y%m%d%H%i')
+					AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{pcrfEndTime},'%Y%m%d%H%i')
+			) AS PCRF
+	</select>
+	<!-- TB_PM_PCRF 테이블 사용안함 -->
+	<!-- <select id = "getPcrfSearchData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			<foreach collection = "pcrfArrayTime" item="value">
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'PCEF' THEN  ATTEMPT END),'-') 				AS PA_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'PCEF' THEN  STD_ATT_5M END),'-') 			AS PAS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'PCEF' THEN  ATT_RATE END),'-') 			AS PAR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'PCEF' THEN  ATT_RATE_LEVEL END),'-') 		AS PARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'PCEF' THEN  SUCCESS END),'-') 				AS PS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'PCEF' THEN  FORMAT(SUCC_RATE,2) END),'-') 	AS PR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'PCEF' THEN  SUCC_RATE_LEVEL END),'-') 		AS PRL_${value},
+				
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'SPR' THEN  ATTEMPT END),'-') 				AS PSA_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'SPR' THEN  STD_ATT_5M END),'-') 			AS PSAS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'SPR' THEN  ATT_RATE END),'-') 				AS PSAR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'SPR' THEN  ATT_RATE_LEVEL END),'-') 		AS PSARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'SPR' THEN  SUCCESS END),'-') 				AS PSS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'SPR' THEN  FORMAT(SUCC_RATE,2) END),'-') 	AS PSR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'SPR' THEN  SUCC_RATE_LEVEL END),'-') 		AS PSRL_${value},
+				
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'AF' THEN  ATTEMPT END),'-') 				AS AFA_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'AF' THEN  STD_ATT_5M END),'-') 			AS AFAS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'AF' THEN  ATT_RATE END),'-') 				AS AFAR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'AF' THEN  ATT_RATE_LEVEL END),'-') 		AS AFARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'AF' THEN  SUCCESS END),'-') 				AS AFS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'AF' THEN  FORMAT(SUCC_RATE,2) END),'-') 	AS AFR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} AND KPI_TYPE = 'AF' THEN  SUCC_RATE_LEVEL END),'-') 		AS AFRL_${value},
+			</foreach>
+			IFNULL(PCRF_ID,'-') AS PCRF_ID,
+			IFNULL(PCRF_NAME,'-') AS PCRF_NAME
+		FROM
+			(
+				SELECT
+					EVENT_TIME,
+					ATTEMPT,
+					STD_ATT_5M,
+					ATT_RATE,
+					ATT_RATE_LEVEL,
+					SUCCESS,
+					SUCC_RATE,
+					SUCC_RATE_LEVEL,
+					PCRF_ID,
+					PCRF_NAME,
+					KPI_TYPE
+				FROM
+					TB_PM_PCRF
+				WHERE
+					KPI_TYPE IN ('PCEF','SPR','AF')
+					AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{pcrfStartTime},'%Y%m%d%H%i')
+					AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{pcrfEndTime},'%Y%m%d%H%i')
+			) AS PCRF
+	</select> -->
+	
+	<select id="getPopEpcTrendData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME,
+			DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') AS COMP_TIME,
+			IFNULL(ATTEMPT,0) AS ATTEMPT,
+			IFNULL(STD_ATT_5M,0) AS STD_ATT,
+			IFNULL(ATT_RATE, 0) AS ATT_RATE,
+		<if test='flag == "1"'>
+			<if test='kpi == "1"'>
+					CASE WHEN ATTEMPT = 0 THEN 100 WHEN ATTEMPT IS NULL THEN 100 ELSE FORMAT(SUCC_RATE,2) END AS SUCC_RATE
+				FROM
+					TB_PM_MME_ATTACH
+			</if>
+			<if test='kpi == "2"'>
+					CASE WHEN ATTEMPT = 0 THEN 100 WHEN ATTEMPT IS NULL THEN 100 ELSE FORMAT(SUCC_RATE,2) END AS SUCC_RATE
+				FROM
+					TB_PM_MME_SR
+			</if>
+			<if test='kpi == "3"'>
+					CASE WHEN ATTEMPT = 0 THEN 100 WHEN ATTEMPT IS NULL THEN 100 ELSE FORMAT(SUCC_RATE,2) END AS SUCC_RATE
+				FROM
+					TB_PM_MME_SRMT
+			</if>
+			WHERE
+				MME_ID = #{equip_id}
+		</if>
+		<if test='flag == "4"'>
+			IFNULL(SUCC_RATE,0) AS SUCC_RATE
+			<if test='kpi == "1"'>
+				FROM
+					TB_PM_PGW_CREATE
+			</if>
+			<if test='kpi == "2"'>
+				FROM
+					TB_PM_PGW_DELETE
+			</if>
+			<if test='kpi == "3"'>
+				FROM
+					TB_PM_PGW_MODIFY
+			</if>
+		WHERE
+			PGW_ID = #{equip_id}
+		</if>
+		<if test='flag == "5"'>
+			CASE WHEN ATTEMPT = 0 THEN 100 WHEN ATTEMPT IS NULL THEN 100 ELSE FORMAT(SUCC_RATE,2) END AS SUCC_RATE
+			<if test='kpi == "1"'>
+				FROM
+					TB_PM_SGW_ATTACH
+			</if>
+			<if test='kpi == "2"'>
+				FROM
+					TB_PM_SGW_DELETE
+			</if>
+			<if test='kpi == "3"'>
+				FROM
+					TB_PM_SGW_MODIFY
+			</if>
+		WHERE
+			SGW_ID = #{equip_id}	
+		</if>
+		<if test='flag == "6"'>
+			CASE WHEN ATTEMPT = 0 THEN 100 WHEN ATTEMPT IS NULL THEN 100 ELSE FORMAT(SUCC_RATE,2) END AS SUCC_RATE
+			<if test='kpi == "1"'>
+				FROM
+					TB_PM_HSS_S6A
+			</if>
+			<if test='kpi == "2"'>
+				FROM
+					TB_PM_HSS_CX
+			</if>
+		WHERE
+			HSS_ID = #{equip_id}
+		</if>
+		<if test='flag == "7"'>
+			CASE WHEN ATTEMPT = 0 THEN 100 WHEN ATTEMPT IS NULL THEN 100 ELSE FORMAT(SUCC_RATE,2) END AS SUCC_RATE
+			<if test='kpi == "1"'>
+				FROM
+					TB_PM_PCRF_GX
+			</if>
+			<if test='kpi == "2"'>
+				FROM
+					TB_PM_PCRF_RX 
+			</if>
+		WHERE  
+			PCRF_ID = #{equip_id}
+		</if>
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+		ORDER BY
+			EVENT_TIME DESC
+	</select>
+	
+	<select id="getPopEpcDetailData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME,
+			IFNULL(ATTEMPT,0) AS ATTEMPT,
+			IFNULL(STD_ATT_5M,0) AS STD_ATT,
+			FORMAT(IFNULL(ATT_RATE,0),2) AS ATT_RATE,
+		<if test='flag == "1"'>
+			MME_ID AS NE_ID,
+			MME_NAME AS NE_NAME,
+			<if test='kpi == "1"'>
+					IFNULL(SUCC_RATE,0) AS SUCC_RATE,
+					IFNULL(SUCCESS,0) AS SUCCESS,
+					IFNULL(ANS_RATE,0) AS ANS_RATE,
+					IFNULL(ANSWER,0) AS ANSWER,
+					'ATTACH' AS KPI
+				FROM
+					TB_PM_MME_ATTACH
+			</if>
+			<if test='kpi == "2"'>
+					IFNULL(SUCC_RATE,0) AS SUCC_RATE,
+					IFNULL(SUCCESS,0) AS SUCCESS,
+					IFNULL(ANS_RATE,0) AS ANS_RATE,
+					IFNULL(ANSWER,0) AS ANSWER,
+					'SRMO' AS KPI
+				FROM
+					TB_PM_MME_SR
+			</if>
+			<if test='kpi == "3"'>
+					IFNULL(SUCC_RATE,0) AS SUCC_RATE,
+					IFNULL(SUCCESS,0) AS SUCCESS,
+					'SGsAP' AS KPI
+				FROM
+					TB_PM_MME_SRMT
+			</if>
+			WHERE
+				MME_ID = #{equip_id}
+		</if>
+		<if test='flag == "4"'>
+			PGW_ID AS NE_ID,
+			PGW_NAME AS NE_NAME,
+			IFNULL(SUCC_RATE,0) AS SUCC_RATE,
+			IFNULL(SUCCESS,0) AS SUCCESS,
+			<if test='kpi == "1"'>
+				'CREATE' AS KPI
+				FROM
+					TB_PM_PGW_CREATE
+			</if>
+			<if test='kpi == "2"'>
+				'DELETE' AS KPI 
+				FROM
+					TB_PM_PGW_DELETE
+			</if>
+			<if test='kpi == "3"'>
+				'MODIFY' AS KPI
+				FROM
+					TB_PM_PGW_MODIFY
+			</if>
+		WHERE
+			PGW_ID = #{equip_id}
+		</if>
+		<if test='flag == "5"'>
+			SGW_ID AS NE_ID,
+			SGW_NAME AS NE_NAME,
+			IFNULL(SUCC_RATE,0) AS SUCC_RATE,
+			IFNULL(SUCCESS,0) AS SUCCESS,
+			<if test='kpi == "1"'>
+				'ATTACH' AS KPI
+				FROM
+					TB_PM_SGW_ATTACH
+			</if>
+			<if test='kpi == "2"'>
+				'DELETE' AS KPI
+				FROM
+					TB_PM_SGW_DELETE
+			</if>
+			<if test='kpi == "3"'>
+				'MODIFY' AS KPI
+				FROM
+					TB_PM_SGW_MODIFY
+			</if>
+		WHERE
+			SGW_ID = #{equip_id}	
+		</if>
+		<if test='flag == "6"'>
+			HSS_ID AS NE_ID,
+			HSS_NAME AS NE_NAME,
+			IFNULL(SUCC_RATE,0) AS SUCC_RATE,
+			IFNULL(SUCCESS,0) AS SUCCESS,
+			<if test='kpi == "1"'>
+				'S6A' AS KPI
+				FROM
+					TB_PM_HSS_S6A
+			</if>
+			<if test='kpi == "2"'> 
+				'CX' AS KPI
+				FROM
+					TB_PM_HSS_CX
+			</if>
+		WHERE
+			HSS_ID = #{equip_id}
+		</if>
+		<if test='flag == "7"'>
+			PCRF_ID AS NE_ID,
+			PCRF_NAME AS NE_NAME,
+			IFNULL(SUCC_RATE,0) AS SUCC_RATE,
+			IFNULL(SUCCESS,0) AS SUCCESS,
+			<if test='kpi == "1"'>
+				'GX' AS KPI
+				FROM
+					TB_PM_PCRF_GX
+			</if>
+			<if test='kpi == "2"'>
+				'RX' AS KPI
+				FROM
+					TB_PM_PCRF_RX
+			</if>
+		WHERE
+			PCRF_ID = #{equip_id}
+		</if>
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+		ORDER BY
+		<if test = 'sortOption.size() > 0'>
+			<foreach collection="sortOption" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test = 'sortOption.size() == 0'>
+			EVENT_TIME DESC
+		</if>
+	</select>
+	
+	
+	<select id="getPopEpcDetailDataAll" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<if test='flag == "1"'>
+			SELECT 
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME,
+				IFNULL(ATTEMPT,0) AS ATTEMPT,
+				IFNULL(STD_ATT_5M,0) AS STD_ATT,
+				FORMAT(IFNULL(ATT_RATE,0),2) AS ATT_RATE,
+				MME_ID AS NE_ID,
+				MME_NAME AS NE_NAME,
+				IFNULL(SUCC_RATE,0) AS SUCC_RATE,
+				IFNULL(SUCCESS,0) AS SUCCESS,
+				IFNULL(ANS_RATE,0) AS ANS_RATE,
+				IFNULL(ANSWER,0) AS ANSWER,
+				KPI
+			FROM(
+				SELECT EVENT_TIME,ATTEMPT,STD_ATT_5M,ATT_RATE,MME_ID,MME_NAME,SUCC_RATE,SUCCESS,ANS_RATE,ANSWER,'ATTACH' AS KPI
+				FROM TB_PM_MME_ATTACH
+				WHERE MME_ID = #{equip_id}
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				<!-- 
+				UNION ALL
+				
+				SELECT EVENT_TIME,ATTEMPT,STD_ATT_5M,ATT_RATE,MME_ID,MME_NAME,SUCC_RATE,SUCCESS, 0 AS ANS_RATE, 0 AS ANSWER,'SGsAP' AS KPI
+				FROM TB_PM_MME_SGSAP
+				WHERE MME_ID = #{equip_id}
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				 -->
+				UNION ALL
+				
+				SELECT EVENT_TIME,ATTEMPT,STD_ATT_5M,ATT_RATE,MME_ID,MME_NAME,SUCC_RATE,SUCCESS,ANS_RATE,ANSWER,'SRMO' AS KPI
+				FROM TB_PM_MME_SR
+				WHERE MME_ID = #{equip_id}
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				
+				UNION ALL
+				
+				SELECT EVENT_TIME,ATTEMPT,STD_ATT_5M,ATT_RATE,MME_ID,MME_NAME,SUCC_RATE,SUCCESS,ANS_RATE,ANSWER,'SRMT' AS KPI
+				FROM TB_PM_MME_SRMT
+				WHERE MME_ID = #{equip_id}
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+			) AS A
+			ORDER BY
+			<if test = 'sortOption.size > 0'>
+				<foreach collection="sortOption" item="option" separator=",">
+					${option.colName} ${option.order}
+				</foreach>
+			</if>
+			<if test = 'sortOption.size() == 0'>
+				EVENT_TIME DESC
+			</if>
+		</if>
+		<if test='flag == "4"'>
+			SELECT
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME,
+				IFNULL(ATTEMPT,0) AS ATTEMPT,
+				IFNULL(STD_ATT_5M,0) AS STD_ATT,
+				FORMAT(IFNULL(ATT_RATE,0),2) AS ATT_RATE,
+				PGW_ID AS NE_ID,
+				PGW_NAME AS NE_NAME,
+				IFNULL(SUCC_RATE,0) AS SUCC_RATE,
+				IFNULL(SUCCESS,0) AS SUCCESS,
+				KPI
+			FROM(
+				SELECT EVENT_TIME,ATTEMPT,STD_ATT_5M,ATT_RATE,PGW_ID,PGW_NAME,SUCC_RATE,SUCCESS,'CREATE' AS KPI
+				FROM TB_PM_PGW_CREATE
+				WHERE
+				PGW_ID = #{equip_id}
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				UNION ALL
+				
+				SELECT EVENT_TIME,ATTEMPT,STD_ATT_5M,ATT_RATE,PGW_ID,PGW_NAME,SUCC_RATE,SUCCESS,'DELETE' AS KPI
+				FROM TB_PM_PGW_DELETE
+				WHERE 
+				PGW_ID = #{equip_id}
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				
+				UNION ALL
+				
+				SELECT EVENT_TIME,ATTEMPT,STD_ATT_5M,ATT_RATE,PGW_ID,PGW_NAME,SUCC_RATE,SUCCESS,'MODIFY' AS KPI
+				FROM TB_PM_PGW_MODIFY
+				WHERE 
+				PGW_ID = #{equip_id}
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+			) AS A
+			ORDER BY
+			<if test = 'sortOption.size() > 0'>
+				<foreach collection="sortOption" item="option" separator=",">
+					${option.colName} ${option.order}
+				</foreach>
+			</if>
+			<if test = 'sortOption.size() == 0'>
+				EVENT_TIME DESC
+			</if>
+		</if>
+		<if test='flag == "5"'>
+			SELECT
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME,
+				IFNULL(ATTEMPT,0) AS ATTEMPT,
+				IFNULL(STD_ATT_5M,0) AS STD_ATT,
+				FORMAT(IFNULL(ATT_RATE,0),2) AS ATT_RATE,
+				SGW_ID AS NE_ID,
+				SGW_NAME AS NE_NAME,
+				IFNULL(SUCC_RATE,0) AS SUCC_RATE,
+				IFNULL(SUCCESS,0) AS SUCCESS,
+				KPI
+			FROM(
+				SELECT EVENT_TIME,ATTEMPT,STD_ATT_5M,ATT_RATE,SGW_ID,SGW_NAME,SUCC_RATE,SUCCESS,'ATTACH' AS KPI
+				FROM TB_PM_SGW_ATTACH
+				WHERE
+				SGW_ID = #{equip_id}
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				UNION ALL
+				
+				SELECT EVENT_TIME,ATTEMPT,STD_ATT_5M,ATT_RATE,SGW_ID,SGW_NAME,SUCC_RATE,SUCCESS,'MODIFY' AS KPI
+				FROM TB_PM_SGW_MODIFY
+				WHERE 
+				SGW_ID = #{equip_id}
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				
+				SELECT EVENT_TIME,ATTEMPT,STD_ATT_5M,ATT_RATE,SGW_ID,SGW_NAME,SUCC_RATE,SUCCESS,'DELETE' AS KPI
+				FROM TB_PM_SGW_DELETE
+				WHERE 
+				SGW_ID = #{equip_id}
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+			) AS A
+			ORDER BY
+			<if test = 'sortOption.size() > 0'>
+				<foreach collection="sortOption" item="option" separator=",">
+					${option.colName} ${option.order}
+				</foreach>
+			</if>
+			<if test = 'sortOption.size() == 0'>
+				EVENT_TIME DESC
+			</if>
+		</if>
+		<if test='flag == "6"'>
+			SELECT
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME,
+				IFNULL(ATTEMPT,0) AS ATTEMPT,
+				IFNULL(STD_ATT_5M,0) AS STD_ATT,
+				FORMAT(IFNULL(ATT_RATE,0),2) AS ATT_RATE,
+				HSS_ID AS NE_ID,
+				HSS_NAME AS NE_NAME,
+				IFNULL(SUCC_RATE,0) AS SUCC_RATE,
+				IFNULL(SUCCESS,0) AS SUCCESS,  
+				KPI  
+			FROM(
+				SELECT EVENT_TIME,ATTEMPT,STD_ATT_5M,ATT_RATE,HSS_ID,HSS_NAME,SUCC_RATE,SUCCESS,'S6A' AS KPI
+				FROM TB_PM_HSS_S6A
+				WHERE
+				HSS_ID = #{equip_id}
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				UNION ALL
+				
+				SELECT EVENT_TIME,ATTEMPT,STD_ATT_5M,ATT_RATE,HSS_ID,HSS_NAME,SUCC_RATE,SUCCESS,'CX' AS KPI
+				FROM TB_PM_HSS_CX
+				WHERE 
+				HSS_ID = #{equip_id}
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+			) AS A
+			ORDER BY
+			<if test = 'sortOption.size() > 0'>
+				<foreach collection="sortOption" item="option" separator=",">
+					${option.colName} ${option.order}
+				</foreach>
+			</if>
+			<if test = 'sortOption.size() == 0'>
+				EVENT_TIME DESC
+			</if>
+		</if>
+		<if test='flag == "7"'>
+			SELECT
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME,
+				IFNULL(ATTEMPT,0) AS ATTEMPT,
+				IFNULL(STD_ATT_5M,0) AS STD_ATT,
+				FORMAT(IFNULL(ATT_RATE,0),2) AS ATT_RATE,
+				PCRF_ID AS NE_ID,
+				PCRF_NAME AS NE_NAME,
+				IFNULL(SUCC_RATE,0) AS SUCC_RATE, 
+				IFNULL(SUCCESS,0) AS SUCCESS,
+				KPI AS KPI
+			FROM(
+				SELECT EVENT_TIME,ATTEMPT,STD_ATT_5M,ATT_RATE,PCRF_ID,PCRF_NAME,SUCC_RATE,SUCCESS,'GX' AS KPI
+				FROM TB_PM_PCRF_GX
+				WHERE
+				PCRF_ID = #{equip_id}   
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				UNION ALL
+				
+				SELECT EVENT_TIME,ATTEMPT,STD_ATT_5M,ATT_RATE,PCRF_ID,PCRF_NAME,SUCC_RATE,SUCCESS,'RX' AS KPI
+				FROM TB_PM_PCRF_RX
+				WHERE 
+				PCRF_ID = #{equip_id}
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+			) AS A
+			ORDER BY
+			<if test = 'sortOption.size() > 0'>
+				<foreach collection="sortOption" item="option" separator=",">
+					${option.colName} ${option.order}
+				</foreach>
+			</if>
+			<if test = 'sortOption.size() == 0'>
+				EVENT_TIME DESC
+			</if>
+		</if>
+	</select>
+</mapper>

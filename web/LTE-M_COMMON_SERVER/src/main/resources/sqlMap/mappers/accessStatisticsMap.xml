@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.AccessStatisticsDAO">
+	<select id="getStatisticsData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			<if test="dateOptVal == 1">
+				DATE_FORMAT(LOG.EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+			</if>
+			<if test="dateOptVal == 2">
+				DATE_FORMAT(LOG.EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+			</if>
+			<if test="dateOptVal == 3">
+				DATE_FORMAT(LOG.EVENT_TIME,'%Y-%m') AS EVENT_TIME,
+			</if>
+		    <choose>
+		    	<when test="chk_user == 'true'">
+		    		IFNULL(CONCAT(LOG.USER_ID,'(',USER.USER_NAME,')'),'-') AS USER_IDNAME,
+		    	</when>
+		    	<otherwise>
+		    		'-' AS USER_IDNAME,
+		    	</otherwise>
+		    </choose>
+		    
+		    <choose>
+		    	<when test="chk_menu == 'true'">
+		    		LOG.MENU_NAME,
+		    	</when>
+		    	<otherwise>
+		    		'-' AS MENU_NAME,
+		    	</otherwise>
+		    </choose>
+		    
+		    <choose>
+		    	<when test="chk_ip == 'true'">
+		    		LOG.IP,
+		    	</when>
+		    	<otherwise>
+		    		'-' AS IP,
+		    	</otherwise>
+		    </choose>
+		    count(1) AS CNT,
+		    CNT_TB.TOTAL_COUNT
+		FROM
+			TB_SE_WEB_LOG AS LOG
+			LEFT OUTER JOIN
+			TB_SE_USER AS USER
+			ON LOG.USER_ID = USER.USER_ID,
+			(
+				SELECT SUM(COUNT.TOTAL_COUNT) AS TOTAL_COUNT
+				FROM(
+					SELECT
+						1 AS TOTAL_COUNT
+					FROM
+						TB_SE_WEB_LOG
+					WHERE
+						MENU_ID IS NOT NULL
+						<if test="dateOptVal == 1">
+							AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{from_dateTime},'%Y-%m-%d %H') 
+							AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(#{to_dateTime},'%Y-%m-%d %H')
+						</if>
+						<if test="dateOptVal == 2">
+							AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{from_dateTime},'%Y-%m-%d') 
+							AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(#{to_dateTime},'%Y-%m-%d')
+						</if>
+						<if test="dateOptVal == 3">
+							AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{from_dateTime},'%Y-%m') 
+							AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(#{to_dateTime},'%Y-%m')
+						</if>
+						
+						<if test="searchOptVal == 1">
+							<if test="searchWord != ''">
+								AND USER_ID like ('${searchWord}%')
+							</if>
+						</if>
+						<if test="searchOptVal == 2">
+							<if test="searchWord != ''">
+								AND MENU_NAME like ('%${searchWord}%')
+							</if>
+						</if>
+					GROUP BY
+						<if test="dateOptVal == 1">
+							DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H')
+						</if>
+						<if test="dateOptVal == 2">
+							DATE_FORMAT(EVENT_TIME,'%Y-%m-%d')
+						</if>
+						<if test="dateOptVal == 3">
+							DATE_FORMAT(EVENT_TIME,'%Y-%m')
+						</if>
+						<if test="chk_user == 'true'">
+							,USER_ID
+						</if>
+						<if test="chk_menu == 'true'">
+							,MENU_ID
+						</if>
+						<if test="chk_ip == 'true'">
+							,IP
+						</if>
+					) AS COUNT
+			) AS CNT_TB
+		WHERE
+			LOG.MENU_ID IS NOT NULL
+			<if test="dateOptVal == 1">
+				AND LOG.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{from_dateTime},'%Y-%m-%d %H') 
+				AND LOG.EVENT_TIME <![CDATA[<]]> STR_TO_DATE(#{to_dateTime},'%Y-%m-%d %H')
+			</if>
+			<if test="dateOptVal == 2">
+				AND LOG.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{from_dateTime},'%Y-%m-%d') 
+				AND LOG.EVENT_TIME <![CDATA[<]]> STR_TO_DATE(#{to_dateTime},'%Y-%m-%d')
+			</if>
+			<if test="dateOptVal == 3">
+				AND LOG.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{from_dateTime},'%Y-%m') 
+				AND LOG.EVENT_TIME <![CDATA[<]]> STR_TO_DATE(#{to_dateTime},'%Y-%m')
+			</if>
+			
+			<if test="searchOptVal == 1">
+				<if test="searchWord != ''">
+					AND LOG.USER_ID like ('${searchWord}%')
+				</if>
+			</if>
+			<if test="searchOptVal == 2">
+				<if test="searchWord != ''">
+					AND LOG.MENU_NAME like ('%${searchWord}%')
+				</if>
+			</if>
+		GROUP BY
+			<if test="dateOptVal == 1">
+				DATE_FORMAT(LOG.EVENT_TIME,'%Y-%m-%d %H')
+			</if>
+			<if test="dateOptVal == 2">
+				DATE_FORMAT(LOG.EVENT_TIME,'%Y-%m-%d')
+			</if>
+			<if test="dateOptVal == 3">
+				DATE_FORMAT(LOG.EVENT_TIME,'%Y-%m')
+			</if>
+			<if test="chk_user == 'true'">
+				,LOG.USER_ID
+			</if>
+			<if test="chk_menu == 'true'">
+				,LOG.MENU_ID
+			</if>
+			<if test="chk_ip == 'true'">
+				,LOG.IP
+			</if>
+		ORDER BY
+			CNT DESC,EVENT_TIME DESC
+	<if test='pageNo != null'>
+		LIMIT #{pageNo}, #{pagingNum}
+	</if>
+	</select>
+</mapper>

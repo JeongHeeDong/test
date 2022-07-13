@@ -1,0 +1,972 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.FailureSearchDAO">
+	
+	<select id="selectEquipType" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT	EQUIP_TYPE
+				,CASE
+					WHEN EQUIP_NAME = 'PGW' THEN 'GW'
+					WHEN EQUIP_TYPE = 14 THEN 'EMS'
+					ELSE EQUIP_NAME
+				END AS EQUIP_NAME
+		FROM	TB_CO_EQUIP
+		WHERE	EQUIP_FM = 'Y' 
+		<if test='equipDesc != "all"'>
+			AND EQUIP_DESC <![CDATA[=]]> #{equipDesc}
+		</if>
+	</select>
+	
+	<select id="selectSearchSystemList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<choose>
+			<!--
+			<when test='equipType == "0"'>
+				SELECT SYSTEM_ID, SYSTEM_NAME, EQUIP_TYPE  FROM VW_SYSTEM WHERE OPR_STATUS = 1 AND EQUIP_TYPE != 3
+			</when>
+			<when test='equipType == "2"'>
+				SELECT DU_ID AS SYSTEM_ID, DU_NAME AS SYSTEM_NAME FROM TB_CO_DU
+			</when>
+			<when test='equipType == "1"'>
+				SELECT MME_ID AS SYSTEM_ID, MME_NAME AS SYSTEM_NAME FROM TB_CO_MME
+			</when>
+			<when test='equipType == "4"'>
+				SELECT PGW_ID AS SYSTEM_ID, PGW_NAME AS SYSTEM_NAME FROM TB_CO_PGW
+			</when>
+			<when test='equipType == "5"'>
+				SELECT SGW_ID AS SYSTEM_ID, SGW_NAME AS SYSTEM_NAME FROM TB_CO_SGW
+			</when>
+			<when test='equipType == "7"'>
+				SELECT PCRF_ID AS SYSTEM_ID, PCRF_NAME AS SYSTEM_NAME FROM TB_CO_PCRF
+			</when>
+			<when test='equipType == "14"'>
+				SELECT EMS_ID AS SYSTEM_ID, EMS_NAME AS SYSTEM_NAME FROM TB_CO_EMS
+			</when>
+			<otherwise>
+				SELECT SYSTEM_ID, SYSTEM_NAME FROM TB_CO_SYSTEM_ETC WHERE EQUIP_TYPE = #{equipType}
+			</otherwise>
+			-->
+			<when test='equipType == "0"'>
+				SELECT
+					VW.SYSTEM_ID
+					,VW.SYSTEM_NAME
+					,VW.EQUIP_TYPE
+					,LINE.LINE_ID
+				FROM
+					VW_SYSTEM VW
+					<if test="equipDesc != 'all' and equipDesc.length() > 0">
+						INNER JOIN (
+							SELECT
+								EQUIP_TYPE
+							FROM
+								TB_CO_EQUIP
+							WHERE
+								EQUIP_FM = 'Y'
+								AND EQUIP_DESC = #{equipDesc}
+						) B
+							ON VW.EQUIP_TYPE = B.EQUIP_TYPE
+					</if>
+		  			LEFT OUTER JOIN 
+		  				(
+		  					SELECT
+								TB_CO_MME.MME_ID AS SYSTEM_ID
+								,'1' AS EQUIP_TYPE
+								,TB_CO_MME.STATION_ID AS STATION_ID
+							FROM
+								TB_CO_MME
+					        
+							UNION ALL
+					    
+							SELECT
+								TB_CO_PGW.PGW_ID AS SYSTEM_ID
+								,'4' AS EQUIP_TYPE
+								,TB_CO_PGW.STATION_ID AS STATION_ID
+							FROM 
+								TB_CO_PGW 
+					        
+							UNION ALL
+					    
+							SELECT 
+								TB_CO_PCRF.PCRF_ID AS SYSTEM_ID
+								,'6' AS EQUIP_TYPE
+								,TB_CO_PCRF.STATION_ID AS STATION_ID
+							FROM
+								TB_CO_PCRF
+					        
+					    UNION ALL    
+					    
+					    SELECT
+							TCSE.SYSTEM_ID AS SYSTEM_ID
+					      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE
+					      	,TCSE.LAREA_ID AS STATION_ID
+							FROM
+							  TB_CO_SYSTEM_ETC AS TCSE
+					      
+							UNION ALL
+							
+							SELECT
+								TCE.EMS_ID AS SYSTEM_ID
+					      ,TCE.EQUIP_TYPE AS EQUIP_TYPE
+								,TCE.STATION_ID AS STATION_ID
+							FROM
+								TB_CO_EMS TCE
+					
+					    UNION ALL
+					    
+					    SELECT
+					      TCD.DU_ID AS SYSTEM_ID
+					      ,'2' AS EQUIP_TYPE
+								,TCD.STATION_ID AS STATION_ID
+							FROM
+								TB_CO_DU TCD
+    
+		  				) EQUIP
+		  				ON VW.SYSTEM_ID = EQUIP.SYSTEM_ID
+		  				AND VW.EQUIP_TYPE = EQUIP.EQUIP_TYPE
+          LEFT OUTER JOIN
+            (
+              SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID
+              ) LINE
+              ON EQUIP.STATION_ID = LINE.STATION_ID
+				WHERE
+					VW.OPR_STATUS = 1
+					AND VW.EQUIP_TYPE != 3
+					<if test="lineId != '' and lineId != null ">
+						AND LINE.LINE_ID LIKE  (CONCAT('%', #{lineId}, '%'))
+					</if>
+				ORDER BY 
+					SYSTEM_ID ASC
+			</when>
+			<!-- <when test='equipType == "14"'>
+				SELECT
+					TCE.EMS_ID AS SYSTEM_ID
+					,TCE.EMS_NAME AS SYSTEM_NAME
+					,TCE.EQUIP_TYPE AS EQUIP_TYPE
+					,TCS.LINE_ID AS LINE_ID
+				FROM
+					TB_CO_EMS AS TCE
+					LEFT JOIN TB_CO_STATION AS TCS
+						ON TCE.STATION_ID = TCS.STATION_ID
+				WHERE 
+					<if test="lineId != '' and lineId != null ">
+						AND TCS.LINE_ID LIKE  (CONCAT('%', #{lineId}, '%'))
+					</if>
+				ORDER BY 
+					SYSTEM_ID ASC
+			</when> -->
+			<otherwise>
+				SELECT
+					VW.SYSTEM_ID AS SYSTEM_ID
+					,VW.SYSTEM_NAME AS SYSTEM_NAME
+					,VW.EQUIP_TYPE AS EQUIP_TYPE
+					,LINE.LINE_ID AS LINE_ID
+				FROM
+					VW_SYSTEM AS VW
+					LEFT OUTER JOIN 
+		  				(
+		  					SELECT
+								TB_CO_MME.MME_ID AS SYSTEM_ID
+								,'1' AS EQUIP_TYPE
+								,TB_CO_MME.STATION_ID AS STATION_ID
+							FROM
+								TB_CO_MME
+					        
+							UNION ALL
+					    
+							SELECT
+								TB_CO_PGW.PGW_ID AS SYSTEM_ID
+								,'4' AS EQUIP_TYPE
+								,TB_CO_PGW.STATION_ID AS STATION_ID
+							FROM 
+								TB_CO_PGW 
+					        
+							UNION ALL
+					    
+							SELECT
+								TB_CO_PCRF.PCRF_ID AS SYSTEM_ID
+								,'7' AS EQUIP_TYPE
+								,TB_CO_PCRF.STATION_ID AS STATION_ID
+							FROM
+								TB_CO_PCRF
+					        
+					    UNION ALL    
+					    
+					    SELECT
+							TCSE.SYSTEM_ID AS SYSTEM_ID
+					      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE
+					      	,TCSE.LAREA_ID AS STATION_ID
+							FROM
+							  TB_CO_SYSTEM_ETC AS TCSE
+					      
+							UNION ALL
+							
+							SELECT
+								TCE.EMS_ID AS SYSTEM_ID
+					      ,TCE.EQUIP_TYPE AS EQUIP_TYPE
+								,TCE.STATION_ID AS STATION_ID
+							FROM
+								TB_CO_EMS TCE
+					
+					    UNION ALL
+					    
+					    SELECT
+					      TCD.DU_ID AS SYSTEM_ID
+					      ,'2' AS EQUIP_TYPE
+								,TCD.STATION_ID AS STATION_ID
+							FROM
+								TB_CO_DU TCD
+    
+		  				) EQUIP
+		  				ON VW.SYSTEM_ID = EQUIP.SYSTEM_ID
+		  				AND VW.EQUIP_TYPE = EQUIP.EQUIP_TYPE
+          LEFT OUTER JOIN
+            (
+              SELECT 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, GROUP_CONCAT(TCL.LINE_NAME) AS LINE_NAME
+		            , GROUP_CONCAT(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          GROUP BY STATION_ID
+              ) LINE
+              ON EQUIP.STATION_ID = LINE.STATION_ID
+				WHERE
+					VW.OPR_STATUS = 1
+					AND VW.EQUIP_TYPE != 3
+					AND VW.EQUIP_TYPE = #{equipType}
+					<if test="lineId != '' and lineId != null ">
+						AND LINE.LINE_ID LIKE  (CONCAT('%', #{lineId}, '%'))
+					</if>
+				ORDER BY 
+					SYSTEM_ID ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="selectFailureAlarmSearch" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			vs.SYSTEM_NAME,
+			ab.ALARM_CODE,
+			ab.PROBABLE_CAUSE,
+			eq.EQUIP_NAME,
+			ab.SEVERITY,
+			ab.ALARM_STATE,
+			IFNULL(ab.EVENT_TIME,'') as EVENT_TIME,
+			IFNULL(ab.RECOVER_TIME,'') as RECOVER_TIME,
+			ab.TIME_TO_REPAIR,
+			ab.ALARM_TYPE,
+			vd.VENDOR_NAME,
+			tm.TEAM_NAME,
+			ab.FDN,
+			COUNT.TOTAL_COUNT,
+			CASE
+				WHEN ab.SEVERITY = 1 THEN 'CRITICAL'
+				WHEN ab.SEVERITY = 2 THEN 'MAJOR'
+				WHEN ab.SEVERITY = 3 THEN 'MINOR'
+				ELSE 'NORMAL'
+			END AS GRADE_TXT,
+			CASE
+				WHEN ab.ALARM_STATE = 0 THEN '해제'
+				WHEN ab.ALARM_STATE = 1 THEN '발생'
+				WHEN ab.ALARM_STATE = 2 THEN '인지'
+				WHEN ab.ALARM_STATE = 3 THEN '운영자해제'
+			END AS ALARM_STATE_TXT,
+			CASE
+				WHEN ab.ALARM_TYPE = 1 THEN 'ALARM'
+				WHEN ab.ALARM_TYPE = 2 THEN 'FAULT'
+				WHEN ab.ALARM_TYPE = 3 THEN 'STATUS'
+				WHEN ab.ALARM_TYPE = 4 THEN 'ETC'
+			END AS ALARM_TYPE_TXT
+			<!-- , ab.DEL_FLAG -->
+		FROM TB_FS_ALARM_ABNORMAL ab
+			left join VW_SYSTEM vs
+			ON ab.SYSTEM_ID = vs.SYSTEM_ID
+			AND ab.EQUIP_TYPE = vs.EQUIP_TYPE
+			left join TB_CO_TEAM tm
+			ON ab.TEAM_ID = tm.TEAM_ID
+			left join TB_CO_VENDOR vd
+			ON ab.VENDOR_ID = vd.VENDOR_ID
+			left join TB_CO_EQUIP eq
+			ON ab.EQUIP_TYPE = eq.EQUIP_TYPE
+			,(	SELECT COUNT(1) AS TOTAL_COUNT
+				FROM TB_FS_ALARM_ABNORMAL ab
+				WHERE CONCAT_WS('-', ab.SYSTEM_ID, ab.EQUIP_TYPE) IN (${systemIds})
+				AND ab.EVENT_TIME <![CDATA[>=]]> DATE_FORMAT(#{fromTime}, '%Y%m%d%H%i%s')
+				AND ab.EVENT_TIME <![CDATA[<=]]> ( DATE_FORMAT(#{toTime}, '%Y%m%d%H%i%s') )
+				<if test='alarmState == "0"'>
+					AND ab.ALARM_STATE != 3
+				</if>
+				<if test='alarmState == "3"'>
+					AND ab.ALARM_STATE = 3
+				</if>
+				
+				<if test='selectAlarm != null and selectAlarm != ""'>
+					AND gr.ALARM_GROUP_ID IN (${selectAlarm}) <!-- 특정알람(선택) -->
+				</if>
+				<if test='exceptAlarm != null and exceptAlarm != ""'>
+					AND gr.ALARM_GROUP_ID NOT IN (${exceptAlarm}) <!-- 특정알람(제외) -->
+				</if>
+				
+				<choose>
+					<when test='operator != null and operator != ""'>
+						<if test='operator == "and"'>
+							AND ab.C_EHOUR IN (${ehour}) AND ab.C_RHOUR IN (${rhour})
+						</if>
+						<if test='operator == "or"'>
+							AND (ab.C_EHOUR IN (${ehour}) OR ab.C_RHOUR IN (${rhour}))
+						</if>
+					</when>
+					<otherwise>
+						<if test='ehour != null and ehour != ""'>
+							AND ab.C_EHOUR IN (${ehour}) <!-- 특정시간(발생) -->
+						</if>
+						<if test='rhour != null and rhour != ""'>
+							AND ab.C_RHOUR IN (${rhour}) <!-- 특정시간(복구) -->
+						</if>
+					</otherwise>
+				</choose>
+				<if test='upper != null and upper != ""'>
+					AND ab.TIME_TO_REPAIR <![CDATA[>=]]> #{upper} <!-- 고장시간(초,분 이상) -->
+				</if>
+				<if test='lower != null and lower != ""'>
+					AND ab.TIME_TO_REPAIR <![CDATA[<=]]> #{lower} <!-- 고장시간(시간 이내) -->
+				</if>
+				<if test='spDate != null and spDate != ""'>
+					<!-- AND ab.EVENT_TIME NOT BETWEEN DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') AND (DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') + INTERVAL 1 DAY) -->
+					<!-- 특정일자제외 -->
+					AND ab.EVENT_TIME NOT BETWEEN DATE_FORMAT(#{spFromDate}, '%Y%m%d%H%i%s') AND DATE_FORMAT(#{spToDate}, '%Y%m%d%H%i%s')
+				</if>
+			) AS COUNT
+			
+		WHERE CONCAT_WS('-', ab.SYSTEM_ID, ab.EQUIP_TYPE) IN (${systemIds})
+		AND ab.EVENT_TIME <![CDATA[>=]]> DATE_FORMAT(#{fromTime}, '%Y%m%d%H%i%s')
+		AND ab.EVENT_TIME <![CDATA[<=]]> ( DATE_FORMAT(#{toTime}, '%Y%m%d%H%i%s') )
+
+		<if test='alarmFilter != null and alarmFilter != ""'>
+			AND ab.SEVERITY <![CDATA[<=]]> #{alarmFilter}
+		</if>
+
+		<if test='alarmState == "0"'>
+			AND ab.ALARM_STATE != 3
+		</if>
+		<if test='alarmState == "3"'>
+			AND ab.ALARM_STATE = 3
+		</if>
+		
+		<!-- 미복구 -->
+		<if test='unRecover != null and unRecover != ""'>
+			AND ab.EVENT_TIME <![CDATA[<=]]> DATE_FORMAT(now(), '%Y%m%d%H%i%s') - INTERVAL 1 DAY
+			AND ab.RECOVER_TIME is null
+		</if>
+		
+		<if test='selectAlarm != null and selectAlarm != ""'>
+			AND gr.ALARM_GROUP_ID IN (${selectAlarm}) <!-- 특정알람(선택) -->
+		</if>
+		<if test='exceptAlarm != null and exceptAlarm != ""'>
+			AND gr.ALARM_GROUP_ID NOT IN (${exceptAlarm}) <!-- 특정알람(제외) -->
+		</if>
+		
+		<choose>
+			<when test='operator != null and operator != ""'>
+				<if test='operator == "and"'>
+					AND ab.C_EHOUR IN (${ehour}) AND ab.C_RHOUR IN (${rhour})
+				</if>
+				<if test='operator == "or"'>
+					AND (ab.C_EHOUR IN (${ehour}) OR ab.C_RHOUR IN (${rhour}))
+				</if>
+			</when>
+			<otherwise>
+				<if test='ehour != null and ehour != ""'>
+					AND ab.C_EHOUR IN (${ehour}) <!-- 특정시간(발생) -->
+				</if>
+				<if test='rhour != null and rhour != ""'>
+					AND ab.C_RHOUR IN (${rhour}) <!-- 특정시간(복구) -->
+				</if>
+			</otherwise>
+		</choose>
+		<if test='upper != null and upper != ""'>
+			AND ab.TIME_TO_REPAIR <![CDATA[>=]]> #{upper} <!-- 고장시간(초,분 이상) -->
+		</if>
+		<if test='lower != null and lower != ""'>
+			AND ab.TIME_TO_REPAIR <![CDATA[<=]]> #{lower} <!-- 고장시간(시간 이내) -->
+		</if>
+		<if test='spDate != null and spDate != ""'>
+			<!-- AND ab.EVENT_TIME NOT BETWEEN DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') AND (DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') + INTERVAL 1 DAY) -->
+			<!-- 특정일자제외 -->
+			AND ab.EVENT_TIME NOT BETWEEN DATE_FORMAT(#{spFromDate}, '%Y%m%d%H%i%s') AND DATE_FORMAT(#{spToDate}, '%Y%m%d%H%i%s')
+		</if>
+		ORDER BY
+		<if test = 'sortOption.size() > 0'>
+			<foreach collection="sortOption" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test = 'sortOption.size() == 0'>
+			ab.EVENT_TIME DESC
+		</if>
+		<if test='pagingFlag == "Y"'>
+		LIMIT ${pageNo}, ${pagingNum}
+		</if>
+	</select>
+	
+	<select id="selectSelectedSystemList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			TB_FS_ALARM_ABNORMAL.SYSTEM_ID,
+			IFNULL(SYSTEM_TB.SYSTEM_NAME,'-') AS SYSTEM_NAME
+		FROM
+			TB_FS_ALARM_ABNORMAL
+			LEFT OUTER JOIN
+			<if test='equipType == "2"'>
+				(SELECT DU_ID AS SYSTEM_ID, DU_NAME AS SYSTEM_NAME FROM TB_CO_DU) AS SYSTEM_TB
+			</if>
+			<if test='equipType == "1"'>
+				(SELECT MME_ID AS SYSTEM_ID, MME_NAME AS SYSTEM_NAME FROM TB_CO_MME) AS SYSTEM_TB
+			</if>
+			<if test='equipType == "4"'>
+				(SELECT PGW_ID AS SYSTEM_ID, PGW_NAME AS SYSTEM_NAME FROM TB_CO_PGW) AS SYSTEM_TB
+			</if>
+			<if test='equipType == "5"'>
+				(SELECT SGW_ID AS SYSTEM_ID, SGW_NAME AS SYSTEM_NAME FROM TB_CO_SGW) AS SYSTEM_TB
+			</if>
+			<if test='equipType == "6"'>
+				(SELECT SYSTEM_ID, SYSTEM_NAME FROM TB_CO_SYSTEM_ETC WHERE EQUIP_TYPE = 6) AS SYSTEM_TB
+			</if>
+			<if test='equipType == "7"'>
+				(SELECT PCRF_ID AS SYSTEM_ID, PCRF_NAME AS SYSTEM_NAME FROM TB_CO_PCRF) AS SYSTEM_TB
+			</if>
+			<if test='equipType == "8"'>
+				(SELECT SYSTEM_ID, SYSTEM_NAME FROM TB_CO_SYSTEM_ETC WHERE EQUIP_TYPE = 8) AS SYSTEM_TB
+			</if>
+			<if test='equipType == "9"'>
+				(SELECT SYSTEM_ID, SYSTEM_NAME FROM TB_CO_SYSTEM_ETC WHERE EQUIP_TYPE = 9) AS SYSTEM_TB
+			</if>
+			<if test='equipType == "10"'>
+				(SELECT SYSTEM_ID, SYSTEM_NAME FROM TB_CO_SYSTEM_ETC WHERE EQUIP_TYPE = 10) AS SYSTEM_TB
+			</if>
+			<if test='equipType == "11"'>
+				(SELECT SYSTEM_ID, SYSTEM_NAME FROM TB_CO_SYSTEM_ETC WHERE EQUIP_TYPE = 11) AS SYSTEM_TB
+			</if>
+			<if test='equipType == "12"'>
+				(SELECT SYSTEM_ID, SYSTEM_NAME FROM TB_CO_SYSTEM_ETC WHERE EQUIP_TYPE = 12) AS SYSTEM_TB
+			</if>
+			<if test='equipType == "17"'>
+				(SELECT SYSTEM_ID, SYSTEM_NAME FROM TB_CO_SYSTEM_ETC WHERE EQUIP_TYPE = 17) AS SYSTEM_TB
+			</if>
+			ON TB_FS_ALARM_ABNORMAL.SYSTEM_ID = SYSTEM_TB.SYSTEM_ID
+		WHERE
+			TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = #{equipType}
+	</select>
+	
+	<select id="selectAlarmCodeList" parameterType="java.util.Map" resultType="java.util.HashMap">
+		<!-- SELECT DISTINCT ac.ALARM_CODE
+		FROM TB_FM_ALARM_CODE ac INNER JOIN VW_SYSTEM vw
+		ON ac.EQUIP_TYPE = vw.EQUIP_TYPE 
+		AND ac.VENDOR_ID = ac.VENDOR_ID
+		WHERE vw.SYSTEM_ID IN (${systemIds})
+		AND ac.ALARM_CODE is not null -->
+		SELECT
+			ALARM_CODE
+			,IFNULL(GROUP_CONCAT(PROBABLE_CAUSE SEPARATOR '\n'), ALARM_CODE) AS PROBABLE_CAUSE
+		FROM
+			(
+				SELECT
+					DISTINCT a.ALARM_CODE
+					,CONCAT(b.EQUIP_NAME, ': ', IFNULL(b.PROBABLE_CAUSE, a.ALARM_CODE)) AS PROBABLE_CAUSE
+				FROM
+					TB_FS_ALARM_ABNORMAL_CNT a
+					LEFT JOIN (
+						SELECT
+							T1.ALARM_CODE
+							,T1.PROBABLE_CAUSE
+							,T1.EQUIP_TYPE
+							,T2.EQUIP_NAME
+						FROM TB_FM_ALARM_CODE T1
+							LEFT JOIN TB_CO_EQUIP T2
+								ON T1.EQUIP_TYPE = T2.EQUIP_TYPE
+					) b
+						ON		a.EQUIP_TYPE = b.EQUIP_TYPE
+							AND	a.ALARM_CODE = b.ALARM_CODE
+				WHERE CONCAT_WS('-', a.SYSTEM_ID, a.EQUIP_TYPE) IN (${systemIds})
+				AND a.EVENT_TIME <![CDATA[>=]]> DATE_FORMAT(#{fromTime}, '%Y%m%d%H%i%s')
+				AND a.EVENT_TIME <![CDATA[<=]]> ( DATE_FORMAT(#{toTime}, '%Y%m%d%H%i%s') )
+				AND a.ALARM_CODE is not null
+				<if test='spTime != null and spTime != ""'>
+					AND a.C_TIME IN (${spTime}) <!-- 특정시간 -->
+				</if>
+				<if test='spDate != null and spDate != ""'>
+					<!-- AND a.EVENT_TIME NOT BETWEEN DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') AND (DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') + INTERVAL 1 DAY) -->
+					<!-- 특정일자제외 -->
+					AND a.EVENT_TIME NOT BETWEEN DATE_FORMAT(#{spFromDate}, '%Y%m%d%H%i%s') AND DATE_FORMAT(#{spToDate}, '%Y%m%d%H%i%s')
+				</if>
+				<if test='alarmCodeSet != null and alarmCodeSet != ""'>
+					AND a.ALARM_CODE IN (${alarmCodeSet})
+				</if>
+				<if test='alarmtype == "0"'>
+					AND a.ALARM_TYPE != 2
+				</if>
+				<if test='alarmtype == "1"'>
+					AND a.ALARM_TYPE = 2
+				</if>
+			) T1
+		GROUP BY ALARM_CODE
+		ORDER BY ALARM_CODE
+	</select>
+	
+	<select id="selectAlarmAnalysisTableList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			TOTAL.SYSTEM_ID, TOTAL.SYSTEM_NAME, TOTAL.EQUIP_TYPE, TOTAL.EQUIP_NAME
+			<if test = 'alarmCodeList.size() > 0'>
+				<foreach collection="alarmCodeList" item="alarmCode" open="," separator=",">
+					TOTAL.${alarmCode.ALARM_CODE}
+				</foreach>
+			</if>
+			<if test = 'alarmCodeList.size() > 0'> 
+				,TOTAL.TOTAL_CNT
+			</if>
+		FROM
+			(SELECT ac.SYSTEM_ID, vs.SYSTEM_NAME, ac.EQUIP_TYPE, vs.EQUIP_NAME
+				<foreach collection="alarmCodeList" item="alarmCode">
+					, SUM(CASE WHEN ALARM_CODE = #{alarmCode.ALARM_CODE} THEN ALARM_CNT ELSE 0 END) as ${alarmCode.ALARM_CODE}
+				</foreach>
+				<if test = 'alarmCodeList.size() > 0'>
+					<foreach collection="alarmCodeList" item="alarmCode" open="," close="AS TOTAL_CNT" separator="+">
+						SUM(CASE WHEN ALARM_CODE = #{alarmCode.ALARM_CODE} THEN ALARM_CNT ELSE 0 END)
+					</foreach>
+				</if>
+			FROM
+				TB_FS_ALARM_ABNORMAL_CNT ac
+				LEFT JOIN VW_SYSTEM vs
+					ON ac.SYSTEM_ID = vs.SYSTEM_ID
+					AND ac.EQUIP_TYPE = vs.EQUIP_TYPE
+			WHERE
+				CONCAT_WS('-', ac.SYSTEM_ID, ac.EQUIP_TYPE) IN (${systemIds})
+				AND ac.EVENT_TIME <![CDATA[>=]]> DATE_FORMAT(#{fromTime}, '%Y%m%d%H%i%s')
+				AND ac.EVENT_TIME <![CDATA[<=]]> ( DATE_FORMAT(#{toTime}, '%Y%m%d%H%i%s')  )
+				<if test='spTime != null and spTime != ""'>
+					AND ac.C_TIME IN (${spTime}) <!-- 특정시간 -->
+				</if>
+				<if test='spDate != null and spDate != ""'>
+					<!-- AND ac.EVENT_TIME NOT BETWEEN DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') AND (DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') + INTERVAL 1 DAY) -->
+					<!-- 특정일자제외 -->
+					AND ac.EVENT_TIME NOT BETWEEN DATE_FORMAT(#{spFromDate}, '%Y%m%d%H%i%s') AND DATE_FORMAT(#{spToDate}, '%Y%m%d%H%i%s')
+				</if>
+				<if test='alarmCodeSet != null and alarmCodeSet != ""'>
+					AND ALARM_CODE IN (${alarmCodeSet})
+				</if>
+				<if test = 'alarmFilter != null and alarmFilter != ""'>
+					AND ac.SEVERITY IN
+					<foreach collection="alarmFilter" item="severity" open="(" close=")" separator=",">
+						#{severity}
+					</foreach>
+				</if>
+				<if test='alarmtype == "0"'>
+					AND ALARM_TYPE != 2
+				</if>
+				<if test='alarmtype == "1"'>
+					AND ALARM_TYPE = 2
+				</if>
+			GROUP BY ac.SYSTEM_ID, vs.SYSTEM_NAME, ac.EQUIP_TYPE, vs.EQUIP_NAME) AS TOTAL
+		ORDER BY
+			<choose>
+				<when test='sortOption.size() > 0'>
+					<foreach collection="sortOption" item="option" separator=",">
+						${option.colName} ${option.order}
+					</foreach>
+				</when>
+				<otherwise>
+					TOTAL.EQUIP_TYPE ASC, TOTAL.SYSTEM_ID ASC
+				</otherwise>
+			</choose>
+	</select>
+	
+	<select id="selectAlarmTypeList" parameterType="java.util.HashMap" resultType="java.lang.String">
+		SELECT DISTINCT ALARM_TYPE
+		FROM TB_FS_ALARM_ABNORMAL_CNT
+		WHERE CONCAT_WS('-', SYSTEM_ID, EQUIP_TYPE) IN (${systemIds})
+		AND EVENT_TIME <![CDATA[>=]]> DATE_FORMAT(#{fromTime}, '%Y%m%d%H%i%s')
+		AND EVENT_TIME <![CDATA[<=]]> ( DATE_FORMAT(#{toTime}, '%Y%m%d%H%i%s') )
+		AND ALARM_TYPE is not null
+		<if test='spTime != null and spTime != ""'>
+			AND C_TIME IN (${spTime}) <!-- 특정시간 -->
+		</if>
+		<if test='spDate != null and spDate != ""'>
+			<!-- AND EVENT_TIME NOT BETWEEN DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') AND (DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') + INTERVAL 1 DAY) -->
+			<!-- 특정일자제외 -->
+			AND EVENT_TIME NOT BETWEEN DATE_FORMAT(#{spFromDate}, '%Y%m%d%H%i%s') AND DATE_FORMAT(#{spToDate}, '%Y%m%d%H%i%s')
+		</if>
+		<if test='alarmCodeSet != null and alarmCodeSet != ""'>
+			AND ALARM_CODE IN (${alarmCodeSet})
+		</if>
+		<if test='alarmtype == "0"'>
+			AND ALARM_TYPE != 2
+		</if>
+		<if test='alarmtype == "1"'>
+			AND ALARM_TYPE = 2
+		</if>
+	</select>
+	
+	<select id="selectAlarmAnalysisGraphList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT ac.SYSTEM_ID, vs.SYSTEM_NAME, vs.EQUIP_NAME
+			<foreach collection="alarmTypeList" item="alarmType">
+				, SUM(CASE WHEN ac.ALARM_TYPE = #{alarmType} THEN ac.ALARM_CNT ELSE 0 END) as 
+				<if test='alarmType == 1'>ALARM</if>
+				<if test='alarmType == 2'>FAULT</if>
+				<if test='alarmType == 3'>STATUS</if>
+				<if test='alarmType == 4'>ETC</if>
+			</foreach>
+		FROM TB_FS_ALARM_ABNORMAL_CNT ac
+		left join VW_SYSTEM vs
+		ON ac.SYSTEM_ID = vs.SYSTEM_ID
+		AND ac.EQUIP_TYPE = vs.EQUIP_TYPE
+		WHERE CONCAT_WS('-', ac.SYSTEM_ID, ac.EQUIP_TYPE) IN (${systemIds})
+		AND ac.EVENT_TIME <![CDATA[>=]]> DATE_FORMAT(#{fromTime}, '%Y%m%d%H%i%s')
+		AND ac.EVENT_TIME <![CDATA[<=]]> ( DATE_FORMAT(#{toTime}, '%Y%m%d%H%i%s') )
+		<if test='spTime != null and spTime != ""'>
+			AND ac.C_TIME IN (${spTime}) <!-- 특정시간 -->
+		</if>
+		<if test='spDate != null and spDate != ""'>
+			<!-- 특정일자제외 -->
+			<!-- AND ac.EVENT_TIME NOT BETWEEN DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') AND (DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') + INTERVAL 1 DAY) -->
+			AND ac.EVENT_TIME NOT BETWEEN DATE_FORMAT(#{spFromDate}, '%Y%m%d%H%i%s') AND DATE_FORMAT(#{spToDate}, '%Y%m%d%H%i%s')
+		</if>
+		<if test='alarmCodeSet != null and alarmCodeSet != ""'>
+			AND ALARM_CODE IN (${alarmCodeSet})
+		</if>
+		<if test = 'alarmFilter != null and alarmFilter != ""'>
+			AND ac.SEVERITY IN
+			<foreach collection="alarmFilter" item="severity" open="(" close=")" separator=",">
+				#{severity}
+			</foreach>
+		</if>
+		<if test='alarmtype == "0"'>
+			AND ALARM_TYPE != 2
+		</if>
+		<if test='alarmtype == "1"'>
+			AND ALARM_TYPE = 2
+		</if>
+		GROUP BY ac.SYSTEM_ID, vs.SYSTEM_NAME, vs.EQUIP_NAME
+	</select>
+	
+	<select id="selectAlarmGroupList" resultType="java.util.HashMap">
+		SELECT gr.ALARM_GROUP_ID, gr.ALARM_GROUP_NAME, gr.ALARM_CODE, cd.ORG_SEVERITY, eq.EQUIP_NAME, cd.PROBABLE_CAUSE
+		FROM TB_FS_ALARM_GROUP gr
+		left join TB_FM_ALARM_CODE cd
+		ON gr.ALARM_CODE = cd.ALARM_CODE
+		AND gr.EQUIP_TYPE = cd.EQUIP_TYPE
+		left join TB_CO_EQUIP eq
+		ON gr.EQUIP_TYPE = eq.EQUIP_TYPE
+		ORDER BY gr.ALARM_GROUP_ID
+	</select>
+	
+	<select id="selectPopupAlarmCodeList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT DISTINCT eq.EQUIP_NAME, ab.SYSTEM_ID, ac.ALARM_CODE, ac.PROBABLE_CAUSE
+		FROM TB_FM_ALARM_CODE ac
+		left join TB_CO_EQUIP eq
+		ON ac.EQUIP_TYPE = eq.EQUIP_TYPE
+		inner join TB_FS_ALARM_ABNORMAL_CNT ab
+		ON ac.EQUIP_TYPE = ab.EQUIP_TYPE
+		AND ac.ALARM_CODE = ab.ALARM_CODE
+		<if test='alarmDesc != "all"'>
+			WHERE ac.EQUIP_TYPE IN (1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 17)
+			AND eq.EQUIP_DESC  = #{alarmDesc}
+			AND CONCAT_WS('-', ab.SYSTEM_ID, ab.EQUIP_TYPE) IN (${systemIds})
+		</if> 
+		ORDER BY eq.EQUIP_TYPE, ab.SYSTEM_ID, ac.ALARM_CODE
+		
+		<!-- SELECT DISTINCT ALARM_CODE, PROBABLE_CAUSE
+		FROM TB_FM_ALARM_CODE ac
+		left join TB_CO_EQUIP eq
+		ON ac.EQUIP_TYPE = eq.EQUIP_TYPE
+		WHERE ac.EQUIP_TYPE IN (1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+		AND eq.EQUIP_DESC  =  #{alarmDesc}
+		AND ALARM_CODE IN (SELECT DISTINCT ALARM_CODE 
+			FROM TB_FS_ALARM_ABNORMAL_CNT
+			ORDER BY ALARM_CODE) -->
+	</select> 
+	
+	<select id="getEquipAnalysisDetailData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT vs.SYSTEM_NAME, ab.ALARM_CODE, ab.PROBABLE_CAUSE, eq.EQUIP_NAME, ab.SEVERITY, ab.ALARM_STATE
+				, IFNULL(ab.EVENT_TIME,'') as EVENT_TIME
+				, IFNULL(ab.RECOVER_TIME,'') as RECOVER_TIME
+				, ab.TIME_TO_REPAIR, ab.ALARM_TYPE, vd.VENDOR_NAME, tm.TEAM_NAME, ab.FDN
+				<!-- , ab.DEL_FLAG -->
+		FROM TB_FS_ALARM_ABNORMAL ab 
+			left join VW_SYSTEM vs
+			ON ab.SYSTEM_ID = vs.SYSTEM_ID
+			AND ab.EQUIP_TYPE = vs.EQUIP_TYPE
+			left join TB_CO_TEAM tm
+			ON ab.TEAM_ID = tm.TEAM_ID
+			left join TB_CO_VENDOR vd 
+			ON ab.VENDOR_ID = vd.VENDOR_ID
+			left join TB_CO_EQUIP eq
+			ON ab.EQUIP_TYPE = eq.EQUIP_TYPE
+		WHERE CONCAT_WS('-', ab.SYSTEM_ID, ab.EQUIP_TYPE) IN (${systemIds})
+			AND ab.RECOVER_TIME <![CDATA[>=]]> DATE_FORMAT(#{fromTime}, '%Y%m%d%H%i%s')
+			AND ab.RECOVER_TIME <![CDATA[<=]]> DATE_FORMAT(#{toTime}, '%Y%m%d%H%i%s')
+			<!-- <if test = 'alarmCodeList.size() > 0'> 
+				AND ab.ALARM_CODE in  
+				<foreach collection="alarmCodeList" item="alarmCode" separator="," open="(" close=")">
+					${alarmCode.ALARM_CODE}
+				</foreach>
+			</if>  -->
+			AND ab.ALARM_CODE in (
+				SELECT
+					ALARM_CODE
+				FROM
+					(
+						SELECT
+							DISTINCT a.ALARM_CODE
+						FROM
+							TB_FS_ALARM_ABNORMAL_CNT a
+							LEFT JOIN (
+								SELECT
+									T1.ALARM_CODE
+									,T1.PROBABLE_CAUSE
+									,T1.EQUIP_TYPE 
+									,T2.EQUIP_NAME
+								FROM TB_FM_ALARM_CODE T1
+									LEFT JOIN TB_CO_EQUIP T2
+										ON T1.EQUIP_TYPE = T2.EQUIP_TYPE
+							) b 
+								ON		a.EQUIP_TYPE = b.EQUIP_TYPE
+									AND	a.ALARM_CODE = b.ALARM_CODE
+						WHERE 1=1
+						AND a.EVENT_TIME <![CDATA[>=]]> DATE_FORMAT(#{fromTime}, '%Y%m%d%H%i%s')
+						AND a.EVENT_TIME <![CDATA[<=]]> DATE_FORMAT(#{toTime}, '%Y%m%d%H%i%s') 
+						AND a.ALARM_CODE is not null
+						<if test='alarmtype == "0"'>
+							AND a.ALARM_TYPE != 2
+						</if>
+						<if test='alarmtype == "1"'>
+							AND a.ALARM_TYPE = 2
+						</if>
+					) T1
+				GROUP BY ALARM_CODE 
+				ORDER BY ALARM_CODE
+			)
+			<if test='spTime != null and spTime != ""'>
+				AND ab.C_RHOUR IN (${spTime}) <!-- 특정시간 -->
+			</if>
+			<if test='spDate != null and spDate != ""'>
+				<!-- AND ab.RECOVER_TIME NOT BETWEEN DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') AND (DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') + INTERVAL 1 DAY) -->
+				<!-- 특정일자제외 -->
+				AND ab.RECOVER_TIME NOT BETWEEN DATE_FORMAT(#{spFromDate}, '%Y%m%d%H%i%s') AND DATE_FORMAT(#{spToDate}, '%Y%m%d%H%i%s')
+				
+			</if>
+
+			AND ab.ALARM_CODE <![CDATA[=]]> #{alarmCode}
+			AND CONCAT_WS('-', ab.SYSTEM_ID, ab.EQUIP_TYPE) <![CDATA[=]]> #{systemId-equipType}
+			<if test = 'alarmFilter != null and alarmFilter != ""'>
+				AND ab.SEVERITY IN
+				<foreach collection="alarmFilter" item="severity" open="(" close=")" separator=",">
+					#{severity}
+				</foreach>
+			</if>
+			
+		
+	</select>
+	
+	<select id="getTimeAnalysisDetailData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT vs.SYSTEM_NAME, ab.ALARM_CODE, ab.PROBABLE_CAUSE, eq.EQUIP_NAME, ab.SEVERITY, ab.ALARM_STATE
+				, IFNULL(ab.EVENT_TIME,'') as EVENT_TIME
+				, IFNULL(ab.RECOVER_TIME,'') as RECOVER_TIME
+				, ab.TIME_TO_REPAIR, ab.ALARM_TYPE, vd.VENDOR_NAME, tm.TEAM_NAME, ab.FDN
+				<!-- , ab.DEL_FLAG -->
+		FROM TB_FS_ALARM_ABNORMAL ab 
+			left join VW_SYSTEM vs
+			ON ab.SYSTEM_ID = vs.SYSTEM_ID
+			AND ab.EQUIP_TYPE = vs.EQUIP_TYPE
+			left join TB_CO_TEAM tm
+			ON ab.TEAM_ID = tm.TEAM_ID
+			left join TB_CO_VENDOR vd
+			ON ab.VENDOR_ID = vd.VENDOR_ID
+			left join TB_CO_EQUIP eq
+			ON ab.EQUIP_TYPE = eq.EQUIP_TYPE
+		WHERE CONCAT_WS('-', ab.SYSTEM_ID, ab.EQUIP_TYPE) IN (${systemIds})
+			AND ab.RECOVER_TIME <![CDATA[>=]]> DATE_FORMAT(#{fromTime}, '%Y%m%d%H%i%s')
+			AND ab.RECOVER_TIME <![CDATA[<=]]> DATE_FORMAT(#{toTime}, '%Y%m%d%H%i%s')
+			AND vs.SYSTEM_NAME <![CDATA[=]]> #{systemName}
+			<!-- <if test = 'alarmCodeList.size() > 0'> 
+				AND ab.ALARM_CODE in  
+				<foreach collection="alarmCodeList" item="alarmCode" separator="," open="(" close=")">
+					${alarmCode.ALARM_CODE}
+				</foreach>
+			</if> -->
+			AND ab.ALARM_CODE in (
+				SELECT
+					ALARM_CODE
+				FROM
+					(
+						SELECT
+							DISTINCT a.ALARM_CODE
+						FROM
+							TB_FS_ALARM_ABNORMAL_CNT a
+							LEFT JOIN (
+								SELECT
+									T1.ALARM_CODE
+									,T1.PROBABLE_CAUSE
+									,T1.EQUIP_TYPE
+									,T2.EQUIP_NAME
+								FROM TB_FM_ALARM_CODE T1
+									LEFT JOIN TB_CO_EQUIP T2
+										ON T1.EQUIP_TYPE = T2.EQUIP_TYPE
+							) b 
+								ON		a.EQUIP_TYPE = b.EQUIP_TYPE
+									AND	a.ALARM_CODE = b.ALARM_CODE
+						WHERE 1=1
+						AND a.EVENT_TIME <![CDATA[>=]]> DATE_FORMAT(#{fromTime}, '%Y%m%d%H%i%s')
+						AND a.EVENT_TIME <![CDATA[<=]]> DATE_FORMAT(#{toTime}, '%Y%m%d%H%i%s')
+						AND a.ALARM_CODE is not null
+						<if test='alarmtype == "0"'>
+							AND a.ALARM_TYPE != 2
+						</if>
+						<if test='alarmtype == "1"'>
+							AND a.ALARM_TYPE = 2
+						</if>
+					) T1
+				GROUP BY ALARM_CODE 
+				ORDER BY ALARM_CODE
+			)
+			<if test='spTime != null and spTime != ""'>
+				AND ab.C_RHOUR IN (${spTime}) <!-- 특정시간 -->
+			</if>
+			<if test='spDate != null and spDate != ""'>
+				<!-- 특정일자제외 -->
+				AND ab.RECOVER_TIME NOT BETWEEN DATE_FORMAT(#{spFromDate}, '%Y%m%d%H%i%s') AND DATE_FORMAT(#{spToDate}, '%Y%m%d%H%i%s') 
+			</if>
+
+			<if test='hour != null and hour != ""'>
+				AND ab.C_RHOUR <![CDATA[=]]> #{hour} 
+			</if>  
+			 
+			<if test='eventDate != null and eventDate != ""'>
+				AND ab.C_RDATE <![CDATA[=]]> #{eventDate} 
+			</if>
+			<if test = 'alarmFilter != null and alarmFilter != ""'>
+				AND ab.SEVERITY IN
+				<foreach collection="alarmFilter" item="severity" open="(" close=")" separator=",">
+					#{severity}
+				</foreach>
+			</if>
+			
+		
+	</select>
+	
+	<select id="selectAlarmByTime" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+		vs.SYSTEM_NAME,
+		<if test="graphType == 'time'">
+			ac.C_TIME, 
+		</if>
+		<if test="graphType == 'date'">
+			ac.C_DATE,
+		</if>
+		SUM(ac.ALARM_CNT) AS CNT
+		<foreach collection="alarmTypeList" item="alarmType">
+				,SUM(CASE WHEN ac.ALARM_TYPE = #{alarmType} THEN ac.ALARM_CNT ELSE 0 END) as 
+				<if test='alarmType == 1'>ALARM</if>
+				<if test='alarmType == 2'>FAULT</if>
+				<if test='alarmType == 3'>STATUS</if>
+				<if test='alarmType == 4'>ETC</if>
+		</foreach>
+		FROM 
+			TB_FS_ALARM_ABNORMAL_CNT ac
+		left join 
+			VW_SYSTEM vs
+		ON 
+			ac.SYSTEM_ID = vs.SYSTEM_ID AND 
+			ac.EQUIP_TYPE = vs.EQUIP_TYPE
+		WHERE 
+			CONCAT_WS('-', ac.SYSTEM_ID, ac.EQUIP_TYPE) IN (${systemIds}) 
+			AND ac.EVENT_TIME <![CDATA[>=]]> DATE_FORMAT(#{fromTime}, '%Y%m%d%H%i%s')
+			AND ac.EVENT_TIME <![CDATA[<=]]> DATE_FORMAT(#{toTime}, '%Y%m%d%H%i%s') 
+			<if test='spTime != null and spTime != ""'>
+				AND C_TIME IN (${spTime}) <!-- 특정시간 -->
+			</if>
+			<if test='spDate != null and spDate != ""'>
+				<!-- 특정일자제외 -->
+				<!-- AND EVENT_TIME NOT BETWEEN DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') AND (DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') + INTERVAL 1 DAY) -->
+				AND ac.EVENT_TIME NOT BETWEEN DATE_FORMAT(#{spFromDate}, '%Y%m%d%H%i%s') AND DATE_FORMAT(#{spToDate}, '%Y%m%d%H%i%s')
+			</if>
+			<if test='spAlarm != null and spAlarm != ""'>
+				AND ALARM_CODE IN (${spAlarm})
+			</if>
+			<if test = 'alarmFilter != null and alarmFilter != ""'>
+				AND ac.SEVERITY IN
+				<foreach collection="alarmFilter" item="severity" open="(" close=")" separator=",">
+					#{severity}
+				</foreach>
+			</if>
+			<if test='alarmtype == "0"'>
+					AND ALARM_TYPE != 2
+			</if>
+			<if test='alarmtype == "1"'>
+				AND ALARM_TYPE = 2
+			</if>
+			<if test="graphType == 'time'">
+				GROUP BY vs.SYSTEM_NAME, ac.C_TIME
+			</if>
+			<if test="graphType == 'date'">
+				GROUP BY vs.SYSTEM_NAME, ac.C_DATE
+				ORDER BY ac.C_DATE
+			</if>
+			
+	</select>
+
+	<select id="getTimeListAlarmByTime" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			COUNT(CNT.C_DATE) AS TIME_LIST
+		FROM
+			(SELECT
+				ac.C_DATE
+			FROM
+			TB_FS_ALARM_ABNORMAL_CNT ac
+			left join
+			VW_SYSTEM vs
+			ON
+			ac.SYSTEM_ID = vs.SYSTEM_ID AND
+			ac.EQUIP_TYPE = vs.EQUIP_TYPE
+			WHERE
+			CONCAT_WS('-', ac.SYSTEM_ID, ac.EQUIP_TYPE) IN (${systemIds})
+			AND ac.EVENT_TIME <![CDATA[>=]]> DATE_FORMAT(#{fromTime}, '%Y%m%d%H%i%s')
+			AND ac.EVENT_TIME <![CDATA[<=]]> ( DATE_FORMAT(#{toTime}, '%Y%m%d%H%i%s') )
+			<if test='spTime != null and spTime != ""'>
+				AND C_TIME IN (${spTime}) <!-- 특정시간 -->
+			</if>
+			<if test='spDate != null and spDate != ""'>
+				<!-- 특정일자제외 -->
+				<!-- AND EVENT_TIME NOT BETWEEN DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') AND (DATE_FORMAT(#{spDate}, '%Y%m%d%H%i%s') + INTERVAL 1 DAY) -->
+				AND ac.EVENT_TIME NOT BETWEEN DATE_FORMAT(#{spFromDate}, '%Y%m%d%H%i%s') AND DATE_FORMAT(#{spToDate}, '%Y%m%d%H%i%s')
+			</if>
+			<if test='spAlarm != null and spAlarm != ""'>
+				AND ALARM_CODE IN (${spAlarm})  
+			</if>
+			<if test = 'alarmFilter != null and alarmFilter != ""'>
+				AND ac.SEVERITY IN
+				<foreach collection="alarmFilter" item="severity" open="(" close=")" separator=",">
+					#{severity}
+				</foreach>
+			</if>
+			<if test='alarmtype == "0"'>
+					AND ALARM_TYPE != 2
+			</if>
+			<if test='alarmtype == "1"'>
+				AND ALARM_TYPE = 2
+			</if>
+			
+			GROUP BY ac.C_DATE) AS CNT
+	</select>
+</mapper>

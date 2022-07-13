@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.LogMgmtDAO">
+
+    <select id="getLogMgmtList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT
+            TSWL.ID,
+            DATE_FORMAT(TSWL.EVENT_TIME, '%Y-%m-%d %T') AS EVENT_TIME,
+            TSWL.USER_ID,
+            TSU.USER_NAME,
+            TSWL.TEAM_ID,
+            TSWL.MENU_ID,
+            IFNULL(TSWL.MENU_NAME,'') AS MENU_NAME,
+            TSWL.IP,
+            CNT_TB.TOTAL_COUNT AS TOTAL_COUNT
+        FROM
+            TB_SE_WEB_LOG AS TSWL,
+            TB_SE_USER AS TSU,
+            (SELECT COUNT(1) AS TOTAL_COUNT
+            FROM TB_SE_WEB_LOG
+            WHERE
+                1 = 1
+                AND EVENT_TIME <![CDATA[<=]]> #{endEventTime}
+                AND EVENT_TIME >= #{startEventTime}
+                <choose>
+                    <when test='optionWord != null and option == "id"'>
+                    AND USER_ID LIKE CONCAT('%',#{optionWord},'%')
+                    </when>
+                    <when test='optionWord != null and option == "name"'>
+                    AND USER_NAME LIKE CONCAT('%',#{optionWord},'%')
+                    </when>
+                    <when test='optionWord != null and option == "ip"'>
+                    AND IP LIKE CONCAT('%',#{optionWord},'%')
+                    </when>
+                    <when test='optionWord != null and option == "menu"'>
+                    AND MENU_NAME LIKE CONCAT('%',#{optionWord},'%')
+                    </when>
+                </choose>
+            ) AS CNT_TB
+        WHERE
+            TSU.USER_ID = TSWL.USER_ID
+            AND TSWL.EVENT_TIME <![CDATA[<=]]> #{endEventTime}
+            AND TSWL.EVENT_TIME >= #{startEventTime}
+            <choose>
+                <when test='optionWord != null and option == "id"'>
+                    AND TSWL.USER_ID LIKE CONCAT('%',#{optionWord},'%')
+                </when>
+                <when test='optionWord != null and option == "name"'>
+                    AND TSWL.USER_NAME LIKE CONCAT('%',#{optionWord},'%')
+                </when>
+                <when test='optionWord != null and option == "ip"'>
+                    AND TSWL.IP LIKE CONCAT('%',#{optionWord},'%')
+                </when>
+                <when test='optionWord != null and option == "menu"'>
+                    AND TSWL.MENU_NAME LIKE CONCAT('%',#{optionWord},'%')
+                </when>
+            </choose>
+        ORDER BY TSWL.EVENT_TIME DESC
+        <if test='pageNo != null'>
+        LIMIT #{pageNo}, #{pageSize}
+        </if>
+    </select>
+
+</mapper>

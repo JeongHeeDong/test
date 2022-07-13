@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.SystemSmsStatisticsDAO">
+	<select id="getStatisticsData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			<if test="dateOptVal == 1">
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H') AS EVENT_TIME,
+			</if>
+			<if test="dateOptVal == 2">
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d') AS EVENT_TIME,
+			</if>
+			<if test="dateOptVal == 3">
+				DATE_FORMAT(EVENT_TIME,'%Y-%m') AS EVENT_TIME,
+			</if>
+		    <choose>
+		    	<when test="chk_number == 'true'">
+		    		TT_NUMBER,
+		    	</when>
+		    	<otherwise>
+		    		'-' AS TT_NUMBER,
+		    	</otherwise>
+		    </choose>
+		    
+		    <choose>
+		    	<when test="chk_code == 'true'">
+		    		ALARM_CODE,
+		    	</when>
+		    	<otherwise>
+		    		'-' AS ALARM_CODE,
+		    	</otherwise>
+		    </choose>
+		    
+		    <choose>
+		    	<when test="chk_severity == 'true'">
+		    		CASE WHEN SEVERITY = 1 THEN 'CRITICAL' WHEN SEVERITY = 2 THEN 'MAJOR' WHEN SEVERITY = 3 THEN 'MINOR' ELSE 'NORMAL' END AS SEVERITY,
+		    	</when>
+		    	<otherwise>
+		    		'-' AS SEVERITY,
+		    	</otherwise>
+		    </choose>
+		    <choose>
+		    	<when test="chk_equip == 'true'">
+		    		EQUIP_TYPE,
+		    	</when>
+		    	<otherwise>
+		    		'-' AS EQUIP_TYPE,
+		    	</otherwise>
+		    </choose>
+		    CAST(count(1) AS CHAR) AS CNT
+		FROM
+			TB_SM_TT_LOG
+		WHERE
+			TT_NUMBER IS NOT NULL
+			<if test="dateOptVal == 1">
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{from_dateTime},'%Y-%m-%d %H') 
+				AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(#{to_dateTime},'%Y-%m-%d %H')
+			</if>
+			<if test="dateOptVal == 2">
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{from_dateTime},'%Y-%m-%d') 
+				AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(#{to_dateTime},'%Y-%m-%d')
+			</if>
+			<if test="dateOptVal == 3">
+				AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{from_dateTime},'%Y-%m') 
+				AND EVENT_TIME <![CDATA[<]]> STR_TO_DATE(#{to_dateTime},'%Y-%m')
+			</if>
+			<!-- 
+			<if test="searchOptVal == 1">
+				<if test="searchWord != ''">
+					AND TT_NUMBER like ('${searchWord}%')
+				</if>
+			</if>
+			<if test="searchOptVal == 2">
+				<if test="searchWord != ''">
+					AND ALARM_CODE like ('%${searchWord}%')
+				</if>
+			</if>
+			<if test="searchOptVal == 3">
+				<if test="searchWord != ''">
+					AND EQUIP_TYPE like ('%${searchWord}%')
+				</if>
+			</if>
+			 -->
+		GROUP BY
+			<if test="dateOptVal == 1">
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H')
+			</if>
+			<if test="dateOptVal == 2">
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d')
+			</if>
+			<if test="dateOptVal == 3">
+				DATE_FORMAT(EVENT_TIME,'%Y-%m')
+			</if>
+			<if test="chk_number == 'true'">
+				,TT_NUMBER
+			</if>
+			<if test="chk_code == 'true'">
+				,ALARM_CODE
+			</if>
+			<if test="chk_severity == 'true'">
+				,SEVERITY
+			</if>
+			<if test="chk_equip == 'true'">
+				,EQUIP_TYPE
+			</if>
+		ORDER BY
+			EVENT_TIME DESC,CNT DESC
+	</select>
+</mapper>

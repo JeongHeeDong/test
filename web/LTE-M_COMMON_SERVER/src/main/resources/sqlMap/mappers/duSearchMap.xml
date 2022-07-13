@@ -1,0 +1,609 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.DuSearchDAO">
+	
+	<select id="getEmsName" resultType="java.util.HashMap">
+		SELECT
+			EMS_NAME, EMS_ID
+		FROM
+			(
+				(SELECT EMS_NAME,EMS_ID FROM TB_CO_EMS WHERE EQUIP_TYPE = '14' GROUP BY EMS_NAME,EMS_ID)
+				UNION ALL
+				(SELECT '전체' AS EMS_NAME, '전체' AS EMS_ID FROM DUAL)
+			) A
+		ORDER BY
+			EMS_NAME DESC
+	</select>
+	
+	<select id="getDu" resultType="java.util.HashMap">
+		SELECT
+			DU_NAME, DU_ID,SORT
+		FROM
+			(
+				(SELECT DU_NAME,DU_ID, @RNUM:=@RNUM+1 AS SORT FROM TB_CO_DU,(SELECT @RNUM:=1) AS R GROUP BY DU_ID,DU_NAME)
+				UNION ALL
+				(SELECT '전체' AS DU_NAME, '전체' AS DU_ID,0 AS SORT FROM DUAL)
+			) A
+		ORDER BY
+			SORT
+	</select>
+	
+	<select id="getTeam" resultType="java.util.HashMap">
+		SELECT
+			TEAM_ID,
+			TEAM_NAME
+		FROM
+			TB_CO_TEAM
+		GROUP BY
+			TEAM_ID,TEAM_NAME
+		ORDER BY
+			TEAM_NAME DESC
+	</select>
+	
+	<select id="getVendor" resultType="java.util.HashMap">
+		SELECT
+			VENDOR_ID,
+			VENDOR_NAME
+		FROM
+			TB_CO_VENDOR
+		GROUP BY
+			VENDOR_ID,VENDOR_NAME
+		ORDER BY
+			VENDOR_NAME DESC
+	</select>
+	
+	<select id="getStationr" resultType="java.util.HashMap">
+		SELECT 
+			STATION_ID,
+		    STATION_NAME
+		FROM 
+			TB_CO_STATION
+		GROUP BY
+			STATION_ID,STATION_NAME
+		ORDER BY
+			STATION_NAME;
+	</select>
+	
+	<select id="getBoardType" resultType="java.util.HashMap">
+		SELECT
+			BD_NAME
+		FROM
+			(
+				(SELECT DISTINCT BD_NAME FROM TB_CO_DU)
+				UNION ALL
+				(SELECT '전체' AS BD_NAME FROM DUAL)
+			) A
+		ORDER BY
+			BD_NAME DESC
+	</select>
+	
+	<select id = "getDuSearch" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<!-- SELECT
+			TB_CO_STATION.LINE_ID,
+			TB_CO_DU.C_UID,
+			IFNULL(EMS_INFO.EMS_NAME,'-') AS EMS_NAME,
+			TB_CO_DU.DU_ID,
+			TB_CO_DU.DU_NAME,
+			IFNULL(TB_CO_DU.EMS_DU_NAME,'-') AS EMS_DU_NAME,
+			IFNULL(TB_CO_STATION.STATION_NAME,'-') AS STATION_NAME,
+			IFNULL(CNT.CELL_CNT,0) AS CELL_CNT,
+			IFNULL(TB_CO_DU.SERIALNUMBER,'-') AS SERIALNUMBER,
+			IFNULL(TB_CO_DU.MASTER_IP,'-') AS MASTER_IP,
+			IFNULL(TB_CO_DU.MASTER_IP_2,'-') AS MASTER_IP_2,
+			IFNULL(TB_CO_DU.ONM_IP,'-') AS ONM_IP,
+			IFNULL(TB_CO_DU.DU_TYPE,'-') AS DU_TYPE,
+			IFNULL(TB_CO_DU.DU_FORMAT,'-') AS DU_FORMAT,
+			IFNULL(TB_CO_DU.MC_TYPE,'-') AS MC_TYPE,
+			IFNULL(TB_CO_TEAM.TEAM_NAME, '-') AS TEAM_NAME,
+			IFNULL(DATE_FORMAT(TB_CO_DU.UPDATE_DATE,'%Y-%m-%d %H:%i:%s'),'-') AS UPDATE_DATE,
+			IFNULL(TB_CO_DU.VLAN_INFO,'-')AS VLAN_INFO,
+			IFNULL(TB_CO_DU.SWITCH_INFO,'-') AS SWITCH_INFO,
+			IFNULL(TB_CO_DU.VLAN_INFO_2,'-') AS VLAN_INFO_2,
+			IFNULL(TB_CO_DU.SWITCH_INFO_2,'-') AS SWITCH_INFO_2,
+			COUNT.TOTAL_COUNT
+		FROM
+			TB_CO_DU
+			LEFT OUTER JOIN
+			(SELECT * FROM TB_CO_EMS WHERE EQUIP_TYPE = 14) AS EMS_INFO
+			ON TB_CO_DU.EMS_ID = EMS_INFO.EMS_ID
+				AND TB_CO_DU.ONM_IP = EMS_INFO.IP_ADDRESS
+			LEFT OUTER JOIN
+		      TB_CO_STATION
+		      ON TB_CO_DU.STATION_ID = TB_CO_STATION.STATION_ID
+			LEFT OUTER JOIN
+			(
+				SELECT
+					COUNT(C_UID) AS CELL_CNT,
+					DU_ID
+				FROM
+					TB_CO_CELL_MAP
+				GROUP BY
+					DU_ID
+			) AS CNT
+			ON TB_CO_DU.DU_ID = CNT.DU_ID
+			LEFT OUTER JOIN
+			TB_CO_TEAM
+			ON TB_CO_DU.TEAM_ID = TB_CO_TEAM.TEAM_ID,
+			(
+				SELECT
+					COUNT(1) AS TOTAL_COUNT
+				FROM
+					TB_CO_DU
+					LEFT OUTER JOIN
+					(SELECT * FROM TB_CO_EMS WHERE EQUIP_TYPE = 14) AS EMS_INFO
+					ON TB_CO_DU.EMS_ID = EMS_INFO.EMS_ID
+				WHERE
+					1=1
+					<if test="emsName != '전체'">
+						AND EMS_INFO.EMS_NAME = #{emsName}
+					</if>
+					<if test="duId != ''">
+						AND TB_CO_DU.DU_ID = #{duId}
+					</if>
+					<if test="duName != ''and duName != '전체'">
+						AND TB_CO_DU.DU_NAME LIKE (CONCAT('%', #{duName}, '%'))
+					</if>
+					<if test="optionFlag == 'true'">
+						BOARD TYPE 제외됨
+						<if test="switchType != ''">
+							AND TB_CO_DU.SWITCH_INFO LIKE (CONCAT('%', #{switchType}, '%'))
+						</if>
+						<if test="mcType != ''">
+							AND TB_CO_DU.MC_TYPE LIKE (CONCAT('%', #{mcType}, '%'))
+						</if>
+						<if test="cUid != ''">
+							AND TB_CO_DU.C_UID LIKE (CONCAT('%', #{cUid}, '%'))
+						</if>
+						<if test="vlan != ''">
+							AND TB_CO_DU.VLAN_INFO LIKE (CONCAT('%', #{vlan}, '%'))
+						</if>
+					</if>
+			) AS COUNT
+		WHERE
+			1=1
+			<if test="emsName != '전체'">
+				AND EMS_NAME = #{emsName}
+			</if>
+			<if test="duId != ''">
+				AND TB_CO_DU.DU_ID = #{duId}
+			</if>
+			<if test="duName != '' and duName != '전체'">
+				AND TB_CO_DU.DU_NAME LIKE (CONCAT('%', #{duName}, '%'))
+			</if>
+			<if test="optionFlag == 'true'">
+				BOARD TYPE 제외됨
+				<if test="switchType != ''">
+					AND TB_CO_DU.SWITCH_INFO LIKE (CONCAT('%', #{switchType}, '%'))
+				</if>
+				<if test="mcType != ''">
+					AND TB_CO_DU.MC_TYPE LIKE (CONCAT('%', #{mcType}, '%'))
+				</if>
+				<if test="cUid != ''">
+					AND TB_CO_DU.C_UID LIKE (CONCAT('%', #{cUid}, '%'))
+				</if>
+				<if test="vlan != ''">
+					AND TB_CO_DU.VLAN_INFO LIKE (CONCAT('%', #{vlan}, '%'))
+				</if>
+			</if>
+			<if test="lineId != '' and lineId != null ">
+				AND TB_CO_STATION.LINE_ID LIKE  (CONCAT('%', #{lineId}, '%'))
+			</if>
+		ORDER BY
+			TB_CO_DU.C_UID, TB_CO_DU.DU_ID
+		LIMIT #{pageNo}, #{pagingNum} -->
+		
+		SELECT
+			LINE_NAME.LINE_ID,
+			LINE_NAME.LINE_NAME,
+			TB_CO_DU.C_UID,
+			IFNULL(EMS_INFO.EMS_NAME,'-') AS EMS_NAME,
+			TB_CO_DU.DU_ID,
+			TB_CO_DU.DU_NAME,
+			IFNULL(TB_CO_DU.EMS_DU_NAME,'-') AS EMS_DU_NAME,
+			IFNULL(LINE_NAME.STATION_NAME,'-') AS STATION_NAME,
+			IFNULL(CNT.CELL_CNT,0) AS CELL_CNT,
+			IFNULL(TB_CO_DU.SERIALNUMBER,'-') AS SERIALNUMBER,
+			IFNULL(TB_CO_DU.MASTER_IP,'-') AS MASTER_IP,
+			IFNULL(TB_CO_DU.MASTER_IP_2,'-') AS MASTER_IP_2,
+			IFNULL(TB_CO_DU.ONM_IP,'-') AS ONM_IP,
+			IFNULL(TB_CO_DU.DU_TYPE,'-') AS DU_TYPE,
+			IFNULL(TB_CO_DU.DU_FORMAT,'-') AS DU_FORMAT,
+			IFNULL(TB_CO_DU.MC_TYPE,'-') AS MC_TYPE,
+			IFNULL(TB_CO_TEAM.TEAM_NAME, '-') AS TEAM_NAME,
+			IFNULL(DATE_FORMAT(TB_CO_DU.UPDATE_DATE,'%Y-%m-%d %H:%i:%s'),'-') AS UPDATE_DATE,
+			IFNULL(TB_CO_DU.VLAN_INFO,'-')AS VLAN_INFO,
+			IFNULL(TB_CO_DU.SWITCH_INFO,'-') AS SWITCH_INFO,
+			IFNULL(TB_CO_DU.VLAN_INFO_2,'-') AS VLAN_INFO_2,
+			IFNULL(TB_CO_DU.SWITCH_INFO_2,'-') AS SWITCH_INFO_2,
+			IFNULL(TB_CO_DU.ACCESS_ID,'') AS ACCESS_ID,
+			COUNT.TOTAL_COUNT
+		FROM
+			TB_CO_DU
+			LEFT OUTER JOIN
+			(SELECT * FROM TB_CO_EMS WHERE EQUIP_TYPE = 14) AS EMS_INFO
+			ON TB_CO_DU.EMS_ID = EMS_INFO.EMS_ID
+				AND TB_CO_DU.ONM_IP = EMS_INFO.IP_ADDRESS
+			LEFT OUTER JOIN 
+	          ( select 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, group_concat(TCL.LINE_NAME) AS LINE_NAME
+		            , group_concat(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          group by STATION_ID) LINE_NAME
+   		    ON TB_CO_DU.STATION_ID = LINE_NAME.STATION_ID
+			LEFT OUTER JOIN
+			(
+				SELECT
+					COUNT(C_UID) AS CELL_CNT,
+					DU_ID
+				FROM
+					TB_CO_CELL_MAP
+				GROUP BY
+					DU_ID
+			) AS CNT
+			ON TB_CO_DU.DU_ID = CNT.DU_ID
+			LEFT OUTER JOIN
+			TB_CO_TEAM
+			ON TB_CO_DU.TEAM_ID = TB_CO_TEAM.TEAM_ID,
+			(
+				SELECT
+					COUNT(1) AS TOTAL_COUNT
+				FROM
+					TB_CO_DU
+					LEFT OUTER JOIN
+					(SELECT * FROM TB_CO_EMS WHERE EQUIP_TYPE = 14) AS EMS_INFO
+					ON TB_CO_DU.EMS_ID = EMS_INFO.EMS_ID
+				WHERE
+					TB_CO_DU.OPR_STATUS = 1 
+					<if test="emsName != '전체'">
+						AND EMS_INFO.EMS_NAME = #{emsName}
+					</if>
+					<if test="duId != ''">
+						AND TB_CO_DU.DU_ID = #{duId}
+					</if>
+					<if test="duName != ''and duName != '전체'">
+						AND TB_CO_DU.DU_NAME LIKE (CONCAT('%', #{duName}, '%'))
+					</if>
+					<if test="optionFlag == 'true'">
+						<!-- BOARD TYPE 제외됨 -->
+						<if test="switchType != ''">
+							AND TB_CO_DU.SWITCH_INFO LIKE (CONCAT('%', #{switchType}, '%'))
+						</if>
+						<if test="mcType != ''">
+							AND TB_CO_DU.MC_TYPE LIKE (CONCAT('%', #{mcType}, '%'))
+						</if>
+						<if test="cUid != ''">
+							AND TB_CO_DU.C_UID LIKE (CONCAT('%', #{cUid}, '%'))
+						</if>
+						<if test="vlan != ''">
+							AND TB_CO_DU.VLAN_INFO LIKE (CONCAT('%', #{vlan}, '%'))
+						</if>
+					</if>
+			) AS COUNT
+		WHERE
+			TB_CO_DU.OPR_STATUS = 1 
+			<if test="emsName != '전체'">
+				AND EMS_NAME = #{emsName}
+			</if>
+			<if test="duId != ''">
+				AND TB_CO_DU.DU_ID = #{duId}
+			</if>
+			<if test="duName != '' and duName != '전체'">
+				AND TB_CO_DU.DU_NAME LIKE (CONCAT('%', #{duName}, '%'))
+			</if>
+			<if test="optionFlag == 'true'">
+				<!-- BOARD TYPE 제외됨 -->
+				<if test="switchType != ''">
+					AND TB_CO_DU.SWITCH_INFO LIKE (CONCAT('%', #{switchType}, '%'))
+				</if>
+				<if test="mcType != ''">
+					AND TB_CO_DU.MC_TYPE LIKE (CONCAT('%', #{mcType}, '%'))
+				</if>
+				<if test="cUid != ''">
+					AND TB_CO_DU.C_UID LIKE (CONCAT('%', #{cUid}, '%'))
+				</if>
+				<if test="vlan != ''">
+					AND TB_CO_DU.VLAN_INFO LIKE (CONCAT('%', #{vlan}, '%'))
+				</if>
+			</if>
+			<if test="lineId != '' and lineId != null ">
+				AND LINE_NAME.LINE_ID LIKE  (CONCAT('%', #{lineId}, '%'))
+			</if>
+		ORDER BY
+			TB_CO_DU.C_UID, TB_CO_DU.DU_ID
+		LIMIT #{pageNo}, #{pagingNum}
+		
+	</select>
+	
+	<select id = "getBasicInfo" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			DU_NAME,
+			DU_ID,
+			TB_CO_DU.VENDOR_ID,
+			IFNULL(TB_CO_VENDOR.VENDOR_NAME, '-') AS VENDOR_NAME,
+			ONM_IP,
+			VLAN_INFO,
+			VLAN_INFO_2,
+			SWITCH_INFO,
+			SWITCH_INFO_2,
+			TB_CO_DU.TEAM_ID,
+			IFNULL(TB_CO_TEAM.TEAM_NAME, '-') AS TEAM_NAME,
+			MASTER_IP,
+			MASTER_IP_2,
+			AREA_INFO
+		FROM
+			TB_CO_DU
+			LEFT JOIN
+			TB_CO_VENDOR
+			ON TB_CO_DU.VENDOR_ID = TB_CO_VENDOR.VENDOR_ID
+			LEFT JOIN
+			TB_CO_TEAM
+			ON TB_CO_DU.TEAM_ID = TB_CO_TEAM.TEAM_ID
+		WHERE
+			TB_CO_DU.C_UID = #{cUid}
+	</select>
+	
+	<select id = "getPropertyInfo" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			CARD_TYPE,
+			CELL_TYPE,
+			SERVICE_TYPE,
+			DU_TYPE,
+			DATE_FORMAT(INSTALL_DATE,'%Y-%m-%d') AS INSTALL_DATE,
+			SERIALNUMBER
+		FROM
+			TB_CO_DU
+		WHERE
+			C_UID = #{cUid}
+	</select>
+	
+	<select id = "getOperationsInfo" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			SET_TB.SET_CNT,
+		    DROP_TB.DROP_CNT,
+		    CELL_TB.CELL_CNT
+		FROM
+			(SELECT COUNT(1) AS SET_CNT FROM TB_CO_RU WHERE OPR_STATUS = 1 AND P_CUID = #{cUid}) AS SET_TB,
+			(SELECT COUNT(1) AS DROP_CNT FROM TB_CO_RU WHERE OPR_STATUS = 0 AND P_CUID = #{cUid}) AS DROP_TB,
+			(SELECT COUNT(1) AS CELL_CNT FROM TB_CO_CELL_MAP WHERE C_UID = #{cUid}) AS CELL_TB
+	</select>
+	
+	<select id = "getManagerInfo" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			MAOPERATOR,
+			MOBILE_NUM,
+			TEL_NUM,
+			FAX_NUM
+		FROM
+			TB_CO_DU
+		WHERE
+			C_UID = #{cUid}
+	</select>
+	
+	<select id = "getAddrInfo" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			LINE_NAME.STATION_NAME
+		FROM
+			TB_CO_DU 
+			LEFT OUTER JOIN 
+	          ( select 
+	    			STATION.STATION_ID AS STATION_ID  
+	    			, group_concat(TCL.LINE_NAME) AS LINE_NAME
+		            , group_concat(TCL.LINE_ID) AS LINE_ID
+		            , STATION.STATION_NAME AS STATION_NAME
+			    			FROM
+			    	    	TB_CO_STATION STATION
+			    			LEFT OUTER JOIN TB_CO_LINE TCL
+			    			  ON STATION.LINE_ID = TCL.LINE_ID
+			          group by STATION_ID) LINE_NAME
+   		    ON TB_CO_DU.STATION_ID = LINE_NAME.STATION_ID
+		WHERE
+			C_UID = #{cUid}
+	</select>
+	
+	<select id = "getRuInfo" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			IFNULL(TB_CO_RU.C_UID,'-') AS RU_CUID,
+			IFNULL(TB_CO_RU.CELL_NUM,0) AS CELL_NUM,
+			IFNULL(TB_CO_RU.PORT_ID,'-') AS PORT_ID,
+			IFNULL(TB_CO_RU.SEQUENCE_ID,'-') AS SEQUENCE_ID,
+			IFNULL(TB_CO_RU.FREQUENCY,'-') AS FREQUENCY,
+			IFNULL(TB_CO_RU.PLD_RU_NAME,'-') AS STATION_NAME
+		FROM
+			TB_CO_RU
+		WHERE
+			P_CUID  = #{cUid}
+	</select>
+	
+	<select id = "getCellInfo" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			IFNULL(CELL_ID,'-') AS CELL_ID,
+		    IFNULL(CELL_NUM,'-') AS CELL_NUM,
+		    IFNULL(SECTOR,'-')AS SECTOR,
+		    IFNULL(FA,'-') AS FA,
+		    IFNULL(PCI,'-')AS PCI,
+		    IFNULL(FREQUENCY,'-')AS FREQUENCY,
+		    IFNULL(ADM_STATE,'-') AS ADM_STATE
+		FROM
+			TB_CO_CELL_MAP
+		WHERE
+			C_UID  = #{cUid}
+	</select>
+	
+	<select id = "getChCardInfo" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			UNIT_ID,
+			UNITTYPE,
+			PORT_TYPE,
+			SHELF_ID,
+			SLOT_ID,
+			PORT_ID,
+			CASC_ID,
+			SERIALNUMBER
+		FROM
+			TB_CO_CHANNEL_CARD
+		WHERE
+			DU_ID = (SELECT DU_ID FROM TB_CO_DU WHERE C_UID = #{cUid})
+	</select>
+	
+	<update id="duDetail_update" parameterType="java.util.HashMap">
+		UPDATE 
+			TB_CO_DU
+		SET
+			DU_NAME = #{du_name},
+			ONM_IP = #{onm_ip},
+			SWITCH_INFO = #{sw_info},
+			VLAN_INFO = #{vlan_info},
+			SWITCH_INFO_2 = #{sw_info2},
+			VENDOR_ID = #{vendor_id},
+			VLAN_INFO_2 = #{vlan_info2},
+			TEAM_ID = #{team_id},
+			MASTER_IP = #{master_ip},
+			MASTER_IP_2 = #{master_ip2},
+			MAOPERATOR = #{manager_nm},
+			MOBILE_NUM = #{mobile},
+			TEL_NUM = #{tel},
+			FAX_NUM = #{fax},
+			AREA_INFO = #{area_info},
+			<if test="station_id != '' and station_id != null ">
+				STATION_ID = #{station_id}, 
+			</if>
+			<!-- <if test="line_id != '' and line_id != null ">
+				LINE_ID = #{line_id}, 
+			</if> -->
+			<choose>
+		    	<when test="du_type != '' and du_type != null ">
+		    		DU_TYPE = #{du_type},
+		    	</when>
+		    	<otherwise>
+		    		DU_TYPE = null, 
+		    	</otherwise>
+		    </choose>
+			<choose>
+		    	<when test="card_type != '' and card_type != null ">
+		    		CARD_TYPE = #{card_type},
+		    	</when>
+		    	<otherwise>
+		    		CARD_TYPE = null,
+		    	</otherwise>
+		    </choose>
+			CELL_TYPE= #{cell_type},
+			<choose>
+		    	<when test="service_type != '' and service_type != null ">
+		    		SERVICE_TYPE= #{service_type}
+		    	</when>
+		    	<otherwise>
+		    		SERVICE_TYPE= null, 
+		    	</otherwise>
+		    </choose>
+			SERIALNUMBER = #{serial_no},
+			
+			<if test=" install_date != null and install_date != ''">
+				INSTALL_DATE = DATE_FORMAT(#{install_date},'%Y%m%d'),
+			</if>
+			UPDATE_USER_ID = #{update_user_id},
+			
+			
+			UPDATE_DATE = NOW()
+		WHERE
+			C_UID = #{c_uid}
+	</update>
+	
+	<update id="ruStation_update" parameterType="java.util.HashMap">
+		UPDATE 
+			TB_CO_RU
+		SET
+			<if test="station_id != '' and station_id != null ">
+				STATION_ID = #{station_id}, 
+			</if>
+			UPDATE_USER_ID = #{update_user_id},
+			UPDATE_DATE = NOW()
+		WHERE
+			P_CUID = #{c_uid} 
+	</update>
+	
+	<select id="duIdCheckResult" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT
+			COUNT(1) AS COUNT
+		FROM
+			TB_CO_DU
+		WHERE
+			DU_ID = #{du_id}
+	</select>
+	
+	<insert id = 'duAdd' parameterType="java.util.HashMap">
+		INSERT INTO TB_CO_DU 
+		(C_UID,OPR_STATUS,DU_ID,DU_NAME,VENDOR_ID,TEAM_ID,INSTALL_DATE,AREA_INFO,STATION_ID,MASTER_IP,EMS_ID,ONM_IP,
+		DU_GROUP,MASTER_IP_2,DU_VERSION,UPDATE_USER_ID,HEIGHT,EMS_DU_NAME,UPDATE_DATE)
+		 VALUES
+		 ((SELECT CONCAT(MAX(CONVERT(DU.C_UID,UNSIGNED))+1) FROM TB_CO_DU AS DU),#{opr_status},#{du_id},#{du_name},
+		 #{vendor_id},#{team_id},#{installDate},#{area_info},#{station_id},#{master_ip},#{ems_id},#{onm_ip},#{du_group},#{master_ip2},
+		 #{du_version},#{update_user_id},0,#{du_name}, NOW())
+	</insert>
+	
+	<insert id = 'duAddEquipAct' parameterType="java.util.HashMap">
+		INSERT INTO TB_CO_EQUIP_ACT
+		(EQUIP_NAME
+		, VIEW_NAME
+		, SYSTEM_ID
+		, NODE
+		, DEFAULT_ACT_SBY
+		, CURRENT_ACT_SBY
+		, EVENT_TIME
+		, CHECK_TIME
+		, EQUIP_TYPE)
+		VALUES
+		(#{equip_name}
+		, #{equip_name}
+		, #{system_id}
+		, #{node}
+		, #{defaultActSby}
+		, #{currentActSby}
+		, NOW()
+		, NOW()
+		, #{equip_type}
+		)
+	</insert>
+	
+	<update id="duEquipAct_update" parameterType="java.util.HashMap">
+		UPDATE 
+			TB_CO_EQUIP_ACT
+		SET
+			EQUIP_NAME = #{equip_name},
+			VIEW_NAME = #{equip_name}
+		WHERE 
+			EQUIP_TYPE = #{equip_type} 
+			AND SYSTEM_ID = #{system_id}
+	</update>
+	
+	<delete id="duDetail_delete" parameterType="java.util.HashMap">
+        DELETE FROM TB_CO_DU 
+        WHERE
+            C_UID = #{c_uid}
+    </delete>
+    
+	<delete id="duEquipAct_delete" parameterType="java.util.HashMap">
+		DELETE FROM TB_CO_EQUIP_ACT
+		WHERE EQUIP_TYPE = #{equip_type}
+			AND SYSTEM_ID = #{system_id}
+	</delete>
+	 
+	<select id="equipActCheckResult" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT
+			COUNT(1) AS COUNT
+		FROM
+			TB_CO_EQUIP_ACT
+		WHERE
+			SYSTEM_ID = #{system_id}
+			AND EQUIP_NAME = #{equip_name} 
+			AND EQUIP_TYPE = #{equip_type}
+	</select>
+	
+</mapper>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.HssDAO">
+	<select id="getHssDetail" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			TB_CO_SYSTEM_ETC.SYSTEM_ID AS HSS_ID,
+			TB_CO_SYSTEM_ETC.EMS_ID,
+			IFNULL(EMS_INFO.EMS_NAME,'-') AS EMS_NAME,
+			TB_CO_SYSTEM_ETC.VENDOR_ID,
+			IFNULL(TB_CO_VENDOR.VENDOR_NAME,'-') AS VENDOR_NAME,
+			TB_CO_SYSTEM_ETC.SYSTEM_NAME AS HSS_NAME,
+			DATE_FORMAT(TB_CO_SYSTEM_ETC.INSTALL_DATE,'%Y-%m-%d') AS INSTALL_DATE,
+			DATE_FORMAT(TB_CO_SYSTEM_ETC.UPDATE_DATE,'%Y-%m-%d') AS UPDATE_DATE,
+			IFNULL(IP,'-') AS IP,
+			IFNULL(TB_CO_SYSTEM_ETC.OPR_STATUS,'0') AS OPR_STATUS
+		FROM
+			TB_CO_SYSTEM_ETC
+			LEFT OUTER JOIN
+			<!-- 주제어장치관리에서 EMS_NAME조회가 안됨  
+			(SELECT * FROM TB_CO_EMS WHERE EQUIP_TYPE = 16) AS EMS_INFO -->
+			(SELECT * FROM TB_CO_EMS) AS EMS_INFO
+			ON TB_CO_SYSTEM_ETC.EMS_ID = EMS_INFO.EMS_ID
+			LEFT OUTER JOIN
+			TB_CO_VENDOR
+			ON TB_CO_SYSTEM_ETC.VENDOR_ID = TB_CO_VENDOR.VENDOR_ID
+		WHERE
+			TB_CO_SYSTEM_ETC.SYSTEM_ID = #{hss_id}
+	</select>
+	<update id="hssDetailupdate" parameterType="java.util.HashMap">
+		UPDATE 
+			TB_CO_SYSTEM_ETC
+		SET
+			SYSTEM_NAME = #{hss_name},
+			EMS_ID = #{ems_id},
+			VENDOR_ID = #{vendor_id},
+			<if test=" install_date != null and install_date != ''">
+				INSTALL_DATE = DATE_FORMAT(#{install_date},'%Y%m%d'),
+			</if>
+			UPDATE_DATE = DATE_FORMAT(#{update_date},'%Y%m%d'),
+			UPDATE_USER_ID = #{update_user_id},
+			IP = #{ip}
+		WHERE
+			SYSTEM_ID = #{hss_id}
+	</update>
+	
+	<select id="hssIdCheckResult" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT
+			COUNT(1) AS COUNT
+		FROM
+			TB_CO_SYSTEM_ETC
+		WHERE
+			SYSTEM_ID = #{hss_id}
+	</select>
+	
+	<insert id="hssAdd" parameterType="java.util.HashMap">
+		INSERT
+		INTO TB_CO_SYSTEM_ETC
+		(SYSTEM_ID,SYSTEM_NAME,EMS_ID,VENDOR_ID,IP,INSTALL_DATE,UPDATE_USER_ID,EQUIP_TYPE)
+		VALUES
+		(#{epc_id},#{epc_name},#{ems_id},#{vendor_id},#{epc_ip},DATE_FORMAT(#{install_date},'%Y%m%d%H%i%s'),#{update_user_id},6)
+	</insert>
+</mapper>

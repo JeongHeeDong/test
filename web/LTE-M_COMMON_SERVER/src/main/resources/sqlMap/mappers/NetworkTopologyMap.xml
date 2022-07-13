@@ -1,0 +1,3656 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.NetworkTopologyDAO">
+
+	<!-- 마지막 업데이트 시간 -->
+	<select id="getMonitorTime" resultType="java.util.HashMap">
+		SELECT
+			DATE_FORMAT(MIN(EVENT_TIME), '%Y/%m/%d %H:%i') AS MONITOR_TIME
+		FROM TB_SM_COLLECT_LOG
+		WHERE
+			DATA_NAME IN (
+				'TB_PM_MME_ATTACH',
+				'TB_PM_MME_SR',
+				'TB_PM_MME_SRMT',
+				'TB_PM_PGW_CREATE',
+				'TB_PM_PGW_MODIFY',
+				'TB_PM_PGW_DELETE',
+				'TB_PM_SGW_ATTACH',
+				'TB_PM_SGW_MODIFY',
+				'TB_PM_PCRF_GX',
+				'TB_PM_PCRF_RX',
+				'TB_PM_HSS_CX',
+				'TB_PM_HSS_S6A',
+				'TB_PM_CALL_SERVER',
+				'TB_PM_ACCESS_KPI')
+			AND EVENT_TIME IS NOT NULL
+	</select>
+	
+	<!-- 서비스장비, 주제어장치, 스위치, 응용시스템 목록 조회 -->
+	<select id="getEquipList" resultType="java.util.HashMap">
+		SELECT	VIEW_NAME
+				,CASE
+					WHEN EQUIP_TYPE = 11 AND CATEGORY = 'IN' THEN 'L2스위치'
+					WHEN EQUIP_TYPE = 11 AND CATEGORY = 'BB' THEN '백본스위치'
+					WHEN EQUIP_TYPE = 11 AND CATEGORY = 'BH' THEN 'DU스위치'
+					ELSE VIEW_NAME
+				END AS SYSTEM_NAME
+				,SYSTEM_ID
+				,DEFAULT_ACT_SBY
+				,CURRENT_ACT_SBY
+				,EQUIP_TYPE
+				,EQUIP_NAME
+				,CATEGORY
+				,NODE
+				,LINE_ID
+				<!-- ,SERVER_STAT -->
+		FROM	(
+				SELECT	ST1.VIEW_NAME
+						,ST1.SYSTEM_ID
+						,ST1.DEFAULT_ACT_SBY
+						,ST1.CURRENT_ACT_SBY
+						,ST1.EQUIP_TYPE
+						,ST2.EQUIP_NAME
+						,'' AS CATEGORY
+						,ST1.NODE
+						,'' AS LINE_ID
+						<!-- ,IFNULL(ST1.SERVER_STAT, 'N')		AS SERVER_STAT -->
+				FROM	TB_CO_EQUIP_ACT ST1
+						INNER JOIN TB_CO_EQUIP ST2
+							ON ST1.EQUIP_TYPE = ST2.EQUIP_TYPE
+				WHERE	ST1.EQUIP_TYPE NOT IN (2, 11, 44, 36)<!-- 2:DU | 11:스위치 | 36:정류기-->
+				UNION ALL
+				<!-- 스위치 -->
+				<!-- SELECT	CONCAT(ST3.CATEGORY, ' 스위치')		AS VIEW_NAME
+						,MIN(ST1.SYSTEM_ID)					AS SYSTEM_ID
+						,'N'								AS DEFAULT_ACT_SBY
+						,MIN(ST1.CURRENT_ACT_SBY)			AS CURRENT_ACT_SBY
+						,MIN(ST1.EQUIP_TYPE)				AS EQUIP_TYPE
+						,MIN(ST2.EQUIP_NAME)				AS EQUIP_NAME
+						,ST3.CATEGORY						AS CATEGORY
+						,MIN(ST1.NODE)						AS NODE
+						,MAX(IFNULL(ST1.SERVER_STAT, 'N'))	AS SERVER_STAT
+				FROM	TB_CO_EQUIP_ACT ST1
+						INNER JOIN TB_CO_EQUIP ST2
+							ON ST1.EQUIP_TYPE = ST2.EQUIP_TYPE
+						INNER JOIN TB_CO_SWITCH_INFO ST3
+							ON ST1.SYSTEM_ID = ST3.SWITCH_ID
+								AND ST1.EQUIP_TYPE = 11
+				GROUP BY ST3.CATEGORY -->
+				
+				   SELECT ST1.VIEW_NAME								AS VIEW_NAME
+						, ST1.SYSTEM_ID								AS SYSTEM_ID
+						,'N'										AS DEFAULT_ACT_SBY
+						, ST1.CURRENT_ACT_SBY						AS CURRENT_ACT_SBY
+						, ST1.EQUIP_TYPE							AS EQUIP_TYPE
+						, ST2.EQUIP_NAME							AS EQUIP_NAME
+						, ST4.CATEGORY								AS CATEGORY
+						, ST1.NODE									AS NODE
+						, GROUP_CONCAT(TCS.LINE_ID SEPARATOR ',') 	AS LINE_ID
+				  	 FROM NMS.TB_CO_EQUIP_ACT 				AS ST1
+					INNER JOIN TB_CO_SYSTEM_ETC 			AS ST3
+					   ON ST1.SYSTEM_ID = ST3.SYSTEM_ID
+					INNER JOIN TB_CO_EQUIP 					AS ST2
+					   ON ST1.EQUIP_TYPE = ST2.EQUIP_TYPE
+					 LEFT OUTER JOIN TB_CO_STATION 			AS TCS
+					   ON ST3.LAREA_ID = TCS.STATION_ID
+					INNER JOIN (
+							SELECT DISTINCT SWITCH_ID
+								 , CATEGORY
+							 FROM TB_CO_SWITCH_INFO
+							) AS ST4
+					   ON ST1.SYSTEM_ID = ST4.SWITCH_ID
+					WHERE ST1.EQUIP_TYPE = 11
+					  AND ST3.OPR_STATUS = 1
+					GROUP BY ST1.VIEW_NAME
+						, ST1.SYSTEM_ID
+						, ST1.CURRENT_ACT_SBY
+						, ST1.EQUIP_TYPE
+  						, ST2.EQUIP_NAME
+  						, ST4.CATEGORY
+  						, ST1.NODE
+				UNION ALL
+				
+				<!-- 노키아 스위치, 정류기 -->
+				SELECT
+					ST1.VIEW_NAME           AS VIEW_NAME
+				  , (ST1.SYSTEM_ID)       AS SYSTEM_ID
+				  , 'N'                   AS DEFAULT_ACT_SBY
+				  , (ST1.CURRENT_ACT_SBY) AS CURRENT_ACT_SBY
+				  , (ST1.EQUIP_TYPE)      AS EQUIP_TYPE
+				  , (ST2.EQUIP_NAME)      AS EQUIP_NAME
+				  , ''                    AS CATEGORY
+				  , (ST1.NODE)            AS NODE
+				  -- , TCS.LINE_ID           AS LINE_ID
+				  , GROUP_CONCAT(TCS.LINE_ID SEPARATOR ',') 	AS LINE_ID
+				FROM TB_CO_EQUIP_ACT ST1
+					INNER JOIN TB_CO_EQUIP ST2
+						ON ST1.EQUIP_TYPE = ST2.EQUIP_TYPE
+						AND ST1.EQUIP_TYPE IN (44, 36)
+					INNER JOIN TB_CO_SYSTEM_ETC ST3
+						ON ST1.SYSTEM_ID = ST3.SYSTEM_ID
+					LEFT OUTER JOIN TB_CO_STATION AS TCS
+						ON ST3.LAREA_ID       = TCS.STATION_ID
+						AND ST3.OPR_STATUS = 1
+				GROUP BY ST1.VIEW_NAME, ST1.SYSTEM_ID, ST1.CURRENT_ACT_SBY, ST1.EQUIP_TYPE, ST2.EQUIP_NAME, ST1.NODE
+				
+				<!-- UNION ALL -->
+				<!-- EMS -->
+				<!--
+				SELECT	MIN(VIEW_NAME)					AS VIEW_NAME
+						,MIN(SYSTEM_ID)					AS SYSTEM_ID
+						,'N'							AS DEFAULT_ACT_SBY
+						,MIN(CURRENT_ACT_SBY)			AS CURRENT_ACT_SBY
+						,MIN(EQUIP_TYPE)				AS EQUIP_TYPE
+						,MIN(EQUIP_NAME)				AS EQUIP_NAME
+						,''								AS CATEGORY
+						,MIN(NODE)						AS NODE
+						,MIN(IFNULL(SERVER_STAT, 'N'))	AS SERVER_STAT
+				FROM	TB_CO_EQUIP_ACT
+				WHERE	EQUIP_TYPE IN (14, 15, 16, 29)
+				-->
+				) T1
+		ORDER BY SYSTEM_ID ASC
+				,DEFAULT_ACT_SBY ASC
+	</select>
+	
+	<!--  서버상태 건수 -->
+	<select id="getServerStat" resultType="java.util.HashMap">
+		SELECT SUM(OK) AS OK , SUM(NOK) AS NOK 
+		FROM 
+			(SELECT COUNT(EQUIP_NAME)AS OK, 0 AS NOK FROM TB_CO_EQUIP_ACT 
+				WHERE CURRENT_ACT_SBY ='A'
+				AND EQUIP_TYPE != '2'
+			UNION ALL
+				SELECT 0 AS OK, COUNT(EQUIP_NAME) AS NOK FROM TB_CO_EQUIP_ACT 
+				WHERE DEFAULT_ACT_SBY = 'A'
+				AND CURRENT_ACT_SBY != 'A'
+				AND EQUIP_TYPE != '2'
+			UNION ALL
+				SELECT COUNT(EQUIP_NAME)AS OK, 0 AS NOK FROM TB_CO_EQUIP_ACT 
+				WHERE DEFAULT_ACT_SBY ='A'
+				AND CURRENT_ACT_SBY = 'A'
+				AND EQUIP_TYPE = '2'
+			UNION ALL
+				SELECT 0 AS OK, COUNT(EQUIP_NAME) AS NOK FROM TB_CO_EQUIP_ACT 
+				WHERE DEFAULT_ACT_SBY ='A'
+				AND CURRENT_ACT_SBY != 'A'
+				AND EQUIP_TYPE = '2') S_STAT
+	</select>
+	<!-- 주제어장치 - MME 성능 알람 조회 -->
+	<select id="getMmeAttach" parameterType="java.util.Map" resultType="java.util.HashMap">
+		SELECT	MME_ID
+				,ATTEMPT
+				,ATT_RATE
+				,IF(IFNULL(ATT_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(ATT_RATE_LEVEL, 4), 4) AS ATT_RATE_LEVEL
+				,SUCC_RATE
+				,IF(IFNULL(SUCC_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(SUCC_RATE_LEVEL, 4), 4) AS SUCC_RATE_LEVEL
+				,ANS_RATE
+				,IF(IFNULL(ANS_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(ANS_RATE_LEVEL, 4), 4) AS ANS_RATE_LEVEL
+		FROM	TB_PM_MME_ATTACH
+		WHERE	EVENT_TIME = STR_TO_DATE(#{mmeEventTime}, '%Y%m%d%H%i%s')
+		LIMIT 1
+	</select>
+	
+	<!-- 주제어장치 - MME 성능 알람 조회 -->
+	<select id="getMmeSr" parameterType="java.util.Map" resultType="java.util.HashMap">
+		SELECT	MME_ID
+				,ATTEMPT
+				,ATT_RATE
+				,IF(IFNULL(ATT_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(ATT_RATE_LEVEL, 4), 4) AS ATT_RATE_LEVEL
+				,SUCC_RATE
+				,IF(IFNULL(SUCC_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(SUCC_RATE_LEVEL, 4), 4) AS SUCC_RATE_LEVEL
+				,ANS_RATE
+				,IF(IFNULL(ANS_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(ANS_RATE_LEVEL, 4), 4) AS ANS_RATE_LEVEL
+		FROM	TB_PM_MME_SR
+		WHERE	EVENT_TIME = STR_TO_DATE(#{mmeEventTime}, '%Y%m%d%H%i%s')
+		LIMIT 1
+	</select>
+	
+	<!-- 주제어장치 - MME 성능 알람 조회 -->
+	<select id="getMmeSrmt" parameterType="java.util.Map" resultType="java.util.HashMap">
+		SELECT	MME_ID
+				,ATTEMPT
+				,ATT_RATE
+				,IF(IFNULL(ATT_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(ATT_RATE_LEVEL, 4), 4) AS ATT_RATE_LEVEL
+				,SUCC_RATE
+				,IF(IFNULL(SUCC_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(SUCC_RATE_LEVEL, 4), 4) AS SUCC_RATE_LEVEL
+				,ANS_RATE
+				,IF(IFNULL(ANS_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(ANS_RATE_LEVEL, 4), 4) AS ANS_RATE_LEVEL
+		FROM	TB_PM_MME_SRMT
+		WHERE	EVENT_TIME = STR_TO_DATE(#{mmeEventTime}, '%Y%m%d%H%i%s')
+		LIMIT 1
+	</select>
+	
+	<!-- 주제어장치 - HSS 성능 알람 조회 -->
+	<select id="getHssData" parameterType="java.util.Map" resultType="java.util.HashMap">
+		SELECT	#{statisticsType} AS STATISTICS_TYPE
+				<!-- ,GROUP_ID -->
+				,ATTEMPT
+				,ATT_RATE
+				,IF(IFNULL(ATT_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(ATT_RATE_LEVEL, 4), 4) AS ATT_RATE_LEVEL
+				,SUCC_RATE
+				,IF(IFNULL(SUCC_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(SUCC_RATE_LEVEL, 4), 4) AS SUCC_RATE_LEVEL
+		FROM	<if test="statisticsType == 'S6A Interface'">
+					TB_PM_HSS_S6A
+				</if>
+				<if test="statisticsType == 'Cx Interface'">
+					TB_PM_HSS_CX
+				</if>
+		
+		WHERE	EVENT_TIME = STR_TO_DATE(#{hssEventTime}, '%Y%m%d%H%i%s')
+			<!-- AND	GROUP_ID = #{groupId} -->
+		LIMIT 1
+	</select>
+	
+	<!-- 주제어장치 - PCRF 성능 알람 조회 -->
+	<select id="getPcrfData" parameterType="java.util.Map" resultType="java.util.HashMap">
+		SELECT	PCRF_ID
+				,#{kpiType} AS KPI_TYPE
+				,ATTEMPT
+				,ATT_RATE
+				,IF(IFNULL(ATT_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(ATT_RATE_LEVEL, 4), 4) AS ATT_RATE_LEVEL
+				,SUCC_RATE
+				,IF(IFNULL(SUCC_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(SUCC_RATE_LEVEL, 4), 4) AS SUCC_RATE_LEVEL
+		FROM	<if test="kpiType == 'Gx'">
+					TB_PM_PCRF_GX
+				</if>
+				<if test="kpiType == 'Rx'"> 
+					TB_PM_PCRF_RX
+				</if>
+		WHERE	EVENT_TIME = STR_TO_DATE(#{pcrfEventTime}, '%Y%m%d%H%i%s')
+		LIMIT 1
+	</select>
+	
+	<!-- 주제어장치 - SGW 성능 알람 조회 -->
+	<select id="getSgwAttach" parameterType="java.util.Map" resultType="java.util.HashMap">
+		SELECT	SGW_ID
+				,ATTEMPT
+				,ATT_RATE
+				,IF(IFNULL(ATT_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(ATT_RATE_LEVEL, 4), 4) AS ATT_RATE_LEVEL
+				,SUCC_RATE
+				,IF(IFNULL(SUCC_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(SUCC_RATE_LEVEL, 4), 4) AS SUCC_RATE_LEVEL
+		FROM	TB_PM_SGW_ATTACH
+		WHERE	EVENT_TIME = STR_TO_DATE(#{sgwPgwEventTime}, '%Y%m%d%H%i%s')
+		LIMIT 1
+	</select>
+	
+	<!-- 주제어장치 - SGW 성능 알람 조회 -->
+	<select id="getSgwModify" parameterType="java.util.Map" resultType="java.util.HashMap">
+		SELECT	SGW_ID
+				,ATTEMPT
+				,ATT_RATE
+				,IF(IFNULL(ATT_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(ATT_RATE_LEVEL, 4), 4) AS ATT_RATE_LEVEL
+				,SUCC_RATE
+				,IF(IFNULL(SUCC_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(SUCC_RATE_LEVEL, 4), 4) AS SUCC_RATE_LEVEL
+		FROM	TB_PM_SGW_MODIFY
+		WHERE	EVENT_TIME = STR_TO_DATE(#{sgwPgwEventTime}, '%Y%m%d%H%i%s')
+		LIMIT 1
+	</select>
+	
+	<!-- 주제어장치 - SGW 성능 알람 조회 -->
+	<select id="getSgwDelete" parameterType="java.util.Map" resultType="java.util.HashMap">
+		SELECT	SGW_ID
+				,ATTEMPT
+				,ATT_RATE
+				,IF(IFNULL(ATT_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(ATT_RATE_LEVEL, 4), 4) AS ATT_RATE_LEVEL
+				,SUCC_RATE
+				,IF(IFNULL(SUCC_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(SUCC_RATE_LEVEL, 4), 4) AS SUCC_RATE_LEVEL
+		FROM	TB_PM_SGW_DELETE
+		WHERE	EVENT_TIME = STR_TO_DATE(#{sgwPgwEventTime}, '%Y%m%d%H%i%s')
+		LIMIT 1
+	</select>
+	
+	<!-- 주제어장치 - PGW 성능 알람 조회 -->
+	<select id="getPgwCreate" parameterType="java.util.Map" resultType="java.util.HashMap">
+		SELECT	PGW_ID
+				,ATTEMPT
+				,ATT_RATE
+				,IF(IFNULL(ATT_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(ATT_RATE_LEVEL, 4), 4) AS ATT_RATE_LEVEL
+				,SUCC_RATE
+				,IF(IFNULL(SUCC_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(SUCC_RATE_LEVEL, 4), 4) AS SUCC_RATE_LEVEL
+		FROM	TB_PM_PGW_CREATE
+		WHERE	EVENT_TIME = STR_TO_DATE(#{sgwPgwEventTime}, '%Y%m%d%H%i%s')
+		LIMIT 1
+	</select>
+	
+	<!-- 주제어장치 - PGW 성능 알람 조회 -->
+	<select id="getPgwDelete" parameterType="java.util.Map" resultType="java.util.HashMap">
+		SELECT	PGW_ID
+				,ATTEMPT
+				,ATT_RATE
+				,IF(IFNULL(ATT_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(ATT_RATE_LEVEL, 4), 4) AS ATT_RATE_LEVEL
+				,SUCC_RATE
+				,IF(IFNULL(SUCC_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(SUCC_RATE_LEVEL, 4), 4) AS SUCC_RATE_LEVEL
+		FROM	TB_PM_PGW_DELETE
+		WHERE	EVENT_TIME = STR_TO_DATE(#{sgwPgwEventTime}, '%Y%m%d%H%i%s')
+		LIMIT 1
+	</select>
+	
+	<!-- 주제어장치 - PGW 성능 알람 조회 -->
+	<select id="getPgwModify" parameterType="java.util.Map" resultType="java.util.HashMap">
+		SELECT	PGW_ID
+				,ATTEMPT
+				,ATT_RATE
+				,IF(IFNULL(ATT_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(ATT_RATE_LEVEL, 4), 4) AS ATT_RATE_LEVEL
+				,SUCC_RATE
+				,IF(IFNULL(SUCC_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(SUCC_RATE_LEVEL, 4), 4) AS SUCC_RATE_LEVEL
+		FROM	TB_PM_PGW_MODIFY
+		WHERE	EVENT_TIME = STR_TO_DATE(#{sgwPgwEventTime}, '%Y%m%d%H%i%s')
+		LIMIT 1
+	</select>
+	
+	<!-- REC 성능 알람 조회 -->
+	<select id="getRecData" parameterType="java.util.Map" resultType="java.util.HashMap">
+		SELECT CALL_ATTEMPT
+		  , ROUND(CALL_ATT_RATE/CNT, 2) AS CALL_ATT_RATE
+		  , CALL_ATT_RATE_LEVEL
+		  , ROUND(CALL_SUCC_RATE/CNT, 2) AS CALL_SUCC_RATE
+		  , CALL_SUCC_RATE_LEVEL
+		  , PTT_ATTEMPT
+		  , ROUND(PTT_ATT_RATE/CNT, 2)  AS PTT_ATT_RATE
+		  , PTT_ATT_RATE_LEVEL
+		  , ROUND(PTT_SUCC_RATE/CNT, 2) AS PTT_SUCC_RATE
+		  , PTT_SUCC_RATE_LEVEL
+		FROM
+		(
+		  SELECT	SUM(CALL_ATTEMPT) AS CALL_ATTEMPT
+		  				,SUM(CALL_ATT_RATE) AS CALL_ATT_RATE
+		  				,IF(IFNULL(MIN(CALL_ATT_RATE_LEVEL), 4)  <![CDATA[<=]]> #{alarmFilter}, IFNULL(MIN(CALL_ATT_RATE_LEVEL), 4), 4) AS CALL_ATT_RATE_LEVEL
+		  				,SUM(CALL_SUCC_RATE) AS CALL_SUCC_RATE
+		  				,IF(IFNULL(MIN(CALL_SUCC_RATE_LEVEL), 4)  <![CDATA[<=]]> #{alarmFilter}, IFNULL(MIN(CALL_SUCC_RATE_LEVEL), 4), 4) AS CALL_SUCC_RATE_LEVEL
+		  				,SUM(PTT_ATTEMPT) AS PTT_ATTEMPT
+		  				,SUM(PTT_ATT_RATE) AS PTT_ATT_RATE
+		  				,IF(IFNULL(MIN(PTT_ATT_RATE_LEVEL), 4)  <![CDATA[<=]]> #{alarmFilter}, IFNULL(MIN(PTT_ATT_RATE_LEVEL), 4), 4) AS PTT_ATT_RATE_LEVEL
+		  				,SUM(PTT_SUCC_RATE) AS PTT_SUCC_RATE
+		  				,IF(IFNULL(MIN(PTT_SUCC_RATE_LEVEL), 4)  <![CDATA[<=]]> #{alarmFilter}, IFNULL(MIN(PTT_SUCC_RATE_LEVEL), 4), 4) AS PTT_SUCC_RATE_LEVEL
+		        	    ,COUNT(EVENT_TIME) CNT
+		  		FROM	TB_PM_REC
+		  		WHERE	EVENT_TIME = STR_TO_DATE(#{recEventTime}, '%Y%m%d%H%i%s')
+		      ) rec
+		LIMIT 1
+	
+	</select>
+	
+	<!-- DU 목록 조회 -->
+	<select id="getDuList" parameterType="java.util.Map" resultType="java.util.HashMap">
+		SELECT	T1.VIEW_NAME
+				,T1.VIEW_NAME					AS SYSTEM_NAME
+				,SUBSTRING(T1.VIEW_NAME, INSTR(T1.VIEW_NAME,'_')+1) AS VIEW_SORT_NAME
+				,T1.SYSTEM_ID
+				,T1.DEFAULT_ACT_SBY
+				,T1.CURRENT_ACT_SBY
+				,T1.EQUIP_TYPE
+				<!-- ,IFNULL(T1.SERVER_STAT, 'N')	AS SERVER_STAT -->
+				,IFNULL(T2.ATTEMPT, 0)			AS ATTEMPT
+				,IFNULL(T2.ATT_RATE, 0)			AS ATT_RATE
+				,IFNULL(T2.RRC_RATE, 0)			AS RRC_RATE
+				,IFNULL(T2.ANSWER_RATE, 0)		AS ANS_RATE
+				,IFNULL(T2.CD_RATE, 0)			AS CD_RATE 
+				,IF(IFNULL(T2.ATT_RATE_5M_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(T2.ATT_RATE_5M_LEVEL, 4), 4) AS ATT_RATE_LEVEL
+				,IF(IFNULL(T2.RRC_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(T2.RRC_RATE_LEVEL, 4), 4) AS RRC_RATE_LEVEL
+				,IF(IFNULL(T2.ANSWER_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(T2.ANSWER_RATE_LEVEL, 4), 4) AS ANS_RATE_LEVEL
+				,IF(IFNULL(T2.CD_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(T2.CD_RATE_LEVEL, 4), 4) AS CD_RATE_LEVEL
+				,'DU'				AS EQUIP_NAME
+				,#{eventTime}		AS EVENT_TIME
+				, GROUP_CONCAT(T4.LINE_ID SEPARATOR ',') AS LINE_ID	<!-- 여러줄로 나오는 호선에 대해 한줄로 가져오기  위해 추가 -->
+				<!-- 기지국성능감시 개선 (200824) 추가 -->
+				, T2.ERAB_ATTEMPT AS ERAB_ATTEMPT
+				, T2.ERAB_ATT_RATE AS ERAB_ATT_RATE
+				, T2.ERAB_ATT_RATE_LEVEL AS ERAB_ATT_RATE_LEVEL
+				<!-- // 기지국성능감시 개선 (200824) 추가 -->
+				, (SELECT COUNT(*) AS COUNT FROM TB_CO_DU WHERE OPR_STATUS = '1') AS LIST_COUNT
+		FROM	TB_CO_EQUIP_ACT T1
+				LEFT JOIN (
+					SELECT	KPI.DU_ID
+						  ,	KPI.ATTEMPT             -- RRC 시도호
+						  , KPI.ATT_RATE			-- RRC 시도호 증감율(%)
+						  , KPI.ATT_RATE_5M_LEVEL	--
+						  , KPI.STD_ATT_5M       	-- 전주 동시간 RRC 시도호
+						  , KPI.RRC                 -- 소통호 (RRC 성공호)
+						  , KPI.RRC_RATE			-- 소통율(RRC 성공율)(%)
+						  , KPI.RRC_RATE_LEVEL		--
+						  , KPI.ANSWER              -- 완료호 (ERAB Setup 성공호)
+						  , KPI.ANSWER_RATE			-- 완료율(ERAB Setup 성공율)(%)
+						  , KPI.ANSWER_RATE_LEVEL	--
+						  , KPI.CD                  -- 절단호
+						  , KPI.CD_RATE				-- 절단율 (%)
+						  , KPI.CD_RATE_LEVEL		--
+						  , KPI.ERAB_ATTEMPT        -- ERAB Setup 시도호
+						  , KPI.ERAB_ATT_RATE		-- ERAB SEtup 시도호 증감율(%)
+						  , KPI.ERAB_ATT_RATE_LEVEL	--
+					FROM	TB_PM_ACCESS_KPI AS KPI 
+					WHERE	EVENT_TIME = STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i%s')
+					GROUP BY DU_ID
+				) T2
+					ON T1.SYSTEM_ID = T2.DU_ID
+				LEFT JOIN TB_CO_DU T3
+			   		ON T1.SYSTEM_ID = T3.DU_ID
+			    LEFT JOIN TB_CO_STATION T4
+			    	ON T3.STATION_ID = T4.STATION_ID
+		WHERE	T1.EQUIP_TYPE = 2
+		AND		T3.OPR_STATUS = '1'  
+		GROUP BY T1.SYSTEM_ID, T1.DEFAULT_ACT_SBY, T1.CURRENT_ACT_SBY, T1.EQUIP_TYPE <!-- 여러줄로 나오는 호선에 대해 한줄로 가져오기  위해 추가 -->
+		ORDER BY T1.SYSTEM_ID ASC
+				, VIEW_NAME ASC 
+				, DEFAULT_ACT_SBY ASC   
+	</select> 
+	 
+	<!-- RU 목록 조회 -->
+	<select id="getRuList" parameterType="java.util.Map" resultType="java.util.HashMap">
+		SELECT	T1.C_UID					AS SYSTEM_ID
+				,T1.RU_NAME					AS SYSTEM_NAME
+				,T1.RU_NAME					AS VIEW_NAME
+				,SUBSTRING_INDEX(T1.RU_NAME,'_', -1)					AS VIEW_SORT_NAME
+				,3							AS EQUIP_TYPE
+				,T1.DU_ID
+				,T1.SECTOR
+				,T1.PORT_ID
+				,T1.SEQUENCE_ID
+				,IFNULL(T2.ATTEMPT, 0)		AS ATTEMPT			/* 시도호 */
+				,IFNULL(T2.ATT_RATE, 0)		AS ATT_RATE			/* 시도호증감율 */
+				,IFNULL(T2.RRC_RATE, 0)		AS RRC_RATE			/* 소통율 */
+				,IFNULL(T2.ANSWER_RATE, 0)	AS ANS_RATE			/* 완료율 */
+				,IFNULL(T2.CD_RATE, 0)		AS CD_RATE			/* 절단율 */
+				,IF(IFNULL(T2.ATT_RATE_5M_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(T2.ATT_RATE_5M_LEVEL, 4), 4) AS ATT_RATE_LEVEL
+				,IF(IFNULL(T2.RRC_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(T2.RRC_RATE_LEVEL, 4), 4) AS RRC_RATE_LEVEL
+				,IF(IFNULL(T2.ANSWER_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(T2.ANSWER_RATE_LEVEL, 4), 4) AS ANS_RATE_LEVEL
+				,IF(IFNULL(T2.CD_RATE_LEVEL, 4) <![CDATA[<=]]> #{alarmFilter}, IFNULL(T2.CD_RATE_LEVEL, 4), 4) AS CD_RATE_LEVEL
+				,'RU'					AS EQUIP_NAME
+				,#{eventTime} 			AS EVENT_TIME
+				<!--, T3.LINE_ID  			AS LINE_ID-->
+				, GROUP_CONCAT(T3.LINE_ID SEPARATOR ',') AS LINE_ID
+				<!-- 기지국성능감시 개선 (200824) 추가 -->
+				, T2.ERAB_ATTEMPT AS ERAB_ATTEMPT
+				, IFNULL(T2.ERAB_ATT_RATE, 0) AS ERAB_ATT_RATE
+				, T2.ERAB_ATT_RATE_LEVEL AS ERAB_ATT_RATE_LEVEL
+				<!-- // 기지국성능감시 개선 (200824) 추가 -->
+		FROM	TB_CO_RU T1 
+				LEFT JOIN TB_PM_ACCESS_KPI T2 
+					ON T1.CELL_NUM = REPLACE(T2.RU_CUID, 'cNum', '')
+					AND T1.DU_ID = T2.DU_ID
+					AND T2.EVENT_TIME = STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i%s')
+				LEFT JOIN TB_CO_STATION T3
+					ON T1.STATION_ID = T3.STATION_ID
+		WHERE	T1.OPR_STATUS = '1'
+		GROUP BY T1.C_UID, T1.RU_NAME, T1.DU_ID ,T1.SECTOR, T1.PORT_ID, T1.SEQUENCE_ID
+		ORDER BY VIEW_NAME ASC
+	</select>
+	
+	<!-- 네트워크 통합감시 - 품질 Trend -->
+	<select id="getQualityTrend" parameterType="java.util.Map" resultType="java.util.HashMap">
+		<choose>
+			<when test="equipType == 1 " ><!-- MME -->
+				SELECT
+					A.MME_ID as SYSTEM_ID
+					, A.MME_NAME as SYSTEM_NAME
+					, DATE_FORMAT(B.EVENT_TIME, '%Y/%m/%d %T') AS EVENT_TIME
+					, B.ATTEMPT
+					, B.SUCC_RATE as RATE_1	<!-- 성공율 -->
+					<!-- , B.SUCC_RATE AS RATE_2 --><!-- 접속율 -->
+					, B.ATT_RATE AS RATE_3	<!-- 시도호증감율 -->
+				FROM TB_CO_MME A
+				<choose>
+					<when test="searchType == 'attach' " >
+						LEFT JOIN TB_PM_MME_ATTACH AS B
+					</when>
+					<when test="searchType == 'srmo' " >
+						LEFT JOIN TB_PM_MME_SR AS B
+					</when>
+					<when test="searchType == 'srmt' " >
+						LEFT JOIN TB_PM_MME_SRMT AS B
+					</when>
+				</choose>
+					ON A.MME_ID = B.MME_ID
+				WHERE
+					A.OPR_STATUS = '1'
+					<!-- AND A.MME_ID = #{systemId} -->
+					AND B.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+					AND B.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+				ORDER BY EVENT_TIME ASC
+			</when>
+			<when test="equipType == 4 " ><!-- GW -->
+				SELECT
+					A.PGW_ID as SYSTEM_ID
+					, A.PGW_NAME as SYSTEM_NAME
+					, DATE_FORMAT(B.EVENT_TIME, '%Y/%m/%d %T') AS EVENT_TIME
+					, B.ATTEMPT
+					, B.SUCC_RATE as RATE_1
+					, B.ATT_RATE AS RATE_3
+				FROM TB_CO_PGW A
+				<choose>
+					<when test="searchType == 'pgw_create' " >
+						LEFT JOIN TB_PM_PGW_CREATE B
+						ON A.PGW_ID = B.PGW_ID
+					</when>
+					<when test="searchType == 'pgw_modify' " >
+						LEFT JOIN TB_PM_PGW_MODIFY B
+						ON A.PGW_ID = B.PGW_ID
+					</when>
+					<when test="searchType == 'pgw_delete' " >
+						LEFT JOIN TB_PM_PGW_DELETE B
+						ON A.PGW_ID = B.PGW_ID
+					</when>
+					<when test="searchType == 'sgw_attach' " >
+						LEFT JOIN TB_PM_SGW_ATTACH B
+						ON A.PGW_ID = B.SGW_ID
+					</when>
+					<when test="searchType == 'sgw_modify' " >
+						LEFT JOIN TB_PM_SGW_MODIFY B
+						ON A.PGW_ID = B.SGW_ID
+					</when>
+					<when test="searchType == 'sgw_delete' " >
+						LEFT JOIN TB_PM_SGW_DELETE B
+						ON A.PGW_ID = B.SGW_ID
+					</when>
+				</choose>
+				WHERE
+					A.OPR_STATUS = '1'
+					<!-- AND A.PGW_ID = #{systemId} -->
+					AND B.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+					AND B.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+				ORDER BY EVENT_TIME ASC
+			</when>
+			<when test="equipType == 6 " ><!-- HSS + PCRF-->
+				<choose>
+				<!-- HSS -->
+					<when test="searchType == 's6a' or searchType == 'cx'" >
+						SELECT
+							'HSS' as SYSTEM_NAME
+							, DATE_FORMAT(EVENT_TIME, '%Y/%m/%d %T') AS EVENT_TIME
+							, ATTEMPT
+							, SUCC_RATE as RATE_1
+							, ATT_RATE AS RATE_3
+							
+						FROM 
+							<choose>
+								<when test="searchType == 's6a' " >
+									TB_PM_HSS_S6A
+								</when>
+								<when test="searchType == 'cx' " >
+									TB_PM_HSS_CX
+								</when>
+							</choose>
+						WHERE
+							EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+							AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+							<!-- AND GROUP_ID = #{searchType} -->
+					
+					</when>
+					
+					<!-- PCRF -->
+					<when test="searchType == 'gx' or searchType == 'rx'" >
+						SELECT
+							A.PCRF_NAME AS SYSTEM_NAME
+							, DATE_FORMAT(B.EVENT_TIME, '%Y/%m/%d %T') AS EVENT_TIME
+							, B.ATTEMPT
+							, B.SUCC_RATE as RATE_1
+							, B.ATT_RATE AS RATE_3
+						
+						FROM
+							TB_CO_PCRF A
+						<choose>
+							<when test="searchType == 'gx' " >
+								LEFT JOIN TB_PM_PCRF_GX B
+								ON A.PCRF_ID = B.PCRF_ID
+							</when>
+							<when test="searchType == 'rx' " >
+								LEFT JOIN  TB_PM_PCRF_RX B
+								ON A.PCRF_ID = B.PCRF_ID
+							</when>
+						</choose>
+						WHERE
+							A.OPR_STATUS = '1'
+							<!-- AND A.PCRF_ID = #{systemId} -->
+							AND B.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+							AND B.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+					</when>
+				</choose>
+				ORDER BY EVENT_TIME ASC
+			</when>
+			<when test="equipType == 7 " ><!-- PCRF -->
+				SELECT
+					A.PCRF_ID AS SYSTEM_ID
+					, A.PCRF_NAME AS SYSTEM_NAME
+					, DATE_FORMAT(B.EVENT_TIME, '%Y/%m/%d %T') AS EVENT_TIME
+					, B.ATTEMPT
+					, B.SUCC_RATE as RATE_1
+					, B.ATT_RATE AS RATE_3
+				FROM
+					TB_CO_PCRF A
+					LEFT JOIN TB_PM_PCRF B
+						ON A.PCRF_ID = B.PCRF_ID
+				WHERE
+					A.OPR_STATUS = '1'
+					AND A.PCRF_ID = #{systemId}
+					AND B.KPI_TYPE = #{searchType}
+					AND B.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+					AND B.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+				ORDER BY EVENT_TIME ASC
+			</when>
+			<when test="equipType == 2 " ><!-- DU -->
+				SELECT A.C_UID as SYSTEM_ID
+					, A.DU_NAME as SYSTEM_NAME
+					, DATE_FORMAT(B.EVENT_TIME, '%Y/%m/%d %T') AS EVENT_TIME
+					, CAST(SUM(B.ATTEMPT) AS SIGNED) AS ATTEMPT					 -- RRC 시도호
+					, CAST(SUM(B.STD_ATT_5M) AS SIGNED)         AS STD_ATT_5M    -- RRC 기준 시도호
+					, CAST(SUM(B.ERAB_ATTEMPT) AS SIGNED)       AS ERAB_ATTEMPT  -- ERAB Setup 시도호
+					, CAST(SUM(B.STD_ERAB_5M) AS SIGNED)        AS STD_ERAB_5M   -- ERAB Setup 기준 시도
+					, IFNULL(((SUM(B.ATTEMPT) - SUM(B.STD_ATT_5M)) / SUM(B.STD_ATT_5M)) * 100, 0)				AS ATT_RATE	-- RRC 시도호 증감율(%)
+					, IFNULL(((SUM(B.ERAB_ATTEMPT) - SUM(B.STD_ERAB_5M)) / SUM(B.STD_ERAB_5M)) * 100, 0)   AS ERAB_ATT_RATE	-- ERAB Setup 시도호 증감율(%)
+					, CASE
+						WHEN IFNULL(SUM(B.ATTEMPT), 0) = 0 THEN FORMAT(100, 2)
+						ELSE FORMAT(SUM(IFNULL(B.RRC, 0)) / SUM(B.ATTEMPT) * 100, 2)
+					END    AS RRC_RATE			-- 소통율(RRC 성공율)(%)
+					, CASE
+						WHEN IFNULL(SUM(B.ERAB_ATTEMPT), 0) = 0 THEN FORMAT(100, 2)
+						ELSE FORMAT(SUM(IFNULL(B.ANSWER, 0)) / SUM(B.ERAB_ATTEMPT) * 100, 2)
+					END AS ANSWER_RATE			-- 완료율(ERAB Setup 성공율)(%)
+					, CASE
+						WHEN (IFNULL(SUM(B.ERAB_SUCCESS), 0) + IFNULL(SUM(B.ERAB_ADD_SUCCESS), 0)) = 0 THEN FORMAT(0, 2)
+						ELSE FORMAT(SUM(B.CD) / (IFNULL(SUM(B.ERAB_SUCCESS), 0) + IFNULL(SUM(B.ERAB_ADD_SUCCESS), 0)) * 100, 2)
+						END AS CD_RATE			-- 절단율
+					<!-- <choose>
+						<when test="searchType == 'rrc' " >
+							, CASE
+								WHEN IFNULL(SUM(B.ATTEMPT), 0) = 0 THEN FORMAT(100, 2)
+								ELSE FORMAT(SUM(IFNULL(B.RRC, 0)) / SUM(B.ATTEMPT) * 100, 2)
+							END    AS RATE_1,
+							CASE
+								WHEN IFNULL(SUM(B.ERAB_ATTEMPT), 0) = 0 THEN FORMAT(100, 2)
+								ELSE FORMAT(SUM(IFNULL(B.ANSWER, 0)) / SUM(B.ERAB_ATTEMPT) * 100, 2)
+							END AS RATE_2
+# 							, B.RRC_RATE AS RATE_1
+# 							, B.ANSWER_RATE AS RATE_2
+						</when>
+						<when test="searchType == 'cd' " >
+							, CASE
+								WHEN (IFNULL(SUM(B.ERAB_SUCCESS), 0) + IFNULL(SUM(B.ERAB_ADD_SUCCESS), 0)) = 0 THEN FORMAT(0, 2)
+								ELSE FORMAT(SUM(B.CD) / (IFNULL(SUM(B.ERAB_SUCCESS), 0) + IFNULL(SUM(B.ERAB_ADD_SUCCESS), 0)) * 100, 2)
+							END AS RATE_1
+# 							, B.CD_RATE as RATE_1
+						</when>
+					</choose> -->
+				FROM
+					TB_CO_DU AS A
+					LEFT JOIN TB_PM_ACCESS_KPI AS B
+						ON A.C_UID = B.C_UID
+				WHERE
+					A.OPR_STATUS = '1'
+					AND A.DU_ID = #{systemId}
+					AND B.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+					AND B.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+				GROUP BY B.EVENT_TIME
+				ORDER BY B.EVENT_TIME ASC
+			</when>
+			<when test="equipType == 3 " ><!-- RU -->
+				SELECT
+					A.C_UID as SYSTEM_ID
+					, A.RU_NAME as SYSTEM_NAME
+					, DATE_FORMAT(B.EVENT_TIME, '%Y/%m/%d %T') AS EVENT_TIME
+					, B.ATTEMPT			AS ATTEMPT			--  RRC 시도호
+					, B.STD_ATT_5M		AS STD_ATT_5M		--  RRC 기준 시도호
+					, B.ERAB_ATTEMPT 	AS ERAB_ATTEMPT		-- ERAB Setup 시도호
+					, B.STD_ERAB_5M		AS STD_ERAB_5M		-- ERAB Setup 기준 시도
+					, B.ATT_RATE        AS ATT_RATE			-- RRC 시도호 증감율(%)
+					, B.ERAB_ATT_RATE   AS ERAB_ATT_RATE	-- ERAB Setup 시도호 증감율(%)
+					, B.RRC_RATE		AS RRC_RATE			-- 소통율 (RRC 성공율)(%)
+					, B.ANSWER_RATE 	AS ANSWER_RATE		-- 완료율 (ERAB Setup 성공율)(%)
+					, B.CD_RATE			AS CD_RATE			-- 절단율 (%)
+					<!-- <choose>
+						<when test="searchType == 'rrc' " >
+							, B.RRC_RATE as RATE_1
+							, B.ANSWER_RATE as RATE_2
+						</when>
+						<when test="searchType == 'cd' " >
+							, B.CD_RATE as RATE_1
+						</when>
+					</choose> -->
+				FROM
+					TB_CO_RU A
+					LEFT JOIN TB_PM_ACCESS_KPI B
+						ON A.DU_ID      = B.DU_ID
+						AND A.CELL_NUM = REPLACE(B.RU_CUID, 'cNum', '')
+				WHERE
+					A.OPR_STATUS = '1'
+					AND A.C_UID = #{systemId}
+					AND B.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+					AND B.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+				ORDER BY EVENT_TIME ASC
+			</when>
+			<when test="equipType == 10 " ><!-- REC -->
+				SELECT
+					SYSTEM_NAME
+					,EVENT_TIME
+					,ATTEMPT
+					,ROUND(RATE_1/CNT,2)  AS RATE_1 
+					,ROUND(RATE_3/CNT,2)  AS RATE_3 
+				FROM
+					(
+						SELECT
+						<choose>
+							<when test="searchType == 'call' " >
+								'CALL' as SYSTEM_NAME
+								, DATE_FORMAT(EVENT_TIME, '%Y/%m/%d %T') AS EVENT_TIME
+								, SUM(IFNULL(CALL_ATTEMPT,0)) as ATTEMPT
+								, SUM(IFNULL(CALL_SUCC_RATE,0)) as RATE_1
+								, SUM(IFNULL(CALL_ATT_RATE,0)) as RATE_3
+							</when>
+							<when test="searchType == 'ptt' " >
+								'PTT' as SYSTEM_NAME
+								, DATE_FORMAT(EVENT_TIME, '%Y/%m/%d %T') AS EVENT_TIME
+								, SUM(IFNULL(PTT_ATTEMPT,0)) as ATTEMPT
+								, SUM(IFNULL(PTT_SUCC_RATE,0)) as RATE_1
+								, SUM(IFNULL(PTT_ATT_RATE,0)) as RATE_3
+							</when>
+						</choose>  
+						, COUNT(EVENT_TIME) as CNT
+					FROM TB_PM_REC
+					WHERE
+						EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+						AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+					GROUP BY EVENT_TIME
+					) rec
+				ORDER BY EVENT_TIME ASC
+			</when>
+		</choose>
+	</select>
+	
+	<!-- 네트워크 통합감시 - 성능 상세조회 -->
+	<select id="getDetailPerformance" parameterType="java.util.Map" resultType="java.util.HashMap">
+		<choose>
+			<when test="equipType == 1 "><!-- MME -->
+				<choose>
+					<when test="searchType == 'all'">
+						SELECT
+							MME_ID AS SYSTEM_ID
+							, MME_NAME AS SYSTEM_NAME
+							, TYPE
+							, DATE_FORMAT(EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+							, ATTEMPT
+							, ATT_RATE
+							, ATT_RATE_LEVEL
+							, SUCC_RATE AS RATE_1
+							, SUCC_RATE_LEVEL AS RATE_1_LEVEL
+							, ANS_RATE AS RATE_2
+							, ANS_RATE_LEVEL AS RATE_2_LEVEL
+						FROM
+							(
+							SELECT
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								MME_ID,
+								MME_NAME,
+								ATT_RATE,
+								ATT_RATE_LEVEL,
+								SUCCESS,
+								SUCC_RATE,
+								SUCC_RATE_LEVEL,
+								ANSWER,
+								ANS_RATE,
+								ANS_RATE_LEVEL,
+								'ATTACH' AS TYPE
+							FROM TB_PM_MME_ATTACH
+							WHERE
+								EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime},'%Y%m%d%H%i')
+								AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime},'%Y%m%d%H%i')
+
+							UNION ALL
+
+							SELECT
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								MME_ID,
+								MME_NAME,
+								ATT_RATE,
+								ATT_RATE_LEVEL,
+								SUCCESS,
+								SUCC_RATE,
+								SUCC_RATE_LEVEL,
+								ANSWER,
+								ANS_RATE,
+								ANS_RATE_LEVEL,
+								'SRMO' AS TYPE
+							FROM TB_PM_MME_SR
+							WHERE
+								EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime},'%Y%m%d%H%i')
+								AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime},'%Y%m%d%H%i')
+								
+							UNION ALL
+
+							SELECT
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								MME_ID,
+								MME_NAME,
+								ATT_RATE,
+								ATT_RATE_LEVEL,
+								SUCCESS,
+								SUCC_RATE,
+								SUCC_RATE_LEVEL,
+								ANSWER,
+								ANS_RATE,
+								ANS_RATE_LEVEL,
+								'SRMT' AS TYPE
+							FROM TB_PM_MME_SRMT 
+							WHERE
+								
+								EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime},'%Y%m%d%H%i')
+								AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime},'%Y%m%d%H%i')
+							) AS A
+						ORDER BY
+						<if test="sortOption.size() &gt; 0">
+							<foreach collection="sortOption" item="option" separator=",">
+								${option.colName} ${option.order}
+							</foreach>
+						</if>
+						<if test="sortOption.size() == 0">
+							EVENT_TIME DESC
+						</if>
+					</when>
+					<otherwise>
+						SELECT
+							A.MME_ID AS SYSTEM_ID
+							, A.MME_NAME AS SYSTEM_NAME
+							, UPPER(#{searchType}) AS TYPE
+							, DATE_FORMAT(B.EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+							, B.ATTEMPT
+							, B.ATT_RATE
+							, B.ATT_RATE_LEVEL 
+							, B.SUCC_RATE AS RATE_1
+							, B.SUCC_RATE_LEVEL AS RATE_1_LEVEL
+							<if test="searchType != 'sgs' ">
+							, B.ANS_RATE AS RATE_2
+							, B.ANS_RATE_LEVEL AS RATE_2_LEVEL
+							</if>
+						FROM
+							TB_CO_MME A
+							<choose>
+								<when test="searchType == 'attach' ">
+									LEFT JOIN TB_PM_MME_ATTACH B
+								</when>
+								<when test="searchType == 'srmo' ">
+									LEFT JOIN TB_PM_MME_SR B
+								</when>
+								<when test="searchType == 'srmt' ">
+									LEFT JOIN TB_PM_MME_SRMT B
+								</when>
+								<!--<when test="searchType == 'sgs' " >-->
+									<!--LEFT JOIN TB_PM_MME_SGSAP B-->
+								<!--</when>-->
+							</choose>
+								ON A.MME_ID = B.MME_ID
+						WHERE
+							A.OPR_STATUS = '1'
+							AND B.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+							AND B.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+						ORDER BY
+						<if test="sortOption.size() &gt; 0">
+							<foreach collection="sortOption" item="option" separator=",">
+								${option.colName} ${option.order}
+							</foreach>
+						</if>
+						<if test="sortOption.size() == 0">
+							EVENT_TIME DESC
+						</if>
+					</otherwise>
+				</choose>
+			</when>
+			<when test="equipType == 4 "><!-- PGW/SGW -->
+				<choose>
+					<when test="searchType == 'all'">
+						SELECT
+							PGW_ID AS SYSTEM_ID
+							, PGW_NAME AS SYSTEM_NAME
+							, TYPE
+							, DATE_FORMAT(EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+							, ATTEMPT
+							, ATT_RATE
+							, ATT_RATE_LEVEL
+							, SUCC_RATE AS RATE_1
+							, SUCC_RATE_LEVEL AS RATE_1_LEVEL
+						FROM
+							(
+							SELECT
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								PGW_ID,
+								PGW_NAME,
+								ATT_RATE,
+								ATT_RATE_LEVEL,
+								SUCCESS,
+								SUCC_RATE,
+								SUCC_RATE_LEVEL,
+								'PGW_CREATE' AS TYPE
+							FROM TB_PM_PGW_CREATE
+							WHERE
+								EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime},'%Y%m%d%H%i')
+								AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime},'%Y%m%d%H%i')
+
+							UNION ALL
+
+							SELECT
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								PGW_ID,
+								PGW_NAME,
+								ATT_RATE,
+								ATT_RATE_LEVEL,
+								SUCCESS,
+								SUCC_RATE,
+								SUCC_RATE_LEVEL,
+								'PGW_DELETE' AS TYPE
+							FROM TB_PM_PGW_DELETE
+							WHERE
+								EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime},'%Y%m%d%H%i')
+								AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime},'%Y%m%d%H%i')
+
+							UNION ALL
+
+							SELECT
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								PGW_ID,
+								PGW_NAME,
+								ATT_RATE,
+								ATT_RATE_LEVEL,
+								SUCCESS,
+								SUCC_RATE,
+								SUCC_RATE_LEVEL,
+								'PGW_MODIFY' AS TYPE
+							FROM TB_PM_PGW_MODIFY
+							WHERE
+								EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime},'%Y%m%d%H%i')
+								AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime},'%Y%m%d%H%i')
+								
+							UNION ALL
+							
+							SELECT
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								SGW_ID,
+								SGW_NAME,
+								ATT_RATE,
+								ATT_RATE_LEVEL,
+								SUCCESS,
+								SUCC_RATE,
+								SUCC_RATE_LEVEL,
+								'SGW_CREATE' AS TYPE
+							FROM TB_PM_SGW_ATTACH
+							WHERE
+								EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime},'%Y%m%d%H%i')
+								AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime},'%Y%m%d%H%i')
+							UNION ALL
+							
+							SELECT
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								SGW_ID,
+								SGW_NAME,
+								ATT_RATE,
+								ATT_RATE_LEVEL,
+								SUCCESS,
+								SUCC_RATE,
+								SUCC_RATE_LEVEL,
+								'SGW_DELETE' AS TYPE
+							FROM TB_PM_SGW_DELETE
+							WHERE
+								EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime},'%Y%m%d%H%i')
+								AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime},'%Y%m%d%H%i')
+							UNION ALL
+
+							SELECT
+								EVENT_TIME,
+								ATTEMPT,
+								STD_ATT_5M,
+								SGW_ID,
+								SGW_NAME,
+								ATT_RATE,
+								ATT_RATE_LEVEL,
+								SUCCESS,
+								SUCC_RATE,
+								SUCC_RATE_LEVEL,
+								'SGW_MODIFY' AS TYPE
+							FROM TB_PM_SGW_MODIFY
+							WHERE
+								EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime},'%Y%m%d%H%i')
+								AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime},'%Y%m%d%H%i')
+							) AS A
+						ORDER BY
+						<if test="sortOption.size() &gt; 0">
+							<foreach collection="sortOption" item="option" separator=",">
+								${option.colName} ${option.order}
+							</foreach>
+						</if>
+						<if test="sortOption.size() == 0">
+							EVENT_TIME DESC
+						</if>
+					</when>
+					<otherwise>
+						SELECT
+							A.PGW_ID AS SYSTEM_ID
+							, A.PGW_NAME AS SYSTEM_NAME
+							, UPPER(#{searchType}) AS TYPE
+							, DATE_FORMAT(B.EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+							, B.ATTEMPT
+							, B.ATT_RATE
+							, B.ATT_RATE_LEVEL
+							, B.SUCC_RATE AS RATE_1
+							, B.SUCC_RATE_LEVEL AS RATE_1_LEVEL
+						FROM
+							TB_CO_PGW A
+							<choose>
+								<when test="searchType == 'pgw_create' ">
+									LEFT JOIN TB_PM_PGW_CREATE B
+									ON A.PGW_ID = B.PGW_ID
+								</when>
+								<when test="searchType == 'pgw_modify' ">
+									LEFT JOIN TB_PM_PGW_MODIFY B
+									ON A.PGW_ID = B.PGW_ID
+								</when>
+								<when test="searchType == 'pgw_delete' ">
+									LEFT JOIN TB_PM_PGW_DELETE B
+									ON A.PGW_ID = B.PGW_ID
+								</when>
+								<when test="searchType == 'sgw_attach' ">
+									LEFT JOIN TB_PM_SGW_ATTACH B
+									ON A.PGW_ID = B.SGW_ID
+								</when>
+								<when test="searchType == 'sgw_modify' ">
+									LEFT JOIN TB_PM_SGW_MODIFY B
+									ON A.PGW_ID = B.SGW_ID
+								</when>
+								<when test="searchType == 'sgw_delete' ">
+									LEFT JOIN TB_PM_SGW_DELETE B
+									ON A.PGW_ID = B.SGW_ID
+								</when>
+							</choose>
+						WHERE
+							A.OPR_STATUS = '1'
+							AND B.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+							AND B.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+						ORDER BY
+						<if test="sortOption.size() &gt; 0">
+							<foreach collection="sortOption" item="option" separator=",">
+								${option.colName} ${option.order}
+							</foreach>
+						</if>
+						<if test="sortOption.size() == 0">
+							EVENT_TIME DESC
+						</if>
+					</otherwise>
+				</choose>
+			</when>
+			<when test="equipType == 6 "><!-- HSS  + PCRF -->
+				<choose>
+					<when test="searchType == 'all'">
+						<!-- HSS -->
+						SELECT
+						    HSS_ID AS SYSTEM_NAME
+							, HSS_NAME AS SYSTEM_NAME
+							, 'S6A' AS TYPE
+							, DATE_FORMAT(EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+							, ATTEMPT
+							, ATT_RATE
+							, ATT_RATE_LEVEL
+							, SUCC_RATE AS RATE_1
+							, SUCC_RATE_LEVEL AS RATE_1_LEVEL
+						FROM TB_PM_HSS_S6A 
+						WHERE
+							EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+							AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+							<!-- AND GROUP_ID % 100 = 0 -->
+							 
+						UNION ALL
+						
+						SELECT
+							HSS_ID 
+							, HSS_NAME 
+							, 'CX' AS TYPE 
+							, DATE_FORMAT(EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+							, ATTEMPT
+							, ATT_RATE
+							, ATT_RATE_LEVEL
+							, SUCC_RATE AS RATE_1
+							, SUCC_RATE_LEVEL AS RATE_1_LEVEL
+						FROM TB_PM_HSS_CX
+						WHERE
+							EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+							AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+							<!-- AND GROUP_ID % 100 = 0 -->
+							
+						UNION ALL
+						
+						<!-- PCRF -->
+						SELECT
+							A.PCRF_ID 
+							, A.PCRF_NAME
+							, 'GX' AS TYPE
+							, DATE_FORMAT(B.EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+							, B.ATTEMPT
+							, B.ATT_RATE
+							, B.ATT_RATE_LEVEL
+							, B.SUCC_RATE AS RATE_1
+							, B.SUCC_RATE_LEVEL AS RATE_1_LEVEL
+						FROM
+							TB_CO_PCRF A
+							LEFT JOIN TB_PM_PCRF_GX B
+								ON A.PCRF_ID = B.PCRF_ID
+						WHERE
+							A.OPR_STATUS = '1'
+							AND B.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+							AND B.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+						
+						UNION ALL
+						
+						SELECT
+							A.PCRF_ID 
+							, A.PCRF_NAME 
+							, 'RX' AS TYPE
+							, DATE_FORMAT(B.EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+							, B.ATTEMPT
+							, B.ATT_RATE
+							, B.ATT_RATE_LEVEL
+							, B.SUCC_RATE AS RATE_1
+							, B.SUCC_RATE_LEVEL AS RATE_1_LEVEL
+						FROM
+							TB_CO_PCRF A
+							LEFT JOIN TB_PM_PCRF_RX B
+								ON A.PCRF_ID = B.PCRF_ID
+						WHERE
+							A.OPR_STATUS = '1'
+							AND B.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+							AND B.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+						ORDER BY
+						<if test="sortOption.size() &gt; 0">
+							<foreach collection="sortOption" item="option" separator=",">
+								${option.colName} ${option.order}
+							</foreach>
+						</if>
+						<if test="sortOption.size() == 0">
+							EVENT_TIME DESC
+						</if>
+					</when> 
+					
+					<otherwise>
+						<choose>
+							<!-- HSS -->
+							<when test="searchType == 's6a' or searchType == 'cx'" >
+								SELECT
+									HSS_ID as SYSTEM_ID
+									, HSS_NAME as SYSTEM_NAME 
+									, UPPER(#{searchType}) AS TYPE
+									, DATE_FORMAT(EVENT_TIME, '%Y/%m/%d %T') AS EVENT_TIME
+									, ATTEMPT
+									, ATT_RATE
+									, ATT_RATE_LEVEL
+									, SUCC_RATE AS RATE_1
+									, SUCC_RATE_LEVEL AS RATE_1_LEVEL
+									
+								FROM 
+									<choose>
+										<when test="searchType == 's6a' " >
+											TB_PM_HSS_S6A
+										</when>
+										<when test="searchType == 'cx' " >
+											TB_PM_HSS_CX
+										</when>
+									</choose>
+								WHERE
+									EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+									AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+									<!-- AND GROUP_ID = #{searchType} -->
+							</when>
+							
+							<!-- PCRF -->
+							<when test="searchType == 'gx' or searchType == 'rx'" >
+								SELECT
+									A.PCRF_ID AS SYSTEM_ID
+									, A.PCRF_NAME AS SYSTEM_NAME
+									, UPPER(#{searchType}) AS TYPE
+									, DATE_FORMAT(B.EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+									, B.ATTEMPT
+									, B.ATT_RATE
+									, B.ATT_RATE_LEVEL
+									, B.SUCC_RATE AS RATE_1
+									, B.SUCC_RATE_LEVEL AS RATE_1_LEVEL
+								
+								FROM
+									TB_CO_PCRF A
+								<choose>
+									<when test="searchType == 'gx' " >
+										LEFT JOIN TB_PM_PCRF_GX B
+										ON A.PCRF_ID = B.PCRF_ID
+									</when>
+									<when test="searchType == 'rx' " >
+										LEFT JOIN  TB_PM_PCRF_RX B
+										ON A.PCRF_ID = B.PCRF_ID
+									</when>
+								</choose>
+								WHERE
+									A.OPR_STATUS = '1'
+									AND B.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+									AND B.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+							</when>
+						</choose>
+						ORDER BY
+						<if test="sortOption.size() &gt; 0">
+							<foreach collection="sortOption" item="option" separator=",">
+								${option.colName} ${option.order}
+							</foreach>
+						</if>
+						<if test="sortOption.size() == 0">
+							EVENT_TIME DESC
+						</if>
+					</otherwise>
+				</choose>
+			</when>
+			<when test="equipType == 7 "><!-- PCRF 현재 위의 HSS와 통합-->
+				<choose>
+					<when test="searchType == 'all'">
+						SELECT
+							A.PCRF_ID AS SYSTEM_ID
+							, A.PCRF_NAME AS SYSTEM_NAME
+							, B.KPI_TYPE AS TYPE
+							, DATE_FORMAT(B.EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+							, B.ATTEMPT
+							, B.ATT_RATE
+							, B.ATT_RATE_LEVEL
+							, B.SUCC_RATE AS RATE_1
+							, B.SUCC_RATE_LEVEL AS RATE_1_LEVEL
+						FROM
+							TB_CO_PCRF A
+							LEFT JOIN TB_PM_PCRF B
+								ON A.PCRF_ID = B.PCRF_ID
+						WHERE
+							A.OPR_STATUS = '1'
+							AND B.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+							AND B.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+						ORDER BY
+						<if test="sortOption.size() &gt; 0">
+							<foreach collection="sortOption" item="option" separator=",">
+								${option.colName} ${option.order}
+							</foreach>
+						</if>
+						<if test="sortOption.size() == 0">
+							EVENT_TIME DESC
+						</if>
+					</when>
+					<otherwise>
+						SELECT
+							A.PCRF_ID AS SYSTEM_ID
+							, A.PCRF_NAME AS SYSTEM_NAME
+							, B.KPI_TYPE AS TYPE
+							, DATE_FORMAT(B.EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+							, B.ATTEMPT
+							, B.ATT_RATE
+							, B.ATT_RATE_LEVEL
+							, B.SUCC_RATE AS RATE_1
+							, B.SUCC_RATE_LEVEL AS RATE_1_LEVEL
+						FROM
+							TB_CO_PCRF A
+							LEFT JOIN TB_PM_PCRF B
+								ON A.PCRF_ID = B.PCRF_ID
+						WHERE
+							A.OPR_STATUS = '1'
+							AND B.KPI_TYPE = #{searchType}
+							AND B.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+							AND B.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+						ORDER BY
+						<if test="sortOption.size() &gt; 0">
+							<foreach collection="sortOption" item="option" separator=",">
+								${option.colName} ${option.order}
+							</foreach>
+						</if>
+						<if test="sortOption.size() == 0">
+							EVENT_TIME DESC
+						</if>
+					</otherwise>
+				</choose>
+			</when>
+			<when test="equipType == 2 "><!-- DU -->
+				SELECT
+					AD.EVENT_TIME
+				  , AD.SYSTEM_ID
+				  , AD.SYSTEM_NAME
+				  , AD.ATTEMPT
+				  , AD.ATT_RATE
+				  , AD.ERAB_ATTEMPT
+				  , AD.ERAB_ATT_RATE
+				  , AD.RRC_RATE
+				  , AD.ANSWER_RATE
+				  , AD.CD_RATE
+				  , AD.ATT_FLAG
+				  , IF(AD.ATT_RATE_LEVEL <![CDATA[<=]]> #{alarmFilter}, AD.ATT_RATE_LEVEL, 4) AS ATT_RATE_LEVEL
+				  , IF(AD.ERAB_ATT_RATE_LEVEL   <![CDATA[<=]]> #{alarmFilter}, AD.ERAB_ATT_RATE_LEVEL, 4)   AS ERAB_ATT_RATE_LEVEL
+				  , IF(AD.RRC_RATE_LEVEL   <![CDATA[<=]]> #{alarmFilter}, AD.RRC_RATE_LEVEL, 4)   AS RRC_RATE_LEVEL
+				  , IF(AD.ANSWER_RATE_LEVEL   <![CDATA[<=]]> #{alarmFilter}, AD.ANSWER_RATE_LEVEL, 4)   AS ANSWER_RATE_LEVEL
+				  , IF(AD.CD_RATE_LEVEL   <![CDATA[<=]]> #{alarmFilter}, AD.CD_RATE_LEVEL, 4)   AS CD_RATE_LEVEL
+				  FROM
+					(
+						SELECT
+							ALL_DATA.EVENT_TIME
+						  , ALL_DATA.SYSTEM_ID
+						  , ALL_DATA.SYSTEM_NAME
+						  , ALL_DATA.ATTEMPT
+						  , ALL_DATA.ATT_RATE
+						  , ALL_DATA.ERAB_ATTEMPT
+						  , ALL_DATA.ERAB_ATT_RATE
+						  , ALL_DATA.RRC_RATE
+						  , ALL_DATA.ANSWER_RATE
+						  , ALL_DATA.CD_RATE
+						  , ALL_DATA.ATT_FLAG
+						  , CASE
+								WHEN ALL_DATA.ATT_FLAG = 0
+									THEN 4
+								WHEN ALL_DATA.ATTEMPT = 0
+									THEN 4
+								WHEN ALL_DATA.ATT_RATE <![CDATA[>=]]> ALL_DATA.ATT_RATE_CRI_INCR
+									THEN 1
+								WHEN ALL_DATA.ATT_RATE <![CDATA[>=]]> ALL_DATA.ATT_RATE_MAJ_INCR
+									THEN 2
+								WHEN ALL_DATA.ATT_RATE <![CDATA[>=]]> ALL_DATA.ATT_RATE_MIN_INCR
+									THEN 3
+								WHEN ALL_DATA.ATT_RATE <![CDATA[<=]]> ALL_DATA.ATT_RATE_CRI_DECR
+									THEN 1
+								WHEN ALL_DATA.ATT_RATE <![CDATA[<=]]> ALL_DATA.ATT_RATE_MAJ_DECR
+									THEN 2
+								WHEN ALL_DATA.ATT_RATE <![CDATA[<=]]> ALL_DATA.ATT_RATE_MIN_DECR
+									THEN 3
+								ELSE 4
+							END AS ATT_RATE_LEVEL
+						  , CASE
+								WHEN ALL_DATA.ATT_FLAG = 0
+									THEN 4
+								WHEN ALL_DATA.ERAB_ATT_RATE = 0
+									THEN 4
+								WHEN ALL_DATA.ERAB_ATT_RATE <![CDATA[>=]]> ALL_DATA.ERAB_ATT_RATE_CRI_INCR
+									THEN 1
+								WHEN ALL_DATA.ERAB_ATT_RATE <![CDATA[>=]]> ALL_DATA.ERAB_ATT_RATE_MAJ_INCR
+									THEN 2
+								WHEN ALL_DATA.ERAB_ATT_RATE <![CDATA[>=]]> ALL_DATA.ERAB_ATT_RATE_MIN_INCR
+									THEN 3
+								WHEN ALL_DATA.ERAB_ATT_RATE <![CDATA[<=]]> ALL_DATA.ERAB_ATT_RATE_CRI_DECR
+									THEN 1
+								WHEN ALL_DATA.ERAB_ATT_RATE <![CDATA[<=]]> ALL_DATA.ERAB_ATT_RATE_MAJ_DECR
+									THEN 2
+								WHEN ALL_DATA.ERAB_ATT_RATE <![CDATA[<=]]> ALL_DATA.ERAB_ATT_RATE_MIN_DECR
+									THEN 3
+								ELSE 4
+							END AS ERAB_ATT_RATE_LEVEL
+						  , CASE
+								WHEN ALL_DATA.ATT_FLAG = 0
+									THEN 4
+								WHEN ALL_DATA.ATTEMPT = 0
+									THEN 4
+								WHEN ALL_DATA.RRC_RATE <![CDATA[<=]]> ALL_DATA.SEIZER_RATE_CRI
+									THEN 1
+								WHEN ALL_DATA.RRC_RATE <![CDATA[<=]]> ALL_DATA.SEIZER_RATE_MAJ
+									THEN 2
+								WHEN ALL_DATA.RRC_RATE <![CDATA[<=]]> ALL_DATA.SEIZER_RATE_MIN
+									THEN 3
+									ELSE 4
+							END AS RRC_RATE_LEVEL
+						  , CASE
+								WHEN ALL_DATA.ATT_FLAG = 0
+									THEN 4
+								WHEN ALL_DATA.ERAB_ATTEMPT = 0
+									THEN 4
+								WHEN ALL_DATA.ANSWER_RATE <![CDATA[<=]]> ALL_DATA.ANSWER_RATE_CRI
+									THEN 1
+								WHEN ALL_DATA.ANSWER_RATE <![CDATA[<=]]> ALL_DATA.ANSWER_RATE_MAJ
+									THEN 2
+								WHEN ALL_DATA.ANSWER_RATE <![CDATA[<=]]> ALL_DATA.ANSWER_RATE_MIN
+									THEN 3
+									ELSE 4
+							END AS ANSWER_RATE_LEVEL
+						  , CASE
+								WHEN ALL_DATA.ATT_FLAG = 0
+									THEN 4
+								WHEN ALL_DATA.SUCCESS = 0
+									THEN 4
+								WHEN ALL_DATA.CD_RATE <![CDATA[>=]]> ALL_DATA.CD_RATE_CRI
+									THEN 1
+								WHEN ALL_DATA.CD_RATE <![CDATA[>=]]> ALL_DATA.CD_RATE_MAJ
+									THEN 2
+								WHEN ALL_DATA.CD_RATE <![CDATA[>=]]> ALL_DATA.CD_RATE_MIN
+									THEN 3
+									ELSE 4
+							END AS CD_RATE_LEVEL
+						FROM
+							(
+								SELECT
+									A.C_UID                                     AS SYSTEM_ID
+								  , A.DU_NAME                                   AS SYSTEM_NAME
+								  , DATE_FORMAT(B.EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+								  , TPTD.ANSWER_RATE_CRI
+								  , TPTD.ANSWER_RATE_MAJ
+								  , TPTD.ANSWER_RATE_MIN
+								  , TPTD.ATT_RATE_CRI_INCR
+								  , TPTD.ATT_RATE_MAJ_INCR
+								  , TPTD.ATT_RATE_MIN_INCR
+								  , TPTD.ATT_RATE_CRI_DECR
+								  , TPTD.ATT_RATE_MAJ_DECR
+								  , TPTD.ATT_RATE_MIN_DECR
+								  , TPTD.ERAB_ATT_RATE_CRI_INCR
+								  , TPTD.ERAB_ATT_RATE_MAJ_INCR
+								  , TPTD.ERAB_ATT_RATE_MIN_INCR
+								  , TPTD.ERAB_ATT_RATE_CRI_DECR
+								  , TPTD.ERAB_ATT_RATE_MAJ_DECR
+								  , TPTD.ERAB_ATT_RATE_MIN_DECR
+								  , TPTD.SEIZER_RATE_CRI
+								  , TPTD.SEIZER_RATE_MAJ
+								  , TPTD.SEIZER_RATE_MIN
+								  , TPTD.CD_RATE_CRI
+								  , TPTD.CD_RATE_MAJ
+								  , TPTD.CD_RATE_MIN
+								  , IFNULL(SUM(B.ATTEMPT), 0)                                           AS ATTEMPT
+								  , IFNULL(SUM(B.RRC), 0)                                               AS RRC
+								  , IFNULL(SUM(B.CD), 0)                                                AS CD
+								  , IFNULL(SUM(B.ERAB_ADD_SUCCESS), 0)                                  AS ERAB_ADD_SUCC
+								  , IFNULL(SUM(B.ERAB_ATTEMPT), 0)                                      AS ERAB_ATTEMPT
+								  , IFNULL(SUM(B.ERAB_SUCCESS), 0) + IFNULL(SUM(B.ERAB_ADD_SUCCESS), 0) AS SUCCESS
+								  , CASE
+										WHEN IFNULL(SUM(B.STD_ATT_5M), 0) = 0
+											THEN FORMAT(0, 2)
+											ELSE FORMAT((IFNULL(SUM(B.ATTEMPT), 0) - SUM(B.STD_ATT_5M)) / SUM(B.STD_ATT_5M) * 100, 2)
+									END AS ATT_RATE
+								  , CASE
+										WHEN IFNULL(SUM(B.STD_ERAB_5M), 0) = 0
+											THEN FORMAT(0, 2)
+											ELSE FORMAT((IFNULL(SUM(B.ERAB_ATTEMPT), 0) - SUM(B.STD_ERAB_5M)) / SUM(B.STD_ERAB_5M) * 100, 2)
+									END AS ERAB_ATT_RATE
+								  , CASE
+										WHEN IFNULL(SUM(B.ATTEMPT), 0) = 0
+											THEN FORMAT(100, 2)
+											ELSE FORMAT(SUM(B.RRC) / SUM(B.ATTEMPT) * 100, 2)
+									END AS RRC_RATE
+								  , CASE
+										WHEN IFNULL(SUM(B.ERAB_ATTEMPT), 0) = 0
+											THEN FORMAT(100, 2)
+											ELSE FORMAT(SUM(B.ANSWER) / SUM(B.ERAB_ATTEMPT) * 100, 2)
+									END AS ANSWER_RATE
+								  , CASE
+										WHEN (
+												IFNULL(SUM(B.ERAB_SUCCESS), 0) + IFNULL(SUM(B.ERAB_ADD_SUCCESS), 0)
+											)
+											= 0
+											THEN FORMAT(0, 2)
+											ELSE FORMAT(SUM(B.CD) / (IFNULL(SUM(B.ERAB_SUCCESS), 0) + IFNULL(SUM(B.ERAB_ADD_SUCCESS), 0)) * 100, 2)
+									END AS CD_RATE
+								  , CASE
+										WHEN IFNULL(SUM(B.ATTEMPT), 0) <![CDATA[<=]]> TPTD.ATTEMPT
+											THEN 0
+											ELSE 1
+									END AS ATT_FLAG
+								FROM
+									TB_CO_DU AS A
+									LEFT JOIN
+										TB_PM_ACCESS_KPI AS B
+										ON
+											A.C_UID = B.C_UID
+									LEFT JOIN TB_PM_THD_DU AS TPTD
+										ON B.WEEKDAY = TPTD.WEEKDAY
+										AND B.HOUR_SCOPE = TPTD.HOUR_SCOPE
+								WHERE
+									A.OPR_STATUS = '1'
+									AND A.DU_ID = #{systemId}
+									AND B.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+									AND B.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+								GROUP BY EVENT_TIME
+							)
+							AS ALL_DATA
+					)
+					AS AD
+				ORDER BY
+				<if test="sortOption.size() &gt; 0">
+					<foreach collection="sortOption" item="option" separator=",">
+						${option.colName} ${option.order}
+					</foreach>
+				</if>
+				<if test="sortOption.size() == 0">
+					AD.EVENT_TIME DESC
+				</if>
+			</when>
+			<when test="equipType == 3 "><!-- RU -->
+				SELECT
+					A.C_UID AS SYSTEM_ID
+					, A.RU_NAME AS SYSTEM_NAME
+					, DATE_FORMAT(B.EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+					, B.ATTEMPT AS ATTEMPT
+					, B.ATT_RATE AS ATT_RATE
+					, B.ERAB_ATTEMPT AS ERAB_ATTEMPT
+					, B.ERAB_ATT_RATE AS ERAB_ATT_RATE
+					, B.RRC_RATE AS RRC_RATE
+					, B.ANSWER_RATE AS ANSWER_RATE
+					, B.CD_RATE AS CD_RATE
+				FROM
+					TB_CO_RU A
+					LEFT JOIN TB_PM_ACCESS_KPI B
+						ON A.DU_ID      = B.DU_ID
+						AND A.CELL_NUM = REPLACE(B.RU_CUID, 'cNum', '')
+				WHERE
+					A.OPR_STATUS = '1'
+					AND A.C_UID = #{systemId}
+					AND B.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime}, '%Y%m%d%H%i')
+					AND B.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime}, '%Y%m%d%H%i')
+				ORDER BY
+				<if test="sortOption.size() &gt; 0">
+					<foreach collection="sortOption" item="option" separator=",">
+						${option.colName} ${option.order}
+					</foreach>
+				</if>
+				<if test="sortOption.size() == 0">
+					EVENT_TIME DESC
+				</if>
+			</when>
+			<when test="equipType == 10 "><!-- REC -->
+				<choose>
+					<when test="searchType == 'all'">
+						SELECT
+							SYSTEM_ID 
+							, SYSTEM_NAME
+							, TYPE
+							, EVENT_TIME
+							, ATTEMPT
+							, ROUND(ATT_RATE/ET_CNT, 2) AS ATT_RATE
+							, ROUND(RATE_1/ET_CNT, 2) AS RATE_1
+						FROM 
+							(SELECT
+								SYSTEM_ID 
+								, SYSTEM_NAME AS SYSTEM_NAME
+								, 'CALL' AS TYPE
+								, DATE_FORMAT(EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+								, SUM(CALL_ATTEMPT) AS ATTEMPT
+								, SUM(CALL_ATT_RATE) AS ATT_RATE
+								, SUM(CALL_SUCC_RATE) AS RATE_1
+				              	, COUNT(SYSTEM_NAME) AS ET_CNT
+							FROM TB_PM_REC
+								WHERE
+									EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime},'%Y%m%d%H%i')
+									AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime},'%Y%m%d%H%i')
+							GROUP BY EVENT_TIME, TYPE) rec
+
+						UNION ALL
+
+						SELECT
+							SYSTEM_ID 
+							, SYSTEM_NAME
+							, TYPE
+							, EVENT_TIME
+							, ATTEMPT
+							, ROUND(ATT_RATE/ET_CNT, 2) AS ATT_RATE
+							, ROUND(RATE_1/ET_CNT, 2) AS RATE_1
+						FROM 
+							(SELECT
+								SYSTEM_ID 
+								, SYSTEM_NAME AS SYSTEM_NAME
+								, 'PTT' AS TYPE
+								, DATE_FORMAT(EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+								, SUM(PTT_ATTEMPT) AS ATTEMPT
+								, SUM(PTT_ATT_RATE) AS ATT_RATE
+								, SUM(PTT_SUCC_RATE) AS RATE_1
+				              	, COUNT(SYSTEM_NAME) AS ET_CNT
+							FROM TB_PM_REC
+								WHERE
+									EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime},'%Y%m%d%H%i')
+									AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime},'%Y%m%d%H%i')
+							GROUP BY EVENT_TIME, TYPE) rec
+
+						ORDER BY
+						<if test="sortOption.size() &gt; 0">
+							<foreach collection="sortOption" item="option" separator=",">
+								${option.colName} ${option.order}
+							</foreach>
+						</if>
+						<if test="sortOption.size() == 0">
+							EVENT_TIME DESC, SYSTEM_NAME DESC, TYPE DESC
+						</if>
+					</when>
+					<when test="searchType == 'call'">
+						SELECT
+							SYSTEM_ID 
+							, SYSTEM_NAME
+							, TYPE
+							, EVENT_TIME
+							, ATTEMPT
+							, ROUND(ATT_RATE/ET_CNT, 2) AS ATT_RATE
+							, ROUND(RATE_1/ET_CNT, 2) AS RATE_1
+						FROM 
+							(SELECT
+								SYSTEM_ID 
+								, SYSTEM_NAME AS SYSTEM_NAME
+								, 'CALL' AS TYPE
+								, DATE_FORMAT(EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+								, SUM(CALL_ATTEMPT) AS ATTEMPT
+								, SUM(CALL_ATT_RATE) AS ATT_RATE
+								, SUM(CALL_SUCC_RATE) AS RATE_1
+				              	, COUNT(SYSTEM_NAME) AS ET_CNT
+							FROM TB_PM_REC
+								WHERE
+									EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime},'%Y%m%d%H%i')
+									AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime},'%Y%m%d%H%i')
+							GROUP BY EVENT_TIME, TYPE) rec
+						ORDER BY
+						<if test="sortOption.size() &gt; 0">
+							<foreach collection="sortOption" item="option" separator=",">
+								${option.colName} ${option.order}
+							</foreach>
+						</if>
+						<if test="sortOption.size() == 0">
+							EVENT_TIME DESC, SYSTEM_NAME DESC, TYPE DESC
+						</if>
+					</when>
+					<when test="searchType == 'ptt'">
+						SELECT
+							SYSTEM_ID 
+							, SYSTEM_NAME
+							, TYPE
+							, EVENT_TIME
+							, ATTEMPT
+							, ROUND(ATT_RATE/ET_CNT, 2) AS ATT_RATE
+							, ROUND(RATE_1/ET_CNT, 2) AS RATE_1
+						FROM 
+							(SELECT
+								SYSTEM_ID 
+								, SYSTEM_NAME AS SYSTEM_NAME
+								, 'PTT' AS TYPE
+								, DATE_FORMAT(EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+								, SUM(PTT_ATTEMPT) AS ATTEMPT
+								, SUM(PTT_ATT_RATE) AS ATT_RATE
+								, SUM(PTT_SUCC_RATE) AS RATE_1
+				              	, COUNT(SYSTEM_NAME) AS ET_CNT
+							FROM TB_PM_REC
+								WHERE
+									EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startTime},'%Y%m%d%H%i')
+									AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{eventTime},'%Y%m%d%H%i')
+							GROUP BY EVENT_TIME, TYPE) rec
+						ORDER BY
+						<if test="sortOption.size() &gt; 0">
+							<foreach collection="sortOption" item="option" separator=",">
+								${option.colName} ${option.order}
+							</foreach>
+						</if>
+						<if test="sortOption.size() == 0">
+							EVENT_TIME DESC, SYSTEM_NAME DESC, TYPE DESC
+						</if>
+					</when>
+				</choose>
+			</when>
+			 
+		</choose>
+	</select>
+
+	<!-- 네트워크 통합감시 - 고장 상세조회 -->
+	<select id="getDetailFailure" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<choose>
+			<when test='equipType == 2'><!-- DU -->
+				SELECT
+					TFAC.ALARM_ID 
+					, TFAC.ALARM_TYPE
+					, TFAC.ALARM_CODE
+					, TFAC.PROBABLE_CAUSE
+					, TFAC.SYSTEM_ID
+					, TFAC.SYSTEM_NAME
+					, TFAC.C_UID
+					, TFAC.SEVERITY
+					, CASE TFAC.SEVERITY
+						WHEN 1 THEN 'Critical'
+						WHEN 2 THEN 'Major'
+						WHEN 3 THEN 'Minor'
+						WHEN 4 THEN 'Warning'
+						WHEN 5 THEN 'Normal'
+						ELSE ''
+					END as LEVEL
+					, TFAC.FDN AS LOCATION
+					, DATE_FORMAT(TFAC.EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+				FROM TB_FM_ALARM_CUR AS TFAC
+				WHERE
+					TFAC.EQUIP_TYPE = '2'
+					AND TFAC.SYSTEM_ID = #{systemId}
+					AND TFAC.FDN NOT LIKE '%PSU%' AND TFAC.FDN NOT LIKE '%RRH%'
+					AND TFAC.ALARM_STATE IN (1,2)
+					AND TFAC.SEVERITY NOT IN (4,5)
+				ORDER BY
+				<if test = 'sortOption.size() > 0'>
+					<foreach collection="sortOption" item="option" separator=",">
+						${option.colName} ${option.order}
+					</foreach>
+				</if>
+				<if test = 'sortOption.size() == 0'> 
+					TFAC.EVENT_TIME DESC
+				</if>
+			</when>
+			<otherwise>
+			/* getDetailFailure - otherwise */
+				SELECT
+					TFAC.ALARM_ID
+					, TFAC.ALARM_TYPE
+					, TFAC.ALARM_CODE
+					, TFAC.PROBABLE_CAUSE
+					, TFAC.SYSTEM_ID
+					, TFAC.SYSTEM_NAME
+					, TFAC.C_UID
+					, TFAC.SEVERITY
+					, CASE TFAC.SEVERITY
+						WHEN 1 THEN 'Critical'
+						WHEN 2 THEN 'Major'
+						WHEN 3 THEN 'Minor'
+						WHEN 4 THEN 'Warning'
+						WHEN 5 THEN 'Normal'
+						ELSE ''
+					END as LEVEL
+					, TFAC.FDN AS LOCATION
+					, DATE_FORMAT(TFAC.EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+				FROM TB_FM_ALARM_CUR AS TFAC
+				WHERE
+					TFAC.EQUIP_TYPE = #{equipType}
+					<if test="systemId != null and systemId != ''">
+						AND TFAC.SYSTEM_ID = #{systemId}
+					</if>
+					AND TFAC.ALARM_STATE IN (1,2)
+					AND TFAC.SEVERITY NOT IN (4,5)
+				ORDER BY
+				<if test = 'sortOption.size() > 0'>
+					<foreach collection="sortOption" item="option" separator=",">
+						${option.colName} ${option.order}
+					</foreach>
+				</if>
+				<if test = 'sortOption.size() == 0'>
+					TFAC.EVENT_TIME DESC
+				</if>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- system list 조회 -->
+	<select id="getSystemList" parameterType="java.util.Map" resultType="java.util.HashMap">
+		<if test="equipType != 11">
+			<if test = "equipType == 7">
+				SELECT
+					PCRF_ID AS SYSTEM_ID,
+					PCRF_NAME AS SYSTEM_NAME
+				FROM TB_CO_PCRF AS TCSE
+			</if>
+			<if test = "equipType != 7">
+				SELECT
+					TCSE.SYSTEM_ID,
+					TCSE.SYSTEM_NAME
+				FROM TB_CO_SYSTEM_ETC AS TCSE
+				WHERE TCSE.EQUIP_TYPE = #{equipType}
+			</if>
+		</if>
+		<if test="equipType == 11"> 
+			SELECT
+				TCSE.SYSTEM_ID,
+				TCSE.SYSTEM_NAME
+			FROM
+				TB_CO_SYSTEM_ETC AS TCSE
+				LEFT JOIN TB_CO_SWITCH_INFO AS TCSI
+					ON TCSI.SWITCH_ID = TCSE.SYSTEM_ID
+			WHERE TCSI.CATEGORY = #{category}
+				AND OPR_STATUS = '1'
+			GROUP BY SYSTEM_ID
+		</if>
+	</select>
+
+	<select id="getSwitchCategory" parameterType="java.util.Map" resultType="java.util.HashMap">
+		SELECT 
+			CATEGORY
+		FROM 
+			TB_CO_SWITCH_INFO 
+		GROUP BY CATEGORY 
+	</select> 
+
+	<select id="getSwitchPortState" resultType="java.util.HashMap" parameterType="java.util.Map">
+		SELECT
+			TCSI.SWITCH_ID,
+			TCSI.PORT_TYPE,
+			TCSE.EQUIP_TYPE,
+			TCSE.VENDOR_ID,
+			TFA.EVENT_TIME,
+			TFA.ALARM_CODE,
+			TFA.ALARM_TYPE,
+			TFA.ALARM_STATE,
+			TFA.PROBABLE_CAUSE,
+			TFA.SEVERITY,
+			CASE TFA.SEVERITY
+				WHEN 1 THEN 'critical'
+				WHEN 2 THEN 'major'
+				WHEN 3 THEN 'minor'
+				ELSE 'normal'
+			END AS LEVEL_TXT,
+			TFA.FDN AS LOCATION,
+			IFNULL(TCSV.SLOT1, '') AS SLOT1,
+			IFNULL(TCSV.PORT1, '') AS PORT1,
+			IFNULL(TCSV.SLOT2, '') AS SLOT2,
+			IFNULL(TCSV.PORT2, '') AS PORT2,
+			IFNULL(TCSV.RANGE_FLAG, '') AS RANGE_FLAG
+		FROM
+			TB_FM_ALARM_CUR AS TFA
+			LEFT JOIN TB_CO_SWITCH_INFO AS TCSI
+				ON TFA.SYSTEM_ID = TCSI.SWITCH_ID
+# 				AND TFA.ALARM_CODE = 'A9999'
+# 				AND TFA.PROBABLE_CAUSE = 'linkDown'
+				AND TFA.ALARM_STATE IN (1,2)
+			LEFT JOIN TB_CO_SYSTEM_ETC AS TCSE
+				ON TCSE.SYSTEM_ID = TCSI.SWITCH_ID
+			LEFT JOIN TB_CO_SWITCH_VLAN AS TCSV
+				ON TCSV.SYSTEM_ID = TFA.SYSTEM_ID
+				AND TCSV.VLAN_TYPE = TFA.FDN
+		WHERE TCSE.EQUIP_TYPE = '11'
+		<if test="category != null and category != ''"> 
+			AND TCSI.CATEGORY = #{category}
+		</if>
+			
+		GROUP BY TFA.EVENT_TIME, TFA.SYSTEM_ID, TFA.ALARM_CODE, TFA.FDN
+		ORDER BY TCSI.SWITCH_ID, TFA.EVENT_TIME, TFA.SEVERITY
+	</select>
+	
+	<select id="getSwitchUsePort" resultType="java.util.HashMap" parameterType="java.util.Map">
+		SELECT
+			TCSI.SWITCH_ID,
+			TCSI.SLOT,
+			TCSI.SHELF,
+			TCSE.SYSTEM_NAME AS SWITCH_NAME,
+			TCSI.SIZE,
+			TCSI.CATEGORY,
+			TCSI.SORT_FLAG,
+			TCSI.PORT_TYPE,
+			<!-- TCEA.SERVER_STAT, -->
+			TCSI.PORT_01,
+			TCSI.PORT_02,
+			TCSI.PORT_03,
+			TCSI.PORT_04,
+			TCSI.PORT_05,
+			TCSI.PORT_06,
+			TCSI.PORT_07,
+			TCSI.PORT_08,
+			TCSI.PORT_09,
+			TCSI.PORT_10,
+			TCSI.PORT_11,
+			TCSI.PORT_12,
+			TCSI.PORT_13,
+			TCSI.PORT_14,
+			TCSI.PORT_15,
+			TCSI.PORT_16,
+			TCSI.PORT_17,
+			TCSI.PORT_18,
+			TCSI.PORT_19,
+			TCSI.PORT_20,
+			TCSI.PORT_21,
+			TCSI.PORT_22,
+			TCSI.PORT_23,
+			TCSI.PORT_24,
+			TCSI.PORT_25,
+			TCSI.PORT_26,
+			TCSI.PORT_27,
+			TCSI.PORT_28,
+			TCSI.PORT_29,
+			TCSI.PORT_30,
+			TCSI.PORT_31,
+			TCSI.PORT_32,
+			TCSI.PORT_33,
+			TCSI.PORT_34,
+			TCSI.PORT_35,
+			TCSI.PORT_36,
+			TCSI.PORT_37,
+			TCSI.PORT_38,
+			TCSI.PORT_39,
+			TCSI.PORT_40,
+			TCSI.PORT_41,
+			TCSI.PORT_42,
+			TCSI.PORT_43,
+			TCSI.PORT_44,
+			TCSI.PORT_45,
+			TCSI.PORT_46,
+			TCSI.PORT_47,
+			TCSI.PORT_48,
+			TCSI.PORT_01_DESC,
+			TCSI.PORT_02_DESC,
+			TCSI.PORT_03_DESC,
+			TCSI.PORT_04_DESC,
+			TCSI.PORT_05_DESC,
+			TCSI.PORT_06_DESC,
+			TCSI.PORT_07_DESC,
+			TCSI.PORT_08_DESC,
+			TCSI.PORT_09_DESC,
+			TCSI.PORT_10_DESC,
+			TCSI.PORT_11_DESC,
+			TCSI.PORT_12_DESC,
+			TCSI.PORT_13_DESC,
+			TCSI.PORT_14_DESC,
+			TCSI.PORT_15_DESC,
+			TCSI.PORT_16_DESC,
+			TCSI.PORT_17_DESC,
+			TCSI.PORT_18_DESC,
+			TCSI.PORT_19_DESC,
+			TCSI.PORT_20_DESC,
+			TCSI.PORT_21_DESC,
+			TCSI.PORT_22_DESC,
+			TCSI.PORT_23_DESC,
+			TCSI.PORT_24_DESC,
+			TCSI.PORT_25_DESC,
+			TCSI.PORT_26_DESC,
+			TCSI.PORT_27_DESC,
+			TCSI.PORT_28_DESC,
+			TCSI.PORT_29_DESC,
+			TCSI.PORT_30_DESC,
+			TCSI.PORT_31_DESC,
+			TCSI.PORT_32_DESC,
+			TCSI.PORT_33_DESC,
+			TCSI.PORT_34_DESC,
+			TCSI.PORT_35_DESC,
+			TCSI.PORT_36_DESC,
+			TCSI.PORT_37_DESC,
+			TCSI.PORT_38_DESC,
+			TCSI.PORT_39_DESC,
+			TCSI.PORT_40_DESC,
+			TCSI.PORT_41_DESC,
+			TCSI.PORT_42_DESC,
+			TCSI.PORT_43_DESC,
+			TCSI.PORT_44_DESC,
+			TCSI.PORT_45_DESC,
+			TCSI.PORT_46_DESC,
+			TCSI.PORT_47_DESC,
+			TCSI.PORT_48_DESC,
+			TCSI.PORT_01_NAME,
+			TCSI.PORT_02_NAME,
+			TCSI.PORT_03_NAME,
+			TCSI.PORT_04_NAME,
+			TCSI.PORT_05_NAME,
+			TCSI.PORT_06_NAME,
+			TCSI.PORT_07_NAME,
+			TCSI.PORT_08_NAME,
+			TCSI.PORT_09_NAME,
+			TCSI.PORT_10_NAME,
+			TCSI.PORT_11_NAME,
+			TCSI.PORT_12_NAME,
+			TCSI.PORT_13_NAME,
+			TCSI.PORT_14_NAME,
+			TCSI.PORT_15_NAME,
+			TCSI.PORT_16_NAME,
+			TCSI.PORT_17_NAME,
+			TCSI.PORT_18_NAME,
+			TCSI.PORT_19_NAME,
+			TCSI.PORT_20_NAME,
+			TCSI.PORT_21_NAME,
+			TCSI.PORT_22_NAME,
+			TCSI.PORT_23_NAME,
+			TCSI.PORT_24_NAME,
+			TCSI.PORT_25_NAME,
+			TCSI.PORT_26_NAME,
+			TCSI.PORT_27_NAME,
+			TCSI.PORT_28_NAME,
+			TCSI.PORT_29_NAME,
+			TCSI.PORT_30_NAME,
+			TCSI.PORT_31_NAME,
+			TCSI.PORT_32_NAME,
+			TCSI.PORT_33_NAME,
+			TCSI.PORT_34_NAME,
+			TCSI.PORT_35_NAME,
+			TCSI.PORT_36_NAME,
+			TCSI.PORT_37_NAME,
+			TCSI.PORT_38_NAME,
+			TCSI.PORT_39_NAME,
+			TCSI.PORT_40_NAME,
+			TCSI.PORT_41_NAME,
+			TCSI.PORT_42_NAME,
+			TCSI.PORT_43_NAME,
+			TCSI.PORT_44_NAME,
+			TCSI.PORT_45_NAME,
+			TCSI.PORT_46_NAME,
+			TCSI.PORT_47_NAME,
+			TCSI.PORT_48_NAME
+		FROM
+			TB_CO_SWITCH_INFO AS TCSI
+			LEFT JOIN TB_CO_SYSTEM_ETC TCSE
+				ON TCSI.SWITCH_ID = TCSE.SYSTEM_ID
+			LEFT JOIN TB_CO_EQUIP_ACT TCEA
+				ON TCSI.SWITCH_ID = TCEA.SYSTEM_ID
+					AND TCEA.EQUIP_TYPE = 11
+		WHERE 1=1
+		<if test="category != null and category != ''"> 
+		AND  CATEGORY = #{category}
+		</if>
+		<if test="systemId != null and systemId != ''">
+		 AND SWITCH_ID = #{systemId}   
+		</if>
+	</select>
+	
+	<select id="getServerStatData" resultType="java.util.HashMap" parameterType="java.util.Map">
+		<!-- SELECT SUM(OK) AS OK, SUM(NOK) AS NOK
+		FROM
+		(
+			SELECT OK, TOTAL-OK AS NOK
+			FROM 
+			(SELECT COUNT(CNT) AS TOTAL
+			FROM (
+			SELECT EQUIP_TYPE, SYSTEM_ID, DEFAULT_ACT_SBY, CURRENT_ACT_SBY, COUNT(EQUIP_TYPE) AS CNT
+			  FROM TB_CO_EQUIP_ACT T1
+			 GROUP BY EQUIP_TYPE, SYSTEM_ID
+			 HAVING COUNT(*) = 1
+			  )T1
+			)S1 ,
+			(SELECT COUNT(CNT) AS OK
+			FROM (
+			SELECT EQUIP_TYPE, SYSTEM_ID, DEFAULT_ACT_SBY, CURRENT_ACT_SBY, COUNT(*) AS CNT
+			  FROM TB_CO_EQUIP_ACT T1
+			 GROUP BY T1.EQUIP_TYPE, T1.SYSTEM_ID
+			 HAVING COUNT(*) = 1
+			 ) T2
+			WHERE T2.CURRENT_ACT_SBY = 'A'
+			OR (T2.DEFAULT_ACT_SBY ='S' AND T2.CURRENT_ACT_SBY ='S')
+		)S2 
+		
+		UNION ALL
+		
+		SELECT COUNT(CAS) AS OK , '0' NOK 
+		FROM
+		(
+			SELECT EQUIP_TYPE, SYSTEM_ID, DEFAULT_ACT_SBY, MIN(CURRENT_ACT_SBY) AS CAS
+			  FROM TB_CO_EQUIP_ACT 
+			 GROUP BY EQUIP_TYPE, SYSTEM_ID
+			 HAVING COUNT(*) > 1) S1
+			 WHERE CAS = 'A'
+			 UNION
+			 SELECT '0' OK , COUNT(CAS) AS NOK
+			FROM
+			(SELECT EQUIP_TYPE, SYSTEM_ID, DEFAULT_ACT_SBY, MIN(CURRENT_ACT_SBY) AS CAS
+			  FROM TB_CO_EQUIP_ACT 
+			 GROUP BY EQUIP_TYPE, SYSTEM_ID
+			 HAVING COUNT(*) > 1) S1
+			 WHERE CAS != 'A'
+		 ) E1 -->
+		<!-- SELECT CURRENT_ACT_SBY, sum(CNT) AS CNT
+		FROM
+			(SELECT 'OK' AS CURRENT_ACT_SBY , 0 AS CNT
+			union
+			SELECT 'NOK' AS CURRENT_ACT_SBY , 0 AS CNT
+			union all
+			SELECT CURRENT_ACT_SBY, COUNT(CURRENT_ACT_SBY)  AS CNT 
+				FROM(
+				SELECT DEFAULT_ACT_SBY, IF(MIN(CURRENT_ACT_SBY)='A','OK','NOK') CURRENT_ACT_SBY, VIEW_NAME
+				, EQUIP_TYPE
+				, IF(INSTR(VIEW_NAME,SUBSTRING_INDEX(VIEW_NAME,'_',-1)) = 1, VIEW_NAME, LEFT(VIEW_NAME,INSTR(VIEW_NAME,SUBSTRING_INDEX(VIEW_NAME,'_',-1))-2) ) AS GROUP_VIEW_NAME
+				FROM TB_CO_EQUIP_ACT
+				WHERE DEFAULT_ACT_SBY != 'N'
+				GROUP BY GROUP_VIEW_NAME
+				 
+				UNION ALL 
+				
+				SELECT DEFAULT_ACT_SBY, IF(MIN(CURRENT_ACT_SBY) in ('N','A'),'OK','NOK') CURRENT_ACT_SBY, VIEW_NAME
+				, EQUIP_TYPE 
+				, VIEW_NAME AS GROUP_VIEW_NAME
+				FROM TB_CO_EQUIP_ACT  
+				WHERE DEFAULT_ACT_SBY = 'N'
+				GROUP BY GROUP_VIEW_NAME
+				) TT 
+			GROUP BY CURRENT_ACT_SBY
+			ORDER BY CURRENT_ACT_SBY DESC) q1
+		GROUP BY CURRENT_ACT_SBY
+		ORDER BY CURRENT_ACT_SBY DESC -->
+		
+		 
+		SELECT CURRENT_ACT_SBY, sum(CNT) AS CNT
+		FROM 
+			(SELECT 'OK' AS CURRENT_ACT_SBY , 0 AS CNT
+			union
+			SELECT 'NOK' AS CURRENT_ACT_SBY , 0 AS CNT
+			union all
+			SELECT CURRENT_ACT_SBY, COUNT(CURRENT_ACT_SBY)  AS CNT 
+				FROM(
+				SELECT DEFAULT_ACT_SBY, IF(MIN(CURRENT_ACT_SBY)='A','OK','NOK') CURRENT_ACT_SBY, VIEW_NAME
+				, EQUIP_TYPE
+				, IF(INSTR(VIEW_NAME,SUBSTRING_INDEX(VIEW_NAME,'_',-1)) = 1, VIEW_NAME, LEFT(VIEW_NAME,INSTR(VIEW_NAME,SUBSTRING_INDEX(VIEW_NAME,'_',-1))-2) ) AS GROUP_VIEW_NAME
+				FROM TB_CO_EQUIP_ACT
+				JOIN TB_CO_DU
+				ON	 TB_CO_EQUIP_ACT.SYSTEM_ID = TB_CO_DU.DU_ID
+				WHERE DEFAULT_ACT_SBY != 'N'
+				<!-- DU 동작상태만 조회 -->
+				AND TB_CO_DU.OPR_STATUS = '1'
+				AND EQUIP_TYPE = '2'
+				
+          AND EQUIP_TYPE NOT IN ( '41', '44' )
+				GROUP BY GROUP_VIEW_NAME
+				 
+				UNION ALL 
+				
+				SELECT DEFAULT_ACT_SBY, IF(MIN(CURRENT_ACT_SBY) in ('N','A'),'OK','NOK') CURRENT_ACT_SBY, VIEW_NAME
+				, EQUIP_TYPE 
+				, VIEW_NAME AS GROUP_VIEW_NAME
+				FROM TB_CO_EQUIP_ACT  
+				JOIN TB_CO_DU
+				ON	 TB_CO_EQUIP_ACT.SYSTEM_ID = TB_CO_DU.DU_ID
+				WHERE DEFAULT_ACT_SBY = 'N'
+				<!-- DU 동작상태만 조회 -->
+				AND TB_CO_DU.OPR_STATUS = '1'
+				AND EQUIP_TYPE = '2' 
+				
+          AND EQUIP_TYPE NOT IN ( '41', '44')
+				GROUP BY GROUP_VIEW_NAME
+				) TT 
+			GROUP BY CURRENT_ACT_SBY
+			ORDER BY CURRENT_ACT_SBY DESC) q1
+		
+		
+		
+		GROUP BY CURRENT_ACT_SBY
+		ORDER BY CURRENT_ACT_SBY DESC
+		 
+	</select>
+	
+	<select id="getRecoverInfo" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT
+			ALARM_CODE
+			,PROBABLE_CAUSE
+			,SEVERITY
+			,FDN
+			,EQUIP_TYPE
+			,SYSTEM_ID
+			,EQUIP_NAME
+			,STATION_ID
+			,STATION_NAME
+			,SYSTEM_NAME
+			,EVENT_TIME
+			,RECOVER_TIME 
+			FROM
+				(SELECT ALARM_CODE
+					, PROBABLE_CAUSE
+					,CASE
+						  WHEN SEVERITY = '1'
+						  THEN 'critical'
+						  WHEN SEVERITY = '2'
+						  THEN 'major'
+						  WHEN SEVERITY = '3'
+						  THEN 'minor'
+						  WHEN SEVERITY = '4'
+						  THEN 'normal'
+						  ELSE 'normal'
+						END SEVERITY
+					, FDN
+					, TB_FS_ALARM_ABNORMAL.EQUIP_TYPE
+					, TB_FS_ALARM_ABNORMAL.SYSTEM_ID
+					, VW_SYSTEM.EQUIP_NAME
+					, IFNULL(q1.STATION_ID,'0') AS STATION_ID
+					, IFNULL(q1.STATION_NAME,'관제센터') AS STATION_NAME
+					, SYSTEM_NAME
+					, MAX(DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i:%s')) AS EVENT_TIME
+					, MAX(DATE_FORMAT(RECOVER_TIME,'%Y-%m-%d %H:%i:%s')) AS RECOVER_TIME
+					FROM TB_FS_ALARM_ABNORMAL   
+					LEFT JOIN VW_SYSTEM 
+					  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = VW_SYSTEM.EQUIP_TYPE
+					  AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = VW_SYSTEM.SYSTEM_ID
+					LEFT OUTER JOIN
+					  (  
+					      SELECT
+									TB_CO_MME.MME_ID AS SYSTEM_ID
+									,'1' AS EQUIP_TYPE
+									,TB_CO_MME.STATION_ID AS STATION_ID
+									,TB_CO_STATION.STATION_NAME AS STATION_NAME
+									,TB_CO_STATION.LINE_ID AS LINE_ID
+								FROM
+									TB_CO_MME
+										LEFT JOIN
+									TB_CO_STATION
+										ON TB_CO_MME.STATION_ID = TB_CO_STATION.STATION_ID
+						        
+								UNION ALL
+						     
+								SELECT
+									TB_CO_PGW.PGW_ID AS SYSTEM_ID
+									,'4' AS EQUIP_TYPE
+									,TB_CO_PGW.STATION_ID AS STATION_ID
+									,TB_CO_STATION.STATION_NAME AS STATION_NAME
+									,TB_CO_STATION.LINE_ID AS LINE_ID
+								FROM
+									TB_CO_PGW 
+										LEFT JOIN
+									TB_CO_STATION
+										ON TB_CO_PGW.STATION_ID = TB_CO_STATION.STATION_ID
+						        
+								UNION ALL
+						    
+								SELECT
+									TB_CO_PCRF.PCRF_ID AS SYSTEM_ID
+									,'7' AS EQUIP_TYPE
+									,TB_CO_STATION.STATION_ID AS STATION_ID
+									,TB_CO_STATION.STATION_NAME AS STATION_NAME
+									,TB_CO_STATION.LINE_ID AS LINE_ID
+								FROM
+									TB_CO_PCRF
+										LEFT JOIN
+									TB_CO_STATION
+										ON TB_CO_PCRF.STATION_ID = TB_CO_STATION.STATION_ID
+							        
+							    UNION ALL    
+							    
+							    SELECT
+									TCSE.SYSTEM_ID AS SYSTEM_ID
+							      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE
+							      	,TCS.STATION_ID AS STATION_ID
+									,TCS.STATION_NAME AS STATION_NAME
+									,TCS.LINE_ID AS LINE_ID
+									FROM
+									  TB_CO_SYSTEM_ETC AS TCSE
+									  LEFT JOIN TB_CO_STATION AS TCS
+									  ON TCSE.LAREA_ID = TCS.STATION_ID
+							      
+									UNION ALL 
+									  
+									SELECT
+										TCE.EMS_ID AS SYSTEM_ID
+							      ,TCE.EQUIP_TYPE AS EQUIP_TYPE
+										,TCS.STATION_ID AS STATION_ID
+										,TCS.STATION_NAME AS STATION_NAME
+										,TCS.LINE_ID AS LINE_ID
+									FROM 
+										TB_CO_EMS TCE
+										LEFT JOIN TB_CO_STATION AS TCS 
+										ON TCE.STATION_ID = TCS.STATION_ID
+							
+							    UNION ALL
+							    
+							    SELECT
+							      TCD.DU_ID AS SYSTEM_ID
+							      ,'2' AS EQUIP_TYPE
+										,TCS.STATION_ID AS STATION_ID
+										,TCS.STATION_NAME AS STATION_NAME
+										,TCS.LINE_ID AS LINE_ID
+										  
+									FROM
+										TB_CO_DU TCD
+										LEFT JOIN TB_CO_STATION AS TCS
+										ON TCD.STATION_ID = TCS.STATION_ID) q1
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = q1.EQUIP_TYPE
+						    AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = q1.SYSTEM_ID
+						 
+						WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+							AND ALARM_TYPE = '1'
+							AND ALARM_STATE in ('0','3')
+							AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE != '3'
+							group by ALARM_CODE
+									,SEVERITY
+									,FDN
+									,EQUIP_TYPE
+									,SYSTEM_ID
+						)q1
+					WHERE EQUIP_TYPE = '2' 
+					ORDER BY RECOVER_TIME DESC
+	</select> 
+	
+	
+	<select id="getRecoverEquipDefault" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT 
+			TB_FS_ALARM_ABNORMAL.EQUIP_TYPE
+			, TB_FS_ALARM_ABNORMAL.SYSTEM_ID
+			, CASE TB_FS_ALARM_ABNORMAL.EQUIP_TYPE
+						WHEN 36 THEN 'equip_jrg_36'
+						ELSE CONCAT('equip_',TB_FS_ALARM_ABNORMAL.SYSTEM_ID,'_',TB_FS_ALARM_ABNORMAL.EQUIP_TYPE)
+					END as EQUIP_ID
+					FROM TB_FS_ALARM_ABNORMAL   
+					LEFT JOIN VW_SYSTEM 
+					  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = VW_SYSTEM.EQUIP_TYPE
+					  AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = VW_SYSTEM.SYSTEM_ID
+					LEFT OUTER JOIN
+					  (  
+					      SELECT
+									TB_CO_MME.MME_ID AS SYSTEM_ID
+									,'1' AS EQUIP_TYPE
+									,TB_CO_MME.STATION_ID AS STATION_ID
+									,TB_CO_STATION.STATION_NAME AS STATION_NAME
+									,TB_CO_STATION.LINE_ID AS LINE_ID
+								FROM
+									TB_CO_MME
+										LEFT JOIN
+									TB_CO_STATION
+										ON TB_CO_MME.STATION_ID = TB_CO_STATION.STATION_ID
+						        
+								UNION ALL
+						     
+								SELECT
+									TB_CO_PGW.PGW_ID AS SYSTEM_ID
+									,'4' AS EQUIP_TYPE
+									,TB_CO_PGW.STATION_ID AS STATION_ID
+									,TB_CO_STATION.STATION_NAME AS STATION_NAME
+									,TB_CO_STATION.LINE_ID AS LINE_ID
+								FROM
+									TB_CO_PGW 
+										LEFT JOIN
+									TB_CO_STATION
+										ON TB_CO_PGW.STATION_ID = TB_CO_STATION.STATION_ID
+						        
+								UNION ALL
+						    
+								SELECT
+									TB_CO_PCRF.PCRF_ID AS SYSTEM_ID
+									,'7' AS EQUIP_TYPE
+									,TB_CO_STATION.STATION_ID AS STATION_ID
+									,TB_CO_STATION.STATION_NAME AS STATION_NAME
+									,TB_CO_STATION.LINE_ID AS LINE_ID
+								FROM
+									TB_CO_PCRF
+										LEFT JOIN
+									TB_CO_STATION
+										ON TB_CO_PCRF.STATION_ID = TB_CO_STATION.STATION_ID
+							        
+							    UNION ALL    
+							    
+							    SELECT
+									TCSE.SYSTEM_ID AS SYSTEM_ID
+							      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE
+							      	,TCS.STATION_ID AS STATION_ID
+									,TCS.STATION_NAME AS STATION_NAME
+									,TCS.LINE_ID AS LINE_ID
+									FROM
+									  TB_CO_SYSTEM_ETC AS TCSE
+									  LEFT JOIN TB_CO_STATION AS TCS
+									  ON TCSE.LAREA_ID = TCS.STATION_ID
+							      
+									UNION ALL 
+									  
+									SELECT
+										TCE.EMS_ID AS SYSTEM_ID
+							      ,TCE.EQUIP_TYPE AS EQUIP_TYPE
+										,TCS.STATION_ID AS STATION_ID
+										,TCS.STATION_NAME AS STATION_NAME
+										,TCS.LINE_ID AS LINE_ID
+									FROM 
+										TB_CO_EMS TCE
+										LEFT JOIN TB_CO_STATION AS TCS 
+										ON TCE.STATION_ID = TCS.STATION_ID
+							
+							    UNION ALL
+							    
+							    SELECT
+							      TCD.DU_ID AS SYSTEM_ID
+							      ,'2' AS EQUIP_TYPE
+										,TCS.STATION_ID AS STATION_ID
+										,TCS.STATION_NAME AS STATION_NAME
+										,TCS.LINE_ID AS LINE_ID
+										  
+									FROM
+										TB_CO_DU TCD
+										LEFT JOIN TB_CO_STATION AS TCS
+										ON TCD.STATION_ID = TCS.STATION_ID) q1
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = q1.EQUIP_TYPE
+						    AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = q1.SYSTEM_ID
+						 
+						WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+							AND ALARM_TYPE = '1'
+							AND ALARM_STATE in ('0','3')
+							AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE NOT IN ('2','3','11','44')
+							AND CTOA_FLAG is null
+						GROUP BY 
+							EQUIP_TYPE
+		UNION ALL
+		
+		SELECT 
+			TB_FS_ALARM_ABNORMAL.EQUIP_TYPE
+			, TB_FS_ALARM_ABNORMAL.SYSTEM_ID
+            , CONCAT('equip_',TB_FS_ALARM_ABNORMAL.SYSTEM_ID,'_',TB_FS_ALARM_ABNORMAL.EQUIP_TYPE) AS EQUIP_ID
+            
+					FROM TB_FS_ALARM_ABNORMAL   
+					LEFT JOIN VW_SYSTEM 
+					  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = VW_SYSTEM.EQUIP_TYPE
+					  AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = VW_SYSTEM.SYSTEM_ID
+					LEFT OUTER JOIN
+					  (  
+
+							    SELECT
+									TCSE.SYSTEM_ID AS SYSTEM_ID
+							      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE
+							      	,TCS.STATION_ID AS STATION_ID
+									,TCS.STATION_NAME AS STATION_NAME
+									,TCS.LINE_ID AS LINE_ID
+									FROM
+									  TB_CO_SYSTEM_ETC AS TCSE
+									  LEFT JOIN TB_CO_STATION AS TCS
+									  ON TCSE.LAREA_ID = TCS.STATION_ID
+									  
+									) q1
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = q1.EQUIP_TYPE
+						    AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = q1.SYSTEM_ID
+						 
+						WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+							AND ALARM_TYPE = '1'
+							AND ALARM_STATE in ('0','3')
+							AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE IN ('11','44')
+							AND (CTOA_FLAG is null or  CTOA_FLAG = '0' )
+						GROUP BY 
+							EQUIP_TYPE, LINE_ID, SYSTEM_ID
+		UNION ALL
+		
+		SELECT 
+			TB_FS_ALARM_ABNORMAL.EQUIP_TYPE
+			, TB_FS_ALARM_ABNORMAL.SYSTEM_ID
+            , CONCAT('equip_',TB_FS_ALARM_ABNORMAL.SYSTEM_ID,'_',TB_FS_ALARM_ABNORMAL.EQUIP_TYPE) AS EQUIP_ID
+            
+					FROM TB_FS_ALARM_ABNORMAL   
+					LEFT JOIN VW_SYSTEM 
+					  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = VW_SYSTEM.EQUIP_TYPE
+					  AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = VW_SYSTEM.SYSTEM_ID
+					LEFT OUTER JOIN
+					  (  
+
+							    SELECT
+									TCSE.SYSTEM_ID AS SYSTEM_ID
+							      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE
+							      	,TCS.STATION_ID AS STATION_ID
+									,TCS.STATION_NAME AS STATION_NAME
+									,TCS.LINE_ID AS LINE_ID
+									FROM
+									  TB_CO_SYSTEM_ETC AS TCSE
+									  LEFT JOIN TB_CO_STATION AS TCS
+									  ON TCSE.LAREA_ID = TCS.STATION_ID
+									  
+									) q1
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = q1.EQUIP_TYPE
+						    AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = q1.SYSTEM_ID
+						 
+						WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+							AND ALARM_TYPE = '1'
+							AND CTOA_FLAG is null
+							AND ALARM_STATE in ('0','3')
+							AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = '36'
+						GROUP BY 
+							EQUIP_TYPE, SYSTEM_ID
+							
+			UNION ALL 
+			<!-- 스위치 성능 정보 -->
+			SELECT 
+			TB_FS_ALARM_ABNORMAL.EQUIP_TYPE
+			, TB_FS_ALARM_ABNORMAL.SYSTEM_ID
+            , CONCAT('equip_',TB_FS_ALARM_ABNORMAL.SYSTEM_ID,'_',TB_FS_ALARM_ABNORMAL.EQUIP_TYPE) AS EQUIP_ID
+            
+					FROM TB_FS_ALARM_ABNORMAL   
+					LEFT JOIN VW_SYSTEM 
+					  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = VW_SYSTEM.EQUIP_TYPE
+					  AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = VW_SYSTEM.SYSTEM_ID
+					LEFT OUTER JOIN
+					  (  
+
+							    SELECT
+									TCSE.SYSTEM_ID AS SYSTEM_ID
+							      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE
+							      	,TCS.STATION_ID AS STATION_ID
+									,TCS.STATION_NAME AS STATION_NAME
+									,TCS.LINE_ID AS LINE_ID
+									FROM
+									  TB_CO_SYSTEM_ETC AS TCSE
+									  LEFT JOIN TB_CO_STATION AS TCS
+									  ON TCSE.LAREA_ID = TCS.STATION_ID
+									  
+									) q1
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = q1.EQUIP_TYPE
+						    AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = q1.SYSTEM_ID
+						 
+						WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+							AND ALARM_TYPE = '1'
+							AND CTOA_FLAG is null
+							AND ALARM_STATE in ('0','3')
+							AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = '57'
+						GROUP BY 
+							EQUIP_TYPE, SYSTEM_ID
+					
+	</select>
+	
+	<select id="getRecoverEquipDuRu" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT concat('equip','_',system_id) as EQUIP_ID
+			, FDN
+			, EVENT_TIME
+			, RECOVER_TIME 
+			FROM TB_FS_ALARM_ABNORMAL  
+			WHERE EQUIP_TYPE = '2'
+				AND RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+			  AND ALARM_STATE in ('0','3')
+			  AND ( CTOA_FLAG is null  OR CTOA_FLAG = '' )
+			  AND (UPPER(FDN) NOT LIKE '%RRH[%' AND UPPER(FDN) NOT LIKE '%PSU[%')
+			GROUP BY EQUIP_ID
+		UNION ALL
+		SELECT EQUIP_ID  
+				, FDN
+				, EVENT_TIME 
+				, RECOVER_TIME
+		FROM (
+				<!-- SELECT concat('ru_',system_id,'_',SUBSTRING_INDEX(REPLACE(fdn,']',''), '[', - 1)) as EQUIP_ID --> 
+				SELECT concat('ru_',system_id,'_', SUBSTRING(FDN,INSTR(FDN,'[')+1, INSTR(FDN,']')-INSTR(FDN,'[')-1)) as EQUIP_ID  
+				, FDN
+				, EVENT_TIME
+				, RECOVER_TIME
+				FROM TB_FS_ALARM_ABNORMAL 
+				WHERE EQUIP_TYPE = '2'
+				  AND ALARM_STATE in ('0','3')
+				  AND ( CTOA_FLAG is null  OR CTOA_FLAG = '' )
+				  AND (UPPER(FDN) LIKE '%RRH[%' OR UPPER(FDN) LIKE '%PSU[%')
+				  ) q1
+		WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+		GROUP BY EQUIP_ID
+			  
+		
+	</select>
+	
+	<select id="getRecoverEquipSwitch" parameterType="java.lang.String" resultType="java.util.HashMap">
+		SELECT 
+			TB_FS_ALARM_ABNORMAL.EQUIP_TYPE
+			, TB_FS_ALARM_ABNORMAL.SYSTEM_ID
+           , CASE LINE_ID
+						WHEN 0 THEN 'switch_gwanje'
+						WHEN 5 THEN 'switch_station5'
+						WHEN 7 THEN 'switch_station7'
+						ELSE '-'
+					END as EQUIP_ID
+					FROM TB_FS_ALARM_ABNORMAL   
+					LEFT JOIN VW_SYSTEM 
+					  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = VW_SYSTEM.EQUIP_TYPE
+					  AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = VW_SYSTEM.SYSTEM_ID
+					LEFT OUTER JOIN
+					  (  
+
+							    SELECT
+									TCSE.SYSTEM_ID AS SYSTEM_ID
+							      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE
+							      	,TCS.STATION_ID AS STATION_ID
+									,TCS.STATION_NAME AS STATION_NAME
+									,TCS.LINE_ID AS LINE_ID
+									FROM
+									  TB_CO_SYSTEM_ETC AS TCSE
+									  LEFT JOIN TB_CO_STATION AS TCS
+									  ON TCSE.LAREA_ID = TCS.STATION_ID
+									  
+									) q1
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = q1.EQUIP_TYPE
+						    AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = q1.SYSTEM_ID
+						 
+						WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+							AND ALARM_TYPE = '1'
+							AND ALARM_STATE in ('0','3')
+							AND (CTOA_FLAG is null or CTOA_FLAG = '0')
+							AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE in ('11', '44')
+						GROUP BY 
+							LINE_ID
+  
+			UNION ALL
+			
+			SELECT 
+				TB_FS_ALARM_ABNORMAL.EQUIP_TYPE
+				, TB_FS_ALARM_ABNORMAL.SYSTEM_ID
+         	  , CONCAT(LINE_ID,'_',TB_FS_ALARM_ABNORMAL.EQUIP_TYPE) AS EQUIP_ID
+					FROM TB_FS_ALARM_ABNORMAL   
+					LEFT JOIN VW_SYSTEM 
+					  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = VW_SYSTEM.EQUIP_TYPE
+					LEFT OUTER JOIN
+					  (  
+
+							    SELECT
+									TCSE.SYSTEM_ID AS SYSTEM_ID
+							      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE
+							      	,TCS.STATION_ID AS STATION_ID
+									,TCS.STATION_NAME AS STATION_NAME
+									,TCS.LINE_ID AS LINE_ID
+									FROM
+									  TB_CO_SYSTEM_ETC AS TCSE
+									  LEFT JOIN TB_CO_STATION AS TCS
+									  ON TCSE.LAREA_ID = TCS.STATION_ID
+									  
+									) q1
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = q1.EQUIP_TYPE
+						    AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = q1.SYSTEM_ID
+						 
+						WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+							AND ALARM_TYPE = '1'
+							AND ALARM_STATE in ('0','3')
+							AND (CTOA_FLAG is null or CTOA_FLAG = '0')
+							AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE in ('11', '44')
+						GROUP BY 
+							EQUIP_TYPE, LINE_ID
+		
+	</select>
+	
+	<select id="getRecoverEquipJrg" parameterType="java.lang.String" resultType="java.util.HashMap">
+		/* getRecoverEquipJrg */
+		SELECT TB_FS_ALARM_ABNORMAL.EQUIP_TYPE
+			 , TB_FS_ALARM_ABNORMAL.SYSTEM_ID
+			 , CASE LINE_ID
+				WHEN 0 THEN 'equip36_gwanje'
+				WHEN 5 THEN 'equip36_station5'
+				WHEN 7 THEN 'equip36_station7'
+				ELSE '-'
+				END as EQUIP_ID
+		FROM TB_FS_ALARM_ABNORMAL
+			LEFT JOIN VW_SYSTEM
+			  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = VW_SYSTEM.EQUIP_TYPE
+			  AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = VW_SYSTEM.SYSTEM_ID
+			LEFT OUTER JOIN
+				(
+					SELECT
+						TCSE.SYSTEM_ID   AS SYSTEM_ID
+					  , TCSE.EQUIP_TYPE  AS EQUIP_TYPE
+					  , TCS.STATION_ID   AS STATION_ID
+					  , TCS.STATION_NAME AS STATION_NAME
+					  , TCS.LINE_ID      AS LINE_ID
+					FROM
+						TB_CO_SYSTEM_ETC AS TCSE
+						LEFT JOIN TB_CO_STATION AS TCS
+						  ON TCSE.LAREA_ID = TCS.STATION_ID
+				) q1
+				ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = q1.EQUIP_TYPE
+			   AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = q1.SYSTEM_ID
+		WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL -1 DAY)
+		  AND ALARM_TYPE = '1'
+		  AND CTOA_FLAG IS NULL
+		  AND ALARM_STATE IN ('0', '3')
+		  AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = '36'
+		  AND (CTOA_FLAG IS NULL OR CTOA_FLAG = '0')
+		GROUP BY EQUIP_TYPE, SYSTEM_ID
+	</select>
+	
+	<!-- 네트워크 통합감시 - 해제알람 상세조회 -->
+	<select id="getDetailRecover" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* getDetailRecover */
+		<choose>
+			<when test='equipType == 2'>
+				SELECT
+					ALARM_CODE
+					,PROBABLE_CAUSE
+					,SEVERITY
+					,FDN
+					,q1.EQUIP_TYPE
+					,q1.SYSTEM_ID
+					,EQUIP_NAME
+					,STATION_ID
+					,STATION_NAME
+					,SYSTEM_NAME
+					,EVENT_TIME
+					,RECOVER_TIME 
+					FROM
+					(SELECT ALARM_CODE
+						, PROBABLE_CAUSE
+						,CASE
+							  WHEN SEVERITY = '1'
+							  THEN 'Critical'
+							  WHEN SEVERITY = '2'
+							  THEN 'Major'
+							  WHEN SEVERITY = '3'
+							  THEN 'Minor'
+							  WHEN SEVERITY = '4'
+							  THEN 'Normal'
+							  ELSE 'Normal'
+							END SEVERITY
+						, FDN
+						, TB_FS_ALARM_ABNORMAL.EQUIP_TYPE
+						, TB_FS_ALARM_ABNORMAL.SYSTEM_ID
+						, IFNULL(q1.STATION_ID,'0') AS STATION_ID
+						, IFNULL(q1.STATION_NAME,'관제센터') AS STATION_NAME
+						, MAX(DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i:%s')) AS EVENT_TIME
+						, MAX(DATE_FORMAT(RECOVER_TIME,'%Y-%m-%d %H:%i:%s')) AS RECOVER_TIME
+						FROM TB_FS_ALARM_ABNORMAL   
+						LEFT OUTER JOIN
+						  (  
+							    SELECT
+							      TCD.DU_ID AS SYSTEM_ID
+							      ,'2' AS EQUIP_TYPE
+										,TCS.STATION_ID AS STATION_ID
+										,TCS.STATION_NAME AS STATION_NAME
+										,TCS.LINE_ID AS LINE_ID
+ 
+									FROM
+										TB_CO_DU TCD
+										LEFT JOIN TB_CO_STATION AS TCS
+										ON TCD.STATION_ID = TCS.STATION_ID) q1
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = q1.EQUIP_TYPE
+						    AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = q1.SYSTEM_ID
+						 
+						WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+							AND ALARM_TYPE = '1'
+							AND ALARM_STATE in ('0','3')
+							AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = '2'
+							AND UPPER(FDN) NOT LIKE '%RRH[%' AND UPPER(FDN) NOT LIKE '%PSU[%'
+							AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = #{systemId} 
+						GROUP BY ALARM_CODE
+									,SEVERITY
+									,FDN
+									,EQUIP_TYPE
+									,SYSTEM_ID
+									,EVENT_TIME
+									,RECOVER_TIME 
+						)q1
+						LEFT JOIN VW_SYSTEM 
+						  ON q1.EQUIP_TYPE = VW_SYSTEM.EQUIP_TYPE
+						  AND q1.SYSTEM_ID = VW_SYSTEM.SYSTEM_ID
+					ORDER BY RECOVER_TIME DESC
+			</when>
+			<when test='equipType == 3'><!-- RU -->
+				SELECT
+					ALARM_CODE
+					,PROBABLE_CAUSE
+					,SEVERITY
+					,FDN
+					,q1.EQUIP_TYPE
+					,q1.SYSTEM_ID
+					,EQUIP_NAME
+					,STATION_ID
+					,STATION_NAME
+					,SYSTEM_NAME
+					,EVENT_TIME
+					,RECOVER_TIME 
+					FROM
+					(SELECT ALARM_CODE
+						, PROBABLE_CAUSE
+						,CASE
+							  WHEN SEVERITY = '1'
+							  THEN 'Critical'
+							  WHEN SEVERITY = '2'
+							  THEN 'Major'
+							  WHEN SEVERITY = '3'
+							  THEN 'Minor'
+							  WHEN SEVERITY = '4'
+							  THEN 'Normal'
+							  ELSE 'Normal'
+							END SEVERITY
+						, FDN
+						, TB_FS_ALARM_ABNORMAL.EQUIP_TYPE
+						, TB_FS_ALARM_ABNORMAL.SYSTEM_ID
+						, IFNULL(q1.STATION_ID,'0') AS STATION_ID
+						, IFNULL(q1.STATION_NAME,'관제센터') AS STATION_NAME
+						, MAX(DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i:%s')) AS EVENT_TIME
+						, MAX(DATE_FORMAT(RECOVER_TIME,'%Y-%m-%d %H:%i:%s')) AS RECOVER_TIME
+						FROM TB_FS_ALARM_ABNORMAL   
+						LEFT OUTER JOIN
+						  (  
+							    SELECT
+							      TCD.DU_ID AS SYSTEM_ID
+							      ,'2' AS EQUIP_TYPE
+										,TCS.STATION_ID AS STATION_ID
+										,TCS.STATION_NAME AS STATION_NAME
+										,TCS.LINE_ID AS LINE_ID
+ 
+									FROM
+										TB_CO_DU TCD
+										LEFT JOIN TB_CO_STATION AS TCS
+										ON TCD.STATION_ID = TCS.STATION_ID) q1
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = q1.EQUIP_TYPE
+						    AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = q1.SYSTEM_ID
+						 
+						WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY ) 
+							AND ALARM_TYPE = '1'
+							AND ALARM_STATE in ('0','3')
+							AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = '2'
+							AND TB_FS_ALARM_ABNORMAL.FDN REGEXP CONCAT('[RRH|PSU]\\[', #{rrh}) 
+							AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = #{systemId} 
+							GROUP BY ALARM_CODE
+									,SEVERITY
+									,FDN
+									,EQUIP_TYPE
+									,SYSTEM_ID
+									,EVENT_TIME
+									,RECOVER_TIME 
+						)q1
+						LEFT JOIN VW_SYSTEM 
+						  ON q1.EQUIP_TYPE = VW_SYSTEM.EQUIP_TYPE
+						  AND q1.SYSTEM_ID = VW_SYSTEM.SYSTEM_ID
+					ORDER BY RECOVER_TIME DESC
+			</when>
+			<!-- <when test='equipType == 9595'>
+			스위치 관제,5호선, 7호선 팝업
+				SELECT
+					ALARM_CODE
+					,PROBABLE_CAUSE
+					,SEVERITY
+					,FDN
+					,EQUIP_TYPE
+					,SYSTEM_ID
+					,EQUIP_NAME
+          			,LINE_ID
+					,STATION_ID
+					,STATION_NAME
+					,SYSTEM_NAME
+					,EVENT_TIME
+					,RECOVER_TIME 
+          			FROM
+					(SELECT ALARM_CODE
+						, PROBABLE_CAUSE
+						,CASE
+							  WHEN SEVERITY = '1'
+							  THEN 'Critical'
+							  WHEN SEVERITY = '2'
+							  THEN 'Major'
+							  WHEN SEVERITY = '3'
+							  THEN 'Minor'
+							  WHEN SEVERITY = '4'
+							  THEN 'Normal'
+							  ELSE 'Normal'
+							END SEVERITY
+						, FDN
+						, TB_FS_ALARM_ABNORMAL.EQUIP_TYPE
+						, TB_FS_ALARM_ABNORMAL.SYSTEM_ID
+						, VW_SYSTEM.EQUIP_NAME
+            			, LINE_ID
+						, IFNULL(q1.STATION_ID,'0') AS STATION_ID
+						, IFNULL(q1.STATION_NAME,'관제센터') AS STATION_NAME
+						, SYSTEM_NAME
+						, MAX(DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i:%s')) AS EVENT_TIME
+						, MAX(DATE_FORMAT(RECOVER_TIME,'%Y-%m-%d %H:%i:%s')) AS RECOVER_TIME
+            
+						FROM TB_FS_ALARM_ABNORMAL   
+						LEFT JOIN VW_SYSTEM 
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = VW_SYSTEM.EQUIP_TYPE
+						  AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = VW_SYSTEM.SYSTEM_ID
+						LEFT OUTER JOIN
+						  (  
+							    SELECT
+									TCSE.SYSTEM_ID AS SYSTEM_ID
+							      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE 
+							      	,TCS.STATION_ID AS STATION_ID
+									,TCS.STATION_NAME AS STATION_NAME
+									,TCS.LINE_ID AS LINE_ID
+									FROM
+									  TB_CO_SYSTEM_ETC AS TCSE
+									  LEFT JOIN TB_CO_STATION AS TCS
+									  ON TCSE.LAREA_ID = TCS.STATION_ID
+									) q1
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = q1.EQUIP_TYPE
+						    AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = q1.SYSTEM_ID
+						 
+						WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+							AND ALARM_TYPE = '1'
+							AND ALARM_STATE in ('0','3')
+							AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE in ('11','44')
+           				   AND LINE_ID LIKE ('%${lineId}%') 
+           				   <if test="systemId != null and systemId != ''">
+           				   		AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = #{systemId} 
+           				   </if>
+           				GROUP BY ALARM_CODE
+									,SEVERITY
+									,FDN
+									,EQUIP_TYPE
+									,SYSTEM_ID
+									,EVENT_TIME
+									,RECOVER_TIME 
+           				   
+							
+						)q1
+					ORDER BY RECOVER_TIME DESC
+			</when>  -->
+			<when test='equipType == 11'><!-- 스위치 -->
+				SELECT
+					ALARM_CODE
+					,PROBABLE_CAUSE
+					,SEVERITY
+					,FDN
+					,EQUIP_TYPE
+					,SYSTEM_ID
+					,EQUIP_NAME
+          			,LINE_ID
+					,STATION_ID
+					,STATION_NAME
+					,SYSTEM_NAME
+					,EVENT_TIME
+					,RECOVER_TIME 
+          
+					FROM
+					(SELECT ALARM_CODE
+						, PROBABLE_CAUSE
+						,CASE
+							  WHEN SEVERITY = '1'
+							  THEN 'Critical'
+							  WHEN SEVERITY = '2'
+							  THEN 'Major'
+							  WHEN SEVERITY = '3'
+							  THEN 'Minor'
+							  WHEN SEVERITY = '4'
+							  THEN 'Normal'
+							  ELSE 'Normal'
+							END SEVERITY
+						, FDN
+						, TB_FS_ALARM_ABNORMAL.EQUIP_TYPE
+						, TB_FS_ALARM_ABNORMAL.SYSTEM_ID
+						, VW_SYSTEM.EQUIP_NAME
+            			, LINE_ID
+						, IFNULL(q1.STATION_ID,'0') AS STATION_ID
+						, IFNULL(q1.STATION_NAME,'관제센터') AS STATION_NAME
+						, SYSTEM_NAME
+						, MAX(DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i:%s')) AS EVENT_TIME
+						, MAX(DATE_FORMAT(RECOVER_TIME,'%Y-%m-%d %H:%i:%s')) AS RECOVER_TIME
+            
+						FROM TB_FS_ALARM_ABNORMAL
+						INNER JOIN TB_CO_SWITCH_INFO AS TCSI
+							ON TB_FS_ALARM_ABNORMAL.SYSTEM_ID = TCSI.SWITCH_ID   
+						LEFT JOIN VW_SYSTEM 
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = VW_SYSTEM.EQUIP_TYPE
+						  AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = VW_SYSTEM.SYSTEM_ID
+						LEFT OUTER JOIN 
+						  (  
+							    SELECT
+									TCSE.SYSTEM_ID AS SYSTEM_ID
+							      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE 
+							      	,TCS.STATION_ID AS STATION_ID
+									,TCS.STATION_NAME AS STATION_NAME
+									,TCS.LINE_ID AS LINE_ID
+									FROM
+									  TB_CO_SYSTEM_ETC AS TCSE
+									  LEFT JOIN TB_CO_STATION AS TCS
+									  ON TCSE.LAREA_ID = TCS.STATION_ID
+									) q1
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = q1.EQUIP_TYPE
+						    AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = q1.SYSTEM_ID
+						 
+						WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+							AND ALARM_TYPE = '1'
+							AND ALARM_STATE in ('0','3')
+							AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = '11'
+							<if test="lineId != null and lineId != ''">
+           				   		AND LINE_ID LIKE ('%${lineId}%')
+           				   	</if> 
+           				    <if test="systemId != null and systemId != ''">
+								AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = #{systemId}
+							</if>
+							<if test="category != null and category != ''">
+								AND TCSI.CATEGORY = #{category}
+							</if>
+						GROUP BY ALARM_CODE
+									,SEVERITY
+									,FDN
+									,EQUIP_TYPE
+									,SYSTEM_ID
+									,EVENT_TIME
+									,RECOVER_TIME 
+						)q1
+					GROUP BY EVENT_TIME, RECOVER_TIME, EQUIP_TYPE, SYSTEM_ID, ALARM_CODE, FDN
+					ORDER BY RECOVER_TIME DESC
+			</when> 
+			<when test='equipType == 44'><!-- 스위치 -->
+				SELECT
+					ALARM_CODE
+					,PROBABLE_CAUSE
+					,SEVERITY
+					,FDN
+					,EQUIP_TYPE
+					,SYSTEM_ID
+					,EQUIP_NAME
+          ,LINE_ID
+					,STATION_ID
+					,STATION_NAME
+					,SYSTEM_NAME
+					,EVENT_TIME
+					,RECOVER_TIME 
+          
+					FROM
+					(SELECT ALARM_CODE
+						, PROBABLE_CAUSE
+						,CASE
+							  WHEN SEVERITY = '1'
+							  THEN 'Critical'
+							  WHEN SEVERITY = '2'
+							  THEN 'Major'
+							  WHEN SEVERITY = '3'
+							  THEN 'Minor'
+							  WHEN SEVERITY = '4'
+							  THEN 'Normal'
+							  ELSE 'Normal'
+							END SEVERITY
+						, FDN
+						, TB_FS_ALARM_ABNORMAL.EQUIP_TYPE
+						, TB_FS_ALARM_ABNORMAL.SYSTEM_ID
+						, VW_SYSTEM.EQUIP_NAME
+            , LINE_ID
+						, IFNULL(q1.STATION_ID,'0') AS STATION_ID
+						, IFNULL(q1.STATION_NAME,'관제센터') AS STATION_NAME
+						, SYSTEM_NAME
+						, MAX(DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i:%s')) AS EVENT_TIME
+						, MAX(DATE_FORMAT(RECOVER_TIME,'%Y-%m-%d %H:%i:%s')) AS RECOVER_TIME
+            
+						FROM TB_FS_ALARM_ABNORMAL   
+						LEFT JOIN VW_SYSTEM 
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = VW_SYSTEM.EQUIP_TYPE
+						  AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = VW_SYSTEM.SYSTEM_ID
+						LEFT OUTER JOIN
+						  (  
+							    SELECT
+									TCSE.SYSTEM_ID AS SYSTEM_ID
+							      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE 
+							      	,TCS.STATION_ID AS STATION_ID
+									,TCS.STATION_NAME AS STATION_NAME
+									,TCS.LINE_ID AS LINE_ID
+									FROM
+									  TB_CO_SYSTEM_ETC AS TCSE
+									  LEFT JOIN TB_CO_STATION AS TCS
+									  ON TCSE.LAREA_ID = TCS.STATION_ID
+									) q1
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = q1.EQUIP_TYPE
+						    AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = q1.SYSTEM_ID
+						 
+						WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+							AND ALARM_TYPE = '1' 
+							AND ALARM_STATE in ('0','3')
+							AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = '44'
+           				    <if test="lineId != null and lineId != ''">
+           				   		AND LINE_ID LIKE ('%${lineId}%')
+           				   	</if> 
+           				    <if test="systemId != null and systemId != ''">
+								AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = #{systemId}
+							</if>
+						GROUP BY ALARM_CODE
+									,SEVERITY
+									,FDN
+									,EQUIP_TYPE
+									,SYSTEM_ID
+									,EVENT_TIME
+									,RECOVER_TIME 
+							
+						)q1
+					GROUP BY EVENT_TIME, RECOVER_TIME, EQUIP_TYPE, SYSTEM_ID, ALARM_CODE, FDN
+					ORDER BY RECOVER_TIME DESC
+			</when>
+			<when test='equipType == 57'><!-- 스위치 -->  
+			/* 스위치 */
+				SELECT
+					ALARM_CODE
+					,PROBABLE_CAUSE
+					,SEVERITY
+					,FDN
+					,EQUIP_TYPE
+					,SYSTEM_ID
+					,EQUIP_NAME
+          ,LINE_ID
+					,STATION_ID
+					,STATION_NAME
+					,SYSTEM_NAME
+					,EVENT_TIME
+					,RECOVER_TIME 
+          
+					FROM
+					(SELECT ALARM_CODE
+						, PROBABLE_CAUSE
+						,CASE
+							  WHEN SEVERITY = '1'
+							  THEN 'Critical'
+							  WHEN SEVERITY = '2'
+							  THEN 'Major'
+							  WHEN SEVERITY = '3'
+							  THEN 'Minor'
+							  WHEN SEVERITY = '4'
+							  THEN 'Normal'
+							  ELSE 'Normal'
+							END SEVERITY
+						, FDN
+						, TB_FS_ALARM_ABNORMAL.EQUIP_TYPE
+						, TB_FS_ALARM_ABNORMAL.SYSTEM_ID
+						, VW_SYSTEM.EQUIP_NAME
+            , LINE_ID
+						, IFNULL(q1.STATION_ID,'0') AS STATION_ID
+						, IFNULL(q1.STATION_NAME,'관제센터') AS STATION_NAME
+						, SYSTEM_NAME
+						, MAX(DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i:%s')) AS EVENT_TIME
+						, MAX(DATE_FORMAT(RECOVER_TIME,'%Y-%m-%d %H:%i:%s')) AS RECOVER_TIME
+            
+						FROM TB_FS_ALARM_ABNORMAL   
+						LEFT JOIN VW_SYSTEM 
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = VW_SYSTEM.EQUIP_TYPE
+						  AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = VW_SYSTEM.SYSTEM_ID
+						LEFT OUTER JOIN
+						  (  
+							    SELECT
+									TCSE.SYSTEM_ID AS SYSTEM_ID
+							      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE 
+							      	,TCS.STATION_ID AS STATION_ID
+									,TCS.STATION_NAME AS STATION_NAME
+									,TCS.LINE_ID AS LINE_ID
+									FROM
+									  TB_CO_SYSTEM_ETC AS TCSE
+									  LEFT JOIN TB_CO_STATION AS TCS
+									  ON TCSE.LAREA_ID = TCS.STATION_ID
+									) q1
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = q1.EQUIP_TYPE
+						    AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = q1.SYSTEM_ID
+						 
+						WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+							AND ALARM_TYPE = '1' 
+							AND ALARM_STATE in ('0','3')
+							AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = '57'
+           				    <if test="lineId != null and lineId != ''">
+           				   		AND LINE_ID LIKE ('%${lineId}%')
+           				   	</if> 
+           				    <if test="systemId != null and systemId != ''">
+								AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = #{systemId}
+							</if> 
+						GROUP BY ALARM_CODE
+									,SEVERITY
+									,FDN
+									,EQUIP_TYPE
+									,SYSTEM_ID
+									,EVENT_TIME
+									,RECOVER_TIME 
+							
+						)q1
+					GROUP BY EVENT_TIME, RECOVER_TIME, EQUIP_TYPE, SYSTEM_ID, ALARM_CODE, FDN
+					ORDER BY RECOVER_TIME DESC
+			</when>
+			<!-- EMS -->
+			<!--
+			<when test='equipType == 14'>
+				SELECT
+					TFAC.ALARM_ID
+					, TFAC.ALARM_TYPE
+					, TFAC.ALARM_CODE
+					, TFAC.PROBABLE_CAUSE
+					, TFAC.SYSTEM_ID
+					, TFAC.SYSTEM_NAME
+					, TFAC.C_UID
+					, TFAC.SEVERITY
+					, CASE TFAC.SEVERITY
+						WHEN 1 THEN 'Critical'
+						WHEN 2 THEN 'Major'
+						WHEN 3 THEN 'Minor'
+						WHEN 4 THEN 'Warning'
+						WHEN 5 THEN 'Normal'
+						ELSE ''
+					END as LEVEL
+					, TFAC.FDN AS LOCATION
+					, DATE_FORMAT(TFAC.EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+				FROM
+					TB_FS_ALARM_ABNORMAL_CUR AS TFAC
+					INNER JOIN TB_CO_EMS AS TCE
+						ON TFAC.SYSTEM_ID = TCE.EMS_ID
+							AND TFAC.EQUIP_TYPE = TCE.EQUIP_TYPE
+							AND TFAC.SYSTEM_NAME = TCE.EMS_NAME
+				WHERE
+					TFAC.ALARM_STATE IN (1,2)
+					AND TFAC.SEVERITY NOT IN (4,5)
+				GROUP BY TFAC.EVENT_TIME, TFAC.SYSTEM_ID, TFAC.ALARM_CODE, TFAC.FDN
+				ORDER BY
+				<if test = 'sortOption.size() > 0'>
+					<foreach collection="sortOption" item="option" separator=",">
+						${option.colName} ${option.order}
+					</foreach>
+				</if>
+				<if test = 'sortOption.size() == 0'>
+					TFAC.EVENT_TIME DESC
+				</if>
+			</when>
+			-->
+			<!-- 정류기 -->
+			<when test="equipType == 36"> 
+				/* 정류기 */
+				SELECT
+					ALARM_CODE
+				  , PROBABLE_CAUSE
+				  , SEVERITY
+				  , FDN
+				  , EQUIP_TYPE
+				  , SYSTEM_ID
+				  , EQUIP_NAME
+				  , LINE_ID
+				  , STATION_ID
+				  , STATION_NAME
+				  , SYSTEM_NAME
+				  , EVENT_TIME
+				  , RECOVER_TIME
+				FROM
+					(
+						SELECT
+							ALARM_CODE
+						  , PROBABLE_CAUSE
+						  , CASE
+								WHEN SEVERITY = '1' THEN 'Critical'
+								WHEN SEVERITY = '2' THEN 'Major'
+								WHEN SEVERITY = '3' THEN 'Minor'
+								WHEN SEVERITY = '4' THEN 'Normal'
+								ELSE 'Normal'
+							END SEVERITY
+						  , FDN
+						  , TB_FS_ALARM_ABNORMAL.EQUIP_TYPE
+						  , TB_FS_ALARM_ABNORMAL.SYSTEM_ID
+						  , VW_SYSTEM.EQUIP_NAME
+						  , LINE_ID
+						  , IFNULL(Q1.STATION_ID,'0')      AS STATION_ID
+						  , IFNULL(Q1.STATION_NAME,'관제센터') AS STATION_NAME
+						  , SYSTEM_NAME
+						  , MAX(DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i:%s'))   AS EVENT_TIME
+						  , MAX(DATE_FORMAT(RECOVER_TIME,'%Y-%m-%d %H:%i:%s')) AS RECOVER_TIME
+						FROM TB_FS_ALARM_ABNORMAL
+							LEFT JOIN VW_SYSTEM
+								ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = VW_SYSTEM.EQUIP_TYPE
+								AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = VW_SYSTEM.SYSTEM_ID
+							LEFT OUTER JOIN
+								( 	
+									SELECT
+										TCSE.SYSTEM_ID   AS SYSTEM_ID
+									  , TCSE.EQUIP_TYPE  AS EQUIP_TYPE
+									  , TCS.STATION_ID   AS STATION_ID
+									  , TCS.STATION_NAME AS STATION_NAME
+									  , TCS.LINE_ID      AS LINE_ID
+									FROM
+										TB_CO_SYSTEM_ETC AS TCSE
+										LEFT JOIN
+											TB_CO_STATION AS TCS
+											ON
+												TCSE.LAREA_ID = TCS.STATION_ID
+								) Q1
+								ON
+									TB_FS_ALARM_ABNORMAL.EQUIP_TYPE    = Q1.EQUIP_TYPE
+									AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = Q1.SYSTEM_ID
+						WHERE
+							RECOVER_TIME   > DATE_ADD(now(), INTERVAL - 1 DAY )
+							AND ALARM_TYPE = '1'
+							AND ALARM_STATE in ('0','3')
+							AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = '36'
+							<if test="lineId != null and lineId != ''">
+								AND LINE_ID LIKE ('%${lineId}%')
+							</if>
+							<if test="lineId == null or lineId == ''">
+								<if test="systemId != null and systemId != ''">
+									AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID  = #{systemId} 
+								</if>
+							</if>
+						GROUP BY
+							ALARM_CODE
+						  , SEVERITY
+						  , FDN
+						  , EQUIP_TYPE
+						  , SYSTEM_ID
+						  , EVENT_TIME
+						  , RECOVER_TIME
+					)
+					Q1
+				ORDER BY
+					RECOVER_TIME DESC
+			</when>
+			<otherwise>
+				SELECT
+					ALARM_CODE
+					,PROBABLE_CAUSE
+					,SEVERITY
+					,FDN
+					,EQUIP_TYPE
+					,SYSTEM_ID
+					,EQUIP_NAME
+					,STATION_ID
+					,STATION_NAME
+					,SYSTEM_NAME 
+					,EVENT_TIME
+					,RECOVER_TIME 
+					FROM
+					(SELECT ALARM_CODE
+						, PROBABLE_CAUSE
+						,CASE
+							  WHEN SEVERITY = '1'
+							  THEN 'Critical'
+							  WHEN SEVERITY = '2'
+							  THEN 'Major'
+							  WHEN SEVERITY = '3'
+							  THEN 'Minor'
+							  WHEN SEVERITY = '4'
+							  THEN 'Normal'
+							  ELSE 'Normal'
+							END SEVERITY
+						, FDN
+						, TB_FS_ALARM_ABNORMAL.EQUIP_TYPE
+						, TB_FS_ALARM_ABNORMAL.SYSTEM_ID
+						, VW_SYSTEM.EQUIP_NAME
+						, IFNULL(q1.STATION_ID,'0') AS STATION_ID
+						, IFNULL(q1.STATION_NAME,'관제센터') AS STATION_NAME
+						, SYSTEM_NAME
+						, MAX(DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i:%s')) AS EVENT_TIME
+						, MAX(DATE_FORMAT(RECOVER_TIME,'%Y-%m-%d %H:%i:%s')) AS RECOVER_TIME
+						FROM TB_FS_ALARM_ABNORMAL   
+						LEFT JOIN VW_SYSTEM 
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = VW_SYSTEM.EQUIP_TYPE
+						  AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = VW_SYSTEM.SYSTEM_ID
+						LEFT OUTER JOIN
+						  (  
+					      SELECT
+									TB_CO_MME.MME_ID AS SYSTEM_ID
+									,'1' AS EQUIP_TYPE
+									,TB_CO_MME.STATION_ID AS STATION_ID
+									,TB_CO_STATION.STATION_NAME AS STATION_NAME
+									,TB_CO_STATION.LINE_ID AS LINE_ID
+								FROM
+									TB_CO_MME
+										LEFT JOIN
+									TB_CO_STATION
+										ON TB_CO_MME.STATION_ID = TB_CO_STATION.STATION_ID
+						        
+								UNION ALL
+						     
+								SELECT
+									TB_CO_PGW.PGW_ID AS SYSTEM_ID
+									,'4' AS EQUIP_TYPE
+									,TB_CO_PGW.STATION_ID AS STATION_ID
+									,TB_CO_STATION.STATION_NAME AS STATION_NAME
+									,TB_CO_STATION.LINE_ID AS LINE_ID
+								FROM
+									TB_CO_PGW 
+										LEFT JOIN
+									TB_CO_STATION
+										ON TB_CO_PGW.STATION_ID = TB_CO_STATION.STATION_ID
+						        
+								UNION ALL
+						    
+								SELECT
+									TB_CO_PCRF.PCRF_ID AS SYSTEM_ID
+									,'7' AS EQUIP_TYPE
+									,TB_CO_STATION.STATION_ID AS STATION_ID
+									,TB_CO_STATION.STATION_NAME AS STATION_NAME
+									,TB_CO_STATION.LINE_ID AS LINE_ID
+								FROM
+									TB_CO_PCRF
+										LEFT JOIN
+									TB_CO_STATION
+										ON TB_CO_PCRF.STATION_ID = TB_CO_STATION.STATION_ID
+							        
+							    UNION ALL    
+							    
+							    SELECT
+									TCSE.SYSTEM_ID AS SYSTEM_ID
+							      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE
+							      	,TCS.STATION_ID AS STATION_ID
+									,TCS.STATION_NAME AS STATION_NAME
+									,TCS.LINE_ID AS LINE_ID
+									FROM
+									  TB_CO_SYSTEM_ETC AS TCSE
+									  LEFT JOIN TB_CO_STATION AS TCS
+									  ON TCSE.LAREA_ID = TCS.STATION_ID
+							      
+									UNION ALL 
+									  
+									SELECT
+										TCE.EMS_ID AS SYSTEM_ID
+							      ,TCE.EQUIP_TYPE AS EQUIP_TYPE
+										,TCS.STATION_ID AS STATION_ID
+										,TCS.STATION_NAME AS STATION_NAME
+										,TCS.LINE_ID AS LINE_ID
+									FROM 
+										TB_CO_EMS TCE 
+										LEFT JOIN TB_CO_STATION AS TCS 
+										ON TCE.STATION_ID = TCS.STATION_ID
+							
+							    UNION ALL
+							    
+							    SELECT
+							      TCD.DU_ID AS SYSTEM_ID
+							      ,'2' AS EQUIP_TYPE
+										,TCS.STATION_ID AS STATION_ID
+										,TCS.STATION_NAME AS STATION_NAME
+										,TCS.LINE_ID AS LINE_ID
+ 
+									FROM
+										TB_CO_DU TCD
+										LEFT JOIN TB_CO_STATION AS TCS
+										ON TCD.STATION_ID = TCS.STATION_ID) q1
+						  ON TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = q1.EQUIP_TYPE
+						    AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = q1.SYSTEM_ID
+						 
+						WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+							AND ALARM_TYPE = '1'
+							AND ALARM_STATE in ('0','3')
+							AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = #{equipType}
+							<if test="systemId != null and systemId != ''">
+								AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = #{systemId}
+							</if>
+						GROUP BY ALARM_CODE
+									,SEVERITY
+									,FDN 
+									,EQUIP_TYPE
+									,SYSTEM_ID
+									,EVENT_TIME
+									,RECOVER_TIME 
+						)q1
+					ORDER BY RECOVER_TIME DESC 
+			
+			</otherwise>
+		</choose>
+	</select>
+	
+	<update id="updateDetailRecover" parameterType="java.util.HashMap">
+		/* updateDetailRecover */
+		<choose>
+			<when test='equipType == 2'>
+				UPDATE 
+					TB_FS_ALARM_ABNORMAL
+				SET
+					CTOA_FLAG = '1'
+					WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+						AND ALARM_TYPE = '1'
+						AND ALARM_STATE in ('0','3')
+						AND EQUIP_TYPE = '2'
+						AND UPPER(FDN) NOT LIKE '%RRH[%' AND UPPER(FDN) NOT LIKE '%PSU[%'
+						AND SYSTEM_ID = #{systemId}
+			</when>
+			<when test='equipType == 3'><!-- RU -->
+				UPDATE 
+					TB_FS_ALARM_ABNORMAL
+				SET
+					CTOA_FLAG = '1'
+				WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+					AND ALARM_TYPE = '1'
+					AND ALARM_STATE in ('0','3')
+					AND EQUIP_TYPE = '2'
+					AND SYSTEM_ID = #{systemId}
+					<!-- AND FDN REGEXP CONCAT('[RRH|PSU]\\[', #{rrh}) -->
+					AND FDN LIKE ('%${rrh}%')
+					
+			</when>
+			<!-- <when test='equipType == 9595'>
+				스위치 관제,5호선 팝업
+				UPDATE TB_FS_ALARM_ABNORMAL
+			    SET CTOA_FLAG = '1'
+				WHERE 
+					RECOVER_TIME > DATE_ADD(NOW(), INTERVAL - 1 DAY )
+				    AND TB_FS_ALARM_ABNORMAL.ALARM_TYPE = '1'
+					AND TB_FS_ALARM_ABNORMAL.ALARM_STATE IN ('0','3')
+					AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE in ('11', '44')
+				    AND CONCAT(EQUIP_TYPE,'-',SYSTEM_ID) IN
+						(SELECT 
+							CONCAT(ETC.EQUIP_TYPE,'-',ETC.SYSTEM_ID)
+							FROM
+							TB_CO_SYSTEM_ETC AS ETC
+							LEFT OUTER JOIN 
+							  (  
+								    SELECT
+										TCSE.SYSTEM_ID AS SYSTEM_ID
+								      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE 
+								      	,TCS.STATION_ID AS STATION_ID
+										,TCS.STATION_NAME AS STATION_NAME
+										,TCS.LINE_ID AS LINE_ID
+										FROM
+										  TB_CO_SYSTEM_ETC AS TCSE
+										  LEFT JOIN TB_CO_STATION AS TCS
+										  ON TCSE.LAREA_ID = TCS.STATION_ID
+										) Q1
+							ON ETC.EQUIP_TYPE = Q1.EQUIP_TYPE
+							  AND ETC.SYSTEM_ID = Q1.SYSTEM_ID
+							WHERE ETC.EQUIP_TYPE in ('11', '44')
+   		   	  					AND LINE_ID LIKE ('%${lineId}%')	  			  	
+   		   	  				
+						)
+			</when>  -->
+			<when test='equipType == 11'><!-- 스위치 -->
+				UPDATE TB_FS_ALARM_ABNORMAL
+				  SET CTOA_FLAG = '1'
+				     WHERE 
+						RECOVER_TIME > DATE_ADD(NOW(), INTERVAL - 1 DAY )
+			          AND TB_FS_ALARM_ABNORMAL.ALARM_TYPE = '1'
+						  	AND TB_FS_ALARM_ABNORMAL.ALARM_STATE IN ('0','3')
+						  	AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = '11'
+			          <if test="systemId != null and systemId != ''">
+						AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = #{systemId}
+					  </if>
+					  <if test="systemId == null or systemId == ''">
+						AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID in
+							(SELECT 
+							IFNULL(ETC.SYSTEM_ID,'-') AS SYSTEM_ID
+							FROM
+							TB_CO_SYSTEM_ETC AS ETC
+							LEFT OUTER JOIN 
+							  (  
+							    SELECT
+									TCSE.SYSTEM_ID AS SYSTEM_ID
+							      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE 
+							      	,TCS.STATION_ID AS STATION_ID
+									,TCS.STATION_NAME AS STATION_NAME
+									,TCS.LINE_ID AS LINE_ID
+									FROM
+									  TB_CO_SYSTEM_ETC AS TCSE
+									  LEFT JOIN TB_CO_STATION AS TCS
+									  ON TCSE.LAREA_ID = TCS.STATION_ID
+									) Q1
+								ON ETC.EQUIP_TYPE = Q1.EQUIP_TYPE
+								    AND ETC.SYSTEM_ID = Q1.SYSTEM_ID	  			  	
+		  		   	  			WHERE  Q1.LINE_ID LIKE ('%${lineId}%')
+							)
+					  </if>
+					
+			</when> 
+			<when test='equipType == 44'><!-- 스위치 -->
+				UPDATE TB_FS_ALARM_ABNORMAL
+				  SET CTOA_FLAG = '1'
+				     WHERE 
+						RECOVER_TIME > DATE_ADD(NOW(), INTERVAL - 1 DAY )
+			          AND TB_FS_ALARM_ABNORMAL.ALARM_TYPE = '1'
+						  	AND TB_FS_ALARM_ABNORMAL.ALARM_STATE IN ('0','3')
+						  	AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = '44'
+			          <if test="systemId != null and systemId != ''">
+						AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID = #{systemId}
+					  </if>
+					  <if test="systemId == null and systemId == ''">
+						AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID in
+							(SELECT 
+							IFNULL(ETC.SYSTEM_ID,'-') AS SYSTEM_ID
+							FROM
+							TB_CO_SYSTEM_ETC AS ETC
+							LEFT OUTER JOIN 
+							  (  
+							    SELECT
+									TCSE.SYSTEM_ID AS SYSTEM_ID
+							      	,TCSE.EQUIP_TYPE AS EQUIP_TYPE 
+							      	,TCS.STATION_ID AS STATION_ID
+									,TCS.STATION_NAME AS STATION_NAME
+									,TCS.LINE_ID AS LINE_ID
+									FROM
+									  TB_CO_SYSTEM_ETC AS TCSE
+									  LEFT JOIN TB_CO_STATION AS TCS
+									  ON TCSE.LAREA_ID = TCS.STATION_ID
+									) Q1
+								ON ETC.EQUIP_TYPE = Q1.EQUIP_TYPE
+								    AND ETC.SYSTEM_ID = Q1.SYSTEM_ID	  			  	
+		  		   	  			WHERE q1.LINE_ID LIKE ('%${lineId}%')
+							) 
+						</if>
+			</when>
+			<!-- EMS -->
+			<!--
+			<when test='equipType == 14'>
+				SELECT
+					TFAC.ALARM_ID
+					, TFAC.ALARM_TYPE
+					, TFAC.ALARM_CODE
+					, TFAC.PROBABLE_CAUSE
+					, TFAC.SYSTEM_ID
+					, TFAC.SYSTEM_NAME
+					, TFAC.C_UID
+					, TFAC.SEVERITY
+					, CASE TFAC.SEVERITY
+						WHEN 1 THEN 'Critical'
+						WHEN 2 THEN 'Major'
+						WHEN 3 THEN 'Minor'
+						WHEN 4 THEN 'Warning'
+						WHEN 5 THEN 'Normal'
+						ELSE ''
+					END as LEVEL
+					, TFAC.FDN AS LOCATION
+					, DATE_FORMAT(TFAC.EVENT_TIME, '%Y/%m/%d %H:%i') AS EVENT_TIME
+				FROM
+					TB_FS_ALARM_ABNORMAL_CUR AS TFAC
+					INNER JOIN TB_CO_EMS AS TCE
+						ON TFAC.SYSTEM_ID = TCE.EMS_ID
+							AND TFAC.EQUIP_TYPE = TCE.EQUIP_TYPE
+							AND TFAC.SYSTEM_NAME = TCE.EMS_NAME
+				WHERE
+					TFAC.ALARM_STATE IN (1,2)
+					AND TFAC.SEVERITY NOT IN (4,5)
+				GROUP BY TFAC.EVENT_TIME, TFAC.SYSTEM_ID, TFAC.ALARM_CODE, TFAC.FDN
+				ORDER BY
+				<if test = 'sortOption.size() > 0'>
+					<foreach collection="sortOption" item="option" separator=",">
+						${option.colName} ${option.order}
+					</foreach>
+				</if>
+				<if test = 'sortOption.size() == 0'>
+					TFAC.EVENT_TIME DESC
+				</if>
+			</when>
+			--> 
+			
+			<!-- 정류기 -->
+			<when test='equipType == 36'>
+				/* 정류기 */
+				UPDATE TB_FS_ALARM_ABNORMAL
+				SET CTOA_FLAG = '1'
+				WHERE
+					RECOVER_TIME > DATE_ADD(NOW(), INTERVAL - 1 DAY )
+					AND TB_FS_ALARM_ABNORMAL.ALARM_TYPE = '1'
+					AND TB_FS_ALARM_ABNORMAL.ALARM_STATE IN ('0','3')
+					AND TB_FS_ALARM_ABNORMAL.EQUIP_TYPE = '36'
+					<if test="systemId != null and systemId != ''">
+						AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID  = #{systemId} 
+					</if> 
+					<if test="systemId == null or systemId == ''">
+						<if test="lineId != null and lineId != ''">
+							AND TB_FS_ALARM_ABNORMAL.SYSTEM_ID in
+							(
+								SELECT IFNULL(ETC.SYSTEM_ID,'-') AS SYSTEM_ID
+								FROM TB_CO_SYSTEM_ETC AS ETC
+									LEFT OUTER JOIN
+										(
+											SELECT
+												TCSE.SYSTEM_ID   AS SYSTEM_ID
+											  , TCSE.EQUIP_TYPE  AS EQUIP_TYPE
+											  , TCS.STATION_ID   AS STATION_ID
+											  , TCS.STATION_NAME AS STATION_NAME
+											  , TCS.LINE_ID      AS LINE_ID
+											FROM
+												TB_CO_SYSTEM_ETC AS TCSE
+												LEFT JOIN
+													TB_CO_STATION AS TCS
+													ON TCSE.LAREA_ID = TCS.STATION_ID
+										)
+										Q1
+										ON ETC.EQUIP_TYPE    = Q1.EQUIP_TYPE
+											AND ETC.SYSTEM_ID = Q1.SYSTEM_ID
+								WHERE Q1.LINE_ID LIKE ('%${lineId}%')
+							)
+						</if>
+					</if>
+			</when>
+			
+			<otherwise>
+				UPDATE 
+					TB_FS_ALARM_ABNORMAL
+				SET
+					CTOA_FLAG = '1'
+				WHERE RECOVER_TIME > DATE_ADD(now(), INTERVAL - 1 DAY )
+					AND ALARM_TYPE = '1'
+					AND ALARM_STATE in ('0','3')
+					AND EQUIP_TYPE = #{equipType}
+					<if test="systemId != null and systemId != ''">
+						AND SYSTEM_ID = #{systemId}
+					</if>
+			
+			</otherwise>
+		</choose>
+	</update>
+	
+	
+</mapper>

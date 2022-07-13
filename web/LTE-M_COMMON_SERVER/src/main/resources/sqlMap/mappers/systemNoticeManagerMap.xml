@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.SystemNoticeManagerDAO">
+
+	<delete id="deleteNoti" parameterType="java.util.HashMap">
+	DELETE FROM TB_SM_NOTICE_BOARD
+	WHERE USER_ID = #{ID} AND EVENT_TIME = #{TIME}
+	</delete>
+	
+	<update id="updateNoti" parameterType="java.util.HashMap">
+		UPDATE TB_SM_NOTICE_BOARD
+		SET 
+			NOTICE_TITLE = #{TITLE},
+			NOTICE_DESC = #{DESC}
+			<if test="FILE_NAME != NULL">
+				,FILE_NAME = #{FILE_NAME}
+			</if>
+			<if test="FILE_PATH != NULL">
+				,FILE_PATH = #{FILE_PATH}
+			</if>
+            <if test="FROM_DATE != NULL">
+                ,FROM_DATE = #{FROM_DATE}
+            </if>
+            <if test="TO_DATE != NULL">
+                ,TO_DATE = #{TO_DATE}
+            </if>
+            <if test="MAIN_NOTI_YN != NULL">
+                ,MAIN_NOTI_YN = #{MAIN_NOTI_YN}
+            </if>                        			
+		WHERE USER_ID = #{ID} AND EVENT_TIME = #{TIME}
+	</update>
+	
+	<insert id="insertNoti" parameterType="java.util.HashMap">
+	INSERT INTO TB_SM_NOTICE_BOARD
+	VALUES 
+		( NOW(),
+	  	  #{ID},
+	  	  #{TITLE},
+	  	  #{DESC},
+	  	  #{FILE_NAME},
+	  	  #{FILE_PATH},
+	  	  #{FROM_DATE},
+	  	  #{TO_DATE},
+	  	  #{MAIN_NOTI_YN}
+	  	   )
+	</insert>
+	
+	<select id="getFilePath" parameterType="string" resultType="string">
+		SELECT FILE_PATH
+		FROM TB_SM_NOTICE_BOARD
+		WHERE FILE_NAME = #{FILE}
+	</select>
+	
+	<select id="getOneNoticeData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			NOTICE_TITLE,
+			NOTICE_DESC,	
+			FILE_NAME,
+			FILE_PATH,
+            EVENT_TIME,
+            FROM_DATE,
+            TO_DATE,
+            CASE WHEN
+                FROM_DATE IS NOT NULL
+                THEN DATE_FORMAT(FROM_DATE,'%Y-%m-%d')
+                ELSE ''         
+            END FROM_DATE_FORMAT,
+            CASE WHEN
+                TO_DATE IS NOT NULL
+                THEN DATE_FORMAT(TO_DATE,'%Y-%m-%d')
+                ELSE ''         
+            END TO_DATE_FORMAT,             
+            MAIN_NOTI_YN,
+            CASE WHEN
+                FROM_DATE IS NOT NULL AND TO_DATE IS NOT NULL 
+                THEN CONCAT(DATE_FORMAT(FROM_DATE,'%Y/%m/%d'), '~', DATE_FORMAT(TO_DATE,'%Y/%m/%d'))
+                ELSE '-'
+            END AS NOTI_PERIOD            			
+		FROM TB_SM_NOTICE_BOARD
+		WHERE EVENT_TIME = #{TIME} AND USER_ID = #{ID}
+	</select>
+	
+	<select id="getNoticeData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			USER_ID,
+			NOTICE_TITLE,
+			NOTICE_DESC,
+			FILE_NAME,
+			EVENT_TIME,
+			FROM_DATE,
+			TO_DATE,
+            CASE WHEN
+                FROM_DATE IS NOT NULL
+                THEN DATE_FORMAT(FROM_DATE,'%Y-%m-%d')
+                ELSE ''         
+            END FROM_DATE_FORMAT,
+            CASE WHEN
+                TO_DATE IS NOT NULL
+                THEN DATE_FORMAT(TO_DATE,'%Y-%m-%d')
+                ELSE ''         
+            END TO_DATE_FORMAT,            			
+			MAIN_NOTI_YN,
+			CASE WHEN
+			    FROM_DATE IS NOT NULL AND TO_DATE IS NOT NULL 
+			    THEN CONCAT(DATE_FORMAT(FROM_DATE,'%Y/%m/%d'), '~', DATE_FORMAT(TO_DATE,'%Y/%m/%d'))
+			    ELSE '-'
+			END AS NOTI_PERIOD			
+		FROM TB_SM_NOTICE_BOARD
+		WHERE  EVENT_TIME BETWEEN #{fromDate} AND #{toDate} 		
+		<if test="searchOpt != ''">
+			AND ${searchOpt} LIKE '%${searchWord}%'
+		</if>
+		ORDER BY EVENT_TIME DESC
+		<if test="pageNo != null">
+			LIMIT ${pageNo}, ${pageSize}
+		</if>
+	</select>
+	
+	<select id="getTotalCnt" parameterType="java.util.HashMap" resultType="int">
+		SELECT COUNT(*) AS TOTAL_COUNT
+		FROM TB_SM_NOTICE_BOARD
+		WHERE  EVENT_TIME BETWEEN #{fromDate} AND #{toDate} 		
+		<if test="searchOpt != ''">
+			AND ${searchOpt} LIKE '%${searchWord}%'
+		</if>
+	</select>
+</mapper>

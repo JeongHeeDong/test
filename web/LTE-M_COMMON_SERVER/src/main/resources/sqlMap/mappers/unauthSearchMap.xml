@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.UnauthSearchDAO">
+	<select id="getUnauthData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	SELECT
+		DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i:%s') AS EVENT_TIME,
+		CASE WHEN TYPE=1 THEN '비밀번호 입력 오류' WHEN TYPE=2 THEN '아이디 입력 오류' WHEN TYPE=3 THEN '미허가 IP로 접근' ELSE '권한이 없는 메뉴 접근' END AS TYPE,
+		IFNULL(INET_NTOA(ACCESS_IP),'-') AS ACCESS_IP,
+		IFNULL(AT_ID,'-') AS AT_ID,
+		IFNULL(AT_URI,'-') AS AT_URI,
+		IFNULL(TB_SE_FDETECT.USER_ID,'-') AS USER_ID,
+		IFNULL(MENU_INFO,'-') AS MENU_INFO,
+		IFNULL(TB_SE_USER.USER_NAME,'-') AS USER_NAME,
+		IFNULL(CONCAT(TB_SE_FDETECT.USER_ID,'(',USER_NAME,')'),'-') AS USER_IDNAME,
+		CNT_TB.TOTAL_COUNT
+	FROM
+		TB_SE_FDETECT
+		LEFT OUTER JOIN
+		TB_SE_USER
+		ON TB_SE_FDETECT.USER_ID = TB_SE_USER.USER_ID,
+		(
+			SELECT 
+				COUNT(1) AS TOTAL_COUNT
+			FROM 
+				TB_SE_FDETECT 
+			WHERE 
+				EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y-%m-%d') 
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(CONCAT(#{endDateTime}, ' 23:59:59'),'%Y-%m-%d %H:%i:%s')
+				<if test='type != "0"'>
+					AND TYPE = #{type}
+				</if>
+				<if test='searchWord != ""'>
+					AND ${secondTypeCol} LIKE CONCAT(#{searchWord},'%')
+				</if>
+		) AS CNT_TB
+	WHERE
+		EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y-%m-%d')
+		AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(CONCAT(#{endDateTime}, ' 23:59:59'),'%Y-%m-%d %H:%i:%s')
+		<if test='type != "0"'>
+			AND TYPE = #{type}
+		</if>
+		<if test='searchWord != ""'>
+			AND ${secondTypeCol} LIKE CONCAT(#{searchWord},'%')
+		</if>
+	ORDER BY
+		EVENT_TIME DESC
+	<if test='pageNo != null'>
+	LIMIT #{pageNo}, #{pagingNum}
+	</if>
+	</select>
+</mapper>

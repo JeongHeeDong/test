@@ -1,0 +1,246 @@
+{
+    "stations" : [{
+        "LOCATION" : "1",
+        "NAME" : "신평",
+        "POSITION_X" : "-750.4321495327085",
+        "POSITION_Y" : "246.64579439252336",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "2",
+        "NAME" : "하단",
+        "POSITION_X" : "-694.5235226455786",
+        "POSITION_Y" : "246.64579439252336",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "3",
+        "NAME" : "당리",
+        "POSITION_X" : "-630.4018619698049",
+        "POSITION_Y" : "246.64579439252336",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "4",
+        "NAME" : "사하",
+        "POSITION_X" : "-570.4929978432766",
+        "POSITION_Y" : "246.64579439252336",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "5",
+        "NAME" : "과정",
+        "POSITION_X" : "-507.3713371675053",
+        "POSITION_Y" : "246.64579439252336",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "6",
+        "NAME" : "대티",
+        "POSITION_X" : "-445.6199137311286",
+        "POSITION_Y" : "246.64579439252336",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "7",
+        "NAME" : "서대신",
+        "POSITION_X" : "-383.1833716750544",
+        "POSITION_Y" : "246.64579439252336",
+        "STATION_FLAG" : "Y"
+    },  {
+        "LOCATION" : "8",
+        "NAME" : "동대신",
+        "POSITION_X" : "-320.746829618979",
+        "POSITION_Y" : "246.64579439252336",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "9",
+        "NAME" : "토성",
+        "POSITION_X" : "-259.99540618260244",
+        "POSITION_Y" : "246.64579439252336",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "10",
+        "NAME" : "자갈치",
+        "POSITION_X" : "-197.5588641265276",
+        "POSITION_Y" : "246.64579439252336",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "11",
+        "NAME" : "남포",
+        "POSITION_X" : "-135.80744069015086",
+        "POSITION_Y" : "246.64579439252336",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "12",
+        "NAME" : "중앙",
+        "POSITION_X" : "-73.02280373831779",
+        "POSITION_Y" : "246.64579439252336",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "13",
+        "NAME" : "부산역",
+        "POSITION_X" : "-11.333493889288269",
+        "POSITION_Y" : "246.64579439252336",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "14",
+        "NAME" : "초량",
+        "POSITION_X" : "50.754953271028015",
+        "POSITION_Y" : "246.64579439252336",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "15",
+        "NAME" : "부산진",
+        "POSITION_X" : "113.44426312005743",
+        "POSITION_Y" : "246.64579439252336",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "16",
+        "NAME" : "좌천",
+        "POSITION_X" : "174.5173831775701",
+        "POSITION_Y" : "246.64579439252333",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "17",
+        "NAME" : "범일",
+        "POSITION_X" : "238.18523364485924",
+        "POSITION_Y" : "246.26710280373857",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "18",
+        "NAME" : "범내골",
+        "POSITION_X" : "282.28168224299117",
+        "POSITION_Y" : "196.93383177570087",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "19",
+        "NAME" : "서면",
+        "TRANSFER_FLAG" : "Y",
+        "POSITION_X" : "282.28168224299117",
+        "POSITION_Y" : "139.21794392523398",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "20",
+        "NAME" : "부전",
+        "POSITION_X" : "282.28168224299117",
+        "POSITION_Y" : "96.36000000000001",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "21",
+        "NAME" : "양정",
+        "POSITION_X" : "282.28168224299117",
+        "POSITION_Y" : "54.7394392523365",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "22",
+        "NAME" : "시청",
+        "POSITION_X" : "282.28168224299117",
+        "POSITION_Y" : "11.238224299065484",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "23",
+        "NAME" : "연산",
+        "TRANSFER_FLAG" : "Y",
+        "POSITION_X" : "282.28168224299117",
+        "POSITION_Y" : "-33.12037383177563",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "24",
+        "NAME" : "교대",
+        "POSITION_X" : "282.28168224299117",
+        "POSITION_Y" : "-86.96028037383185",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "25",
+        "NAME" : "동래",
+        "TRANSFER_FLAG" : "Y",
+        "POSITION_X" : "282.2816822429909",
+        "POSITION_Y" : "-150.20345794392523",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "26",
+        "NAME" : "명륜",
+        "POSITION_X" : "315.7836448598134",
+        "POSITION_Y" : "-220.61869158878505",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "27",
+        "NAME" : "온천장",
+        "POSITION_X" : "387.0761682242995",
+        "POSITION_Y" : "-220.61869158878505",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "28",
+        "NAME" : "부산대",
+        "POSITION_X" : "462.70934579439245",
+        "POSITION_Y" : "-220.61869158878505",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "29",
+        "NAME" : "장전",
+        "POSITION_X" : "536.3425233644866",
+        "POSITION_Y" : "-220.61869158878505",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "30",
+        "NAME" : "구서",
+        "POSITION_X" : "605.5943925233648",
+        "POSITION_Y" : "-220.61869158878505",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "31",
+        "NAME" : "두실",
+        "POSITION_X" : "679.1322429906558",
+        "POSITION_Y" : "-220.61869158878505",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "32",
+        "NAME" : "남산",
+        "POSITION_X" : "752.5747663551416",
+        "POSITION_Y" : "-220.61869158878505",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "33",
+        "NAME" : "범어사",
+        "POSITION_X" : "822.8266355140182",
+        "POSITION_Y" : "-220.61869158878505",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "34",
+        "NAME" : "노포",
+        "POSITION_X" : "900",
+        "POSITION_Y" : "-220.61869158878505",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "35",
+        "NAME" : "청호냉동",
+        "POSITION_X" : "-804.4167936736153",
+        "POSITION_Y" : "199.04550682961894",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "36",
+        "NAME" : "장림초등학교",
+        "POSITION_X" : "-804.4167936736155",
+        "POSITION_Y" : "120.34313443565779",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "37",
+        "NAME" : "고려냉장",
+        "POSITION_X" : "-804.4167936736153",
+        "POSITION_Y" : "36.16843997124389",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "38",
+        "NAME" : "다대초등학교",
+        "POSITION_X" : "-804.4167936736153",
+        "POSITION_Y" : "-53.48720345075467",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "39",
+        "NAME" : "성원아파트",
+        "POSITION_X" : "-804.4167936736153",
+        "POSITION_Y" : "-143.77260963335712",
+        "STATION_FLAG" : "Y"
+    }, {
+        "LOCATION" : "40",
+        "NAME" : "다대포\n해수욕장",
+        "POSITION_X" : "-804.4167936736153",
+        "POSITION_Y" : "-220.78123652048848",
+        "STATION_FLAG" : "Y"
+    }]
+}

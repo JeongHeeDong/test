@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.PmRecordMonitorDAO">
+	<select id = "getMaxDateTime" resultType="java.lang.String">
+		SELECT 
+			MAX(EVENT_TIME) AS UPDATE_DATE
+		FROM 
+			TB_SM_COLLECT_LOG 
+		WHERE 
+			DATA_NAME IN ('TB_PM_REC')
+	</select>
+	
+	<select id = "getCallSearchData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			<foreach collection = "callArrayTime" item="value">
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  CALL_ATTEMPT END),'-')			AS CA_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  CALL_SUCCESS END),'-')			AS CS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  CALL_ATT_RATE END),'-')			AS CAR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  CALL_SUCC_RATE END),'-')			AS CSR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  CALL_ATT_RATE_LEVEL END),'-')	AS CARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  CALL_SUCC_RATE_LEVEL END),'-')	AS CSRL_${value},
+			</foreach>
+			IFNULL(SYSTEM_ID, '-') AS SYSTEM_ID,
+			IFNULL(SYSTEM_NAME, '-') AS SYSTEM_NAME
+		FROM
+			TB_PM_REC
+		WHERE
+			EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{callStartTime},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{callEndTime},'%Y%m%d%H%i')
+		GROUP BY
+			SYSTEM_ID
+			,SYSTEM_NAME
+	</select>
+	
+	<select id = "getPttSearchData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			<foreach collection = "pttArrayTime" item="value">
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  PTT_ATTEMPT END),'-')			AS PA_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  PTT_SUCCESS END),'-')			AS PS_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  PTT_ATT_RATE END),'-')			AS PAR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  PTT_SUCC_RATE END),'-')			AS PSR_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  PTT_ATT_RATE_LEVEL END),'-')		AS PARL_${value},
+				IFNULL(MAX(CASE WHEN DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') = #{value} THEN  PTT_SUCC_RATE_LEVEL END),'-')	AS PSRL_${value},
+			</foreach>
+			IFNULL(SYSTEM_ID, '-') AS SYSTEM_ID,
+			IFNULL(SYSTEM_NAME, '-') AS SYSTEM_NAME
+		FROM
+			TB_PM_REC
+		WHERE
+			EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{pttStartTime},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{pttEndTime},'%Y%m%d%H%i')
+		GROUP BY
+			SYSTEM_ID
+			,SYSTEM_NAME
+	</select>
+	
+	<select id="getPopRecordTrendData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME
+			,DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') AS COMP_TIME
+		<if test='flag == "8"'>
+				,IFNULL(CALL_ATTEMPT, 0) AS ATTEMPT
+				,IFNULL(CALL_SUCCESS, 0) AS SUCCESS
+				,CASE WHEN CALL_ATTEMPT = 0 OR CALL_ATTEMPT IS NULL THEN 100 ELSE FORMAT(CALL_ATT_RATE, 2) END AS ATT_RATE
+				,CASE WHEN CALL_ATTEMPT = 0 OR CALL_ATTEMPT IS NULL THEN 100 ELSE FORMAT(CALL_SUCC_RATE, 2) END AS SUCC_RATE
+		</if>
+		<if test='flag == "9"'>
+				,IFNULL(PTT_ATTEMPT, 0) AS ATTEMPT
+				,IFNULL(PTT_SUCCESS, 0) AS SUCCESS
+				,CASE WHEN PTT_ATTEMPT = 0 OR PTT_ATTEMPT IS NULL THEN 100 ELSE FORMAT(PTT_ATT_RATE, 2) END AS ATT_RATE
+				,CASE WHEN PTT_ATTEMPT = 0 OR PTT_ATTEMPT IS NULL THEN 100 ELSE FORMAT(PTT_SUCC_RATE, 2) END AS SUCC_RATE
+		</if>
+		FROM
+			TB_PM_REC
+		WHERE
+			SYSTEM_ID = #{equip_id}
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+		ORDER BY
+			EVENT_TIME DESC
+	</select>
+	
+	<select id="getPopRecordDetailData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME
+			,IFNULL(SYSTEM_ID, '-') AS SYSTEM_ID
+			,IFNULL(SYSTEM_NAME, '-') AS SYSTEM_NAME
+		<if test='flag == "8"'>
+				,IFNULL(CALL_ATTEMPT, 0) AS ATTEMPT
+				,IFNULL(CALL_SUCCESS, 0) AS SUCCESS
+				,CASE WHEN CALL_ATTEMPT = 0 OR CALL_ATTEMPT IS NULL THEN 100 ELSE FORMAT(CALL_ATT_RATE, 2) END AS ATT_RATE
+				,CASE WHEN CALL_ATTEMPT = 0 OR CALL_ATTEMPT IS NULL THEN 100 ELSE FORMAT(CALL_SUCC_RATE, 2) END AS SUCC_RATE
+		</if>
+		<if test='flag == "9"'>
+				,IFNULL(PTT_ATTEMPT, 0) AS ATTEMPT
+				,IFNULL(PTT_SUCCESS, 0) AS SUCCESS
+				,CASE WHEN PTT_ATTEMPT = 0 OR PTT_ATTEMPT IS NULL THEN 100 ELSE FORMAT(PTT_ATT_RATE, 2) END AS ATT_RATE
+				,CASE WHEN PTT_ATTEMPT = 0 OR PTT_ATTEMPT IS NULL THEN 100 ELSE FORMAT(PTT_SUCC_RATE, 2) END AS SUCC_RATE
+		</if>
+		FROM
+			TB_PM_REC
+		WHERE
+			SYSTEM_ID = #{equip_id}
+			AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+			AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+		ORDER BY
+		<if test = 'sortOption.size() > 0'>
+			<foreach collection="sortOption" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test = 'sortOption.size() == 0'>
+			EVENT_TIME DESC
+		</if>
+	</select>
+</mapper>

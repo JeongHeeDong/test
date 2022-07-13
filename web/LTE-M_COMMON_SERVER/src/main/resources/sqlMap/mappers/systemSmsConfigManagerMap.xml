@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.SystemSmsConfigManagerDAO">
+	<select id="getTotalCnt" resultType="int" parameterType="java.util.HashMap">
+		SELECT COUNT(*) AS CNT FROM (
+			SELECT 
+				SYSTEM_ID, 
+				USER_ID,
+				TT_TIME
+			FROM
+			TB_SM_TT
+			GROUP BY USER_ID,SYSTEM_ID,TT_TIME
+		)A
+		<if test="searchOpt != ''">
+			WHERE ${searchOpt} LIKE '%${searchWord}%'
+		</if>
+	</select>
+	
+	<select id="getCodeForView" parameterType="java.util.HashMap" resultType="string">
+		SELECT ALARM_CODE 
+		FROM TB_SM_TT
+		WHERE 
+			SYSTEM_ID = #{SYSTEM}
+			AND TT_TIME = #{TIME}
+			<!-- AND TT_NUMBER = #{PHONE} -->
+	</select>
+	
+	<select id="getConfInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT * FROM (
+		SELECT 
+			USER_ID, 
+			SYSTEM_ID,
+			TT_TIME, 
+			TT_NUMBER,
+			EVENT_TIME
+		FROM
+		TB_SM_TT
+		GROUP BY TT_TIME, SYSTEM_ID,USER_ID
+		)A
+		<if test="searchOpt != ''">
+			WHERE ${searchOpt} LIKE '%${searchWord}%'
+		</if>
+		ORDER BY EVENT_TIME DESC
+		LIMIT ${pageNo}, ${pageSize}
+	</select>
+	
+	<select id="getExcelData" resultType="java.util.HashMap">
+		SELECT 
+			USER_ID, 
+			SYSTEM_ID,
+			TT_TIME,
+			ALARM_CODE,
+			TT_NUMBER
+		FROM TB_SM_TT
+		<if test="searchOpt != ''">
+			WHERE ${searchOpt} LIKE '%${searchWord}%'
+		</if>
+	</select>
+		
+	<select id="getPhoneInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			PINFO.PHONE_NO AS USER_PHONE,
+		    PCODE.USE_CODE_NAME,
+		    PINFO.PHONE_USE_NAME
+		FROM
+			TB_CO_PHONE_INFO AS PINFO
+		    LEFT OUTER JOIN
+		    TB_CO_PHONE_USE_CODE AS PCODE
+		    ON PINFO.PHONE_USE_CODE = PCODE.USE_CODE
+# 		WHERE
+# 			PINFO.OPR_STATUS = 1
+	</select>
+	
+	<select id="getSystemInfo" resultType="java.util.HashMap">
+		SELECT
+			EQUIP_TYPE
+			,CASE
+				WHEN EQUIP_NAME = 'PGW' THEN 'GW'
+				WHEN EQUIP_TYPE = 14 THEN 'EMS'
+				ELSE EQUIP_NAME
+			END AS EQUIP_NAME
+		FROM
+			TB_CO_EQUIP
+		WHERE
+			EQUIP_FM = 'Y'
+	</select>
+	
+	<select id="getAlarmCode" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT ALARM_CODE, ORG_SEVERITY
+		FROM 
+		TB_FM_ALARM_CODE
+
+		WHERE EQUIP_TYPE = #{TYPE}
+		AND ORG_SEVERITY != '4'
+		<if test="WORD != ''">
+			AND ALARM_CODE LIKE '%${WORD}%'
+		</if>		
+	</select>
+		
+	<insert id="insertConfData" parameterType="java.util.HashMap">
+		INSERT INTO TB_SM_TT (
+			USER_ID,
+			SYSTEM_ID, 
+			ALARM_CODE, 
+			SEVERITY, 
+			TT_TIME, 
+			TT_NUMBER,
+			EVENT_TIME
+		)
+		VALUES
+		<foreach collection="ALARMSET" item="oneAlarmSet" separator=",">
+		( #{ID}, #{SYSTEM}, #{oneAlarmSet.alarm}, #{oneAlarmSet.severity}, #{TT_TIME}, #{TT_NUMBER}, NOW() )
+		</foreach>
+	</insert>
+	
+	<insert id="insertConfDataSingle" parameterType="java.util.HashMap">
+		INSERT INTO TB_SM_TT (
+			USER_ID,
+			SYSTEM_ID, 
+			ALARM_CODE, 
+			SEVERITY, 
+			TT_TIME, 
+			TT_NUMBER,
+			EVENT_TIME
+		)
+		VALUES
+		( #{ID}, #{SYSTEM}, #{ALARM_CODE}, #{SEVERITY}, #{TT_TIME}, #{TT_NUMBER}, NOW() )
+		
+	</insert>
+	
+	<update id="updateConfDataSingle" parameterType="java.util.HashMap">
+		UPDATE TB_SM_TT
+		SET
+			TT_NUMBER = #{TT_NUMBER}
+			, EVENT_TIME = NOW()
+		WHERE 
+			SYSTEM_ID = #{SYSTEM}
+			AND ALARM_CODE = #{ALARM_CODE} 
+			AND TT_TIME = #{TT_TIME}
+	</update>
+	
+	<select id="getCodePhone" parameterType="java.util.HashMap" resultType="string">
+		SELECT TT_NUMBER 
+		FROM TB_SM_TT
+		WHERE 
+			SYSTEM_ID = #{SYSTEM}
+			AND TT_TIME = #{TIME}
+			AND ALARM_CODE = #{ALARM_CODE}
+	</select>
+
+	<delete id="delConfData" parameterType="java.util.HashMap">
+		DELETE FROM TB_SM_TT 
+		WHERE USER_ID = #{USER} 
+		AND   SYSTEM_ID = #{SYSTEM}
+		AND TT_TIME = #{TIMES}
+		<if test="codeList != null">
+		AND ALARM_CODE IN
+			<foreach collection="codeList" open="(" item="code" separator="," close=")">
+				#{code}
+			</foreach>
+		</if>
+	</delete>
+	
+	<update id="updateTimes" parameterType="java.util.HashMap">
+		UPDATE TB_SM_TT
+		SET
+			TT_TIME = #{TIMES}
+		WHERE
+			USER_ID = #{USER} 
+			AND SYSTEM_ID = #{SYSTEM}
+	</update>
+</mapper>
+

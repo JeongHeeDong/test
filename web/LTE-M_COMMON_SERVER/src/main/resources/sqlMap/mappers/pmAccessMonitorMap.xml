@@ -1,0 +1,1200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ltem.dao.PmAccessMonitorDAO">
+	
+	<delete id = "equipDelete" parameterType="java.util.HashMap">
+		DELETE
+		FROM TB_PM_ALARM_FILTER_SYSTEM
+		WHERE
+			USER_ID = #{user_id}
+			AND EQUIP_TYPE = #{equip_type}
+			AND MONITOR_FLAG = #{flag}
+	</delete>
+	
+	<update id="equipSave" parameterType="java.util.HashMap">
+		INSERT INTO TB_PM_ALARM_FILTER_SYSTEM 
+            ( 
+                        USER_ID, 
+                        EQUIP_TYPE, 
+                        SYSTEM_ID, 
+                        MONITOR_FLAG,
+                        UPDATE_DATE 
+            ) 
+            VALUES 
+            ( 
+                        #{user_id}, 
+                        #{equip_type}, 
+                        #{equip_id}, 
+                        #{flag},
+                        DATE_FORMAT(#{modify_date},'%Y%m%d%H%i%s')
+                         
+            ) 
+		ON DUPLICATE KEY UPDATE 
+				SYSTEM_ID = #{equip_id}, 
+				UPDATE_DATE =  DATE_FORMAT(#{modify_date},'%Y%m%d%H%i%s'),
+				MONITOR_FLAG = #{flag}
+	</update>
+	
+	<select id="equipSelectList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			TB_PM_ALARM_FILTER_SYSTEM.SYSTEM_ID,
+			IFNULL(SYSTEM_TB.SYSTEM_NAME,'-') AS SYSTEM_NAME,
+			LINE_ID, 
+			LINE_NAME
+		FROM
+			TB_PM_ALARM_FILTER_SYSTEM
+			LEFT OUTER JOIN (
+				SELECT
+					SYSTEM_ID
+					,SYSTEM_NAME
+					,EQUIP_TYPE
+					,LINE_ID  
+				    ,LINE_NAME
+				FROM
+					VW_SYSTEM AS VS
+					LEFT OUTER JOIN TB_CO_DU AS TCD
+					  ON VS.SYSTEM_ID = TCD.DU_ID
+					LEFT OUTER JOIN  
+					  (
+						SELECT GROUP_CONCAT(TCL.LINE_NAME ORDER BY TCL.LINE_NAME) LINE_NAME
+								, STATION_NAME
+								, STATION_ID 
+								, GROUP_CONCAT(STATION.LINE_ID ORDER BY STATION.LINE_ID)  LINE_ID
+								FROM
+						    (SELECT
+								  STATION_NAME
+								  , STATION_ID 
+								  , SUBSTRING_INDEX (SUBSTRING_INDEX(TB_CO_STATION.LINE_ID,',',NUMBERS.N),',',-1) LINE_ID
+								   
+								FROM 
+									
+								   (SELECT  1 N UNION  ALL  SELECT 2  
+								) NUMBERS INNER  JOIN TB_CO_STATION
+								    ON CHAR_LENGTH ( TB_CO_STATION.LINE_ID ) 
+								     - CHAR_LENGTH ( REPLACE ( TB_CO_STATION.LINE_ID ,  ',' ,  '' ))  <![CDATA[>=]]>  NUMBERS.N-1
+								      ) STATION
+								LEFT OUTER JOIN TB_CO_LINE TCL
+								  ON STATION.LINE_ID = TCL.LINE_ID
+						      GROUP BY STATION.STATION_NAME  
+						) TCS
+					  ON TCD.STATION_ID = TCS.STATION_ID
+				WHERE
+					EQUIP_TYPE != 3
+					AND EQUIP_TYPE = #{equip_type}
+					AND VS.OPR_STATUS = 1
+				ORDER BY 
+					SYSTEM_ID ASC
+			) AS SYSTEM_TB 
+			ON TB_PM_ALARM_FILTER_SYSTEM.SYSTEM_ID = SYSTEM_TB.SYSTEM_ID
+		WHERE
+			TB_PM_ALARM_FILTER_SYSTEM.USER_ID = #{user_id}
+			AND TB_PM_ALARM_FILTER_SYSTEM.EQUIP_TYPE = #{equip_type}
+			AND TB_PM_ALARM_FILTER_SYSTEM.MONITOR_FLAG = #{flag}
+	</select>
+	
+	<select id="equipDeSelectList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<choose>
+	    	<when test="equip_type == 2"> 
+	    		SELECT   
+					VS.SYSTEM_ID 
+					,VS.SYSTEM_NAME
+					,VS.EQUIP_TYPE
+				    ,LINE_ID  
+				    ,LINE_NAME 
+				FROM  
+					VW_SYSTEM AS VS
+					LEFT OUTER JOIN TB_CO_DU AS TCD
+					  ON VS.SYSTEM_ID = TCD.DU_ID
+					LEFT OUTER JOIN  
+					  (
+						SELECT GROUP_CONCAT(TCL.LINE_NAME ORDER BY TCL.LINE_NAME) LINE_NAME
+								, STATION_NAME
+								, STATION_ID 
+								, GROUP_CONCAT(STATION.LINE_ID ORDER BY STATION.LINE_ID)  LINE_ID
+								FROM
+						    (SELECT
+								  STATION_NAME
+								  , STATION_ID 
+								  , SUBSTRING_INDEX (SUBSTRING_INDEX(TB_CO_STATION.LINE_ID,',',NUMBERS.N),',',-1) LINE_ID
+								   
+								FROM 
+									
+								   (SELECT  1 N UNION  ALL  SELECT 2  
+								) NUMBERS INNER  JOIN TB_CO_STATION
+								    ON CHAR_LENGTH ( TB_CO_STATION.LINE_ID ) 
+								     - CHAR_LENGTH ( REPLACE ( TB_CO_STATION.LINE_ID ,  ',' ,  '' )) >= NUMBERS.N-1
+								      ) STATION
+								LEFT OUTER JOIN TB_CO_LINE TCL
+								  ON STATION.LINE_ID = TCL.LINE_ID
+						      GROUP BY STATION.STATION_NAME 
+						) TCS
+					  ON TCD.STATION_ID = TCS.STATION_ID
+				WHERE 
+					VS.EQUIP_TYPE = '2'
+					AND TCD.OPR_STATUS = 1   
+					<if test="lineId != '' and lineId != null ">
+						AND LINE_ID LIKE  (CONCAT('%', #{lineId}, '%'))
+					</if> 
+					<if test="equip_search != '' and equip_search != null ">
+						AND VS.SYSTEM_NAME LIKE  (CONCAT('%', #{equip_search}, '%'))
+					</if>
+				ORDER BY  
+					VS.SYSTEM_ID ASC
+	    	</when>
+	    	<otherwise>
+	    		SELECT
+					SYSTEM_ID
+					,SYSTEM_NAME
+					,EQUIP_TYPE
+				FROM
+					VW_SYSTEM
+				WHERE
+					OPR_STATUS = 1
+					AND EQUIP_TYPE = #{equip_type}
+				ORDER BY 
+					SYSTEM_ID ASC
+	    	</otherwise>
+		</choose>
+	</select>
+	
+	<select id="getStdAlarm" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			SEVERITY,
+			STD_ATT,
+			IFNULL(DATE_FORMAT(STD_DATE,'%Y-%m-%d'),'-') AS STD_DATE
+		FROM
+			TB_PM_ETC_FILTER
+		WHERE
+			USER_ID = #{user_id}
+	</select>
+	
+	<select id="getaAlarm" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			SEVERITY,
+			SOUND_TIME,
+			PLAY_FLAG
+		FROM
+			TB_PM_ALARM_FILTER_SEVERITY
+		WHERE
+			USER_ID = #{user_id}
+			AND EQUIP_TYPE = #{equip_type}
+	</select>
+	
+	<select id = "getDeSelectCnt" parameterType="java.util.HashMap" resultType="java.lang.Integer">
+		SELECT
+			COUNT(1)
+		FROM
+			TB_PM_ALARM_FILTER_SYSTEM
+		WHERE
+			USER_ID = #{user_id}
+			AND EQUIP_TYPE = #{equip_type}
+			AND MONITOR_FLAG = 0 
+	</select>
+	
+	<update id="alarmUpdate" parameterType="java.util.HashMap">
+		INSERT INTO TB_PM_ALARM_FILTER_SEVERITY 
+            ( 
+                        SEVERITY, 
+                        UPDATE_DATE, 
+                        SOUND_TIME, 
+                        PLAY_FLAG,
+                        USER_ID,
+						EQUIP_TYPE 
+            ) 
+            VALUES 
+            ( 
+                        #{al_level}, 
+                        DATE_FORMAT(#{modify_date},'%Y%m%d%H%i%s'), 
+                        #{al_time}, 
+                        #{play_flag},
+                        #{user_id},
+                        #{equip_type}
+                         
+            ) 
+		ON DUPLICATE KEY UPDATE 
+				SEVERITY = #{al_level}, 
+				UPDATE_DATE =  DATE_FORMAT(#{modify_date},'%Y%m%d%H%i%s'),
+				SOUND_TIME = #{al_time},
+				PLAY_FLAG = #{play_flag}
+	</update>
+	
+	<update id="stdalarmUpdate" parameterType="java.util.HashMap">
+		INSERT INTO TB_PM_ETC_FILTER 
+            ( 
+                        SEVERITY, 
+                        STD_ATT, 
+                        <if test='std_al_time == "1"'>
+						STD_DATE,
+						</if>
+						USER_ID
+            ) 
+            VALUES 
+            ( 
+                        #{std_al}, 
+                        #{std_al_time},
+                        <if test='std_al_time == "1"'>
+						DATE_FORMAT(#{std_date},'%Y%m%d'),
+						</if>
+						#{user_id}
+            ) 
+		ON DUPLICATE KEY UPDATE 
+				SEVERITY = #{std_al},
+				STD_ATT = #{std_al_time}
+				<if test='std_al_time == "1"'>
+					,STD_DATE =  DATE_FORMAT(#{std_date},'%Y%m%d')
+				</if>
+	</update>
+	
+	<select id="getUpdateDate" parameterType = "java.util.HashMap" resultType="java.lang.String">
+		SELECT 
+			DATE_FORMAT(MIN(EVENT_TIME),'%Y%m%d%H%i%s') AS UPDATE_DATE
+		FROM 
+			TB_SM_COLLECT_LOG 
+		WHERE 
+			DATA_NAME IN ('TB_PM_ACCESS_KPI' , 'TB_PM_ALM_ACCESS_DTP', 'TB_PM_ACCESS_HANDOVER');
+	</select>
+	
+	<select id = "getEtcFilter" parameterType="java.util.HashMap" resultType = "java.util.HashMap">
+		SELECT
+			SEVERITY,
+			STD_ATT,
+			DATE_FORMAT(STD_DATE,'%Y%m%d%H%i%s') AS STD_DATE
+		FROM
+			TB_PM_ETC_FILTER
+		WHERE
+			USER_ID = #{user_id}
+	</select>
+	
+	<select id="getRuKpiData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			*
+		FROM(  
+			SELECT
+				EVENT_TIME											AS EVENT_TIME
+			  , KPI.C_UID											AS C_UID
+			  , KPI.DU_ID											AS DU_ID
+			  , KPI.RU_CUID											AS RU_CUID
+			  , IFNULL(RU.RU_NAME, '') 								AS RU_NAME			
+			  , KPI.DU_NAME											AS DU_NAME
+			  , IFNULL(KPI.ATTEMPT,0)								AS ATTEMPT				-- RRC 시도호
+			  , KPI.STD_ATT_5M										AS STD_ATT_5M			-- RRC 기준 시도호
+			  , IFNULL(FORMAT(KPI.ATT_RATE,2),0.00)    				AS ATT_RATE				-- 전주 대비 시도호 증/감율
+			  , KPI.ATT_RATE_5M_LEVEL								AS ATT_RATE_5M_LEVEL	-- 전주 시도호 대비 증/감율 알람 등급
+			  , IFNULL(KPI.ERAB_ATTEMPT,0)							AS ERAB_ATTEMPT			-- ERAB SETUP 시도호
+			  , KPI.STD_ERAB_5M										AS STD_ERAB_5M			-- ERAB SETUP 기준 시도호
+			  , IFNULL(FORMAT(KPI.ERAB_ATT_RATE,2),0.00)			AS ERAB_ATT_RATE		-- ERAB SETUP 시도호 증/감율
+			  , KPI.ERAB_ATT_RATE_LEVEL								AS ERAB_ATT_RATE_LEVEL	-- 전주 대비 ERAB Setup 시도호 증/감율 알람 등급
+			  , KPI.ERAB_ADD_SUCCESS								AS ERAB_ADD_SUCCESS		-- ERAB SETUP ADD 성공호
+			  , KPI.RRC												AS RRC				-- 소통호 (RRC 성공호)
+			  , CASE
+					WHEN KPI.ATTEMPT = 0
+						THEN 100.00
+					WHEN KPI.ATTEMPT IS NULL
+						THEN 100.00
+						ELSE FORMAT(RRC_RATE,2)
+				END 												AS RRC_RATE			-- 소통율				
+			  , KPI.RRC_RATE_LEVEL									AS RRC_RATE_LEVEL	-- 소통율 알람 등급
+			  
+			  , KPI.ANSWER											AS ANSWER			-- 완료호 (ERAB SETUP 성공호)
+			  , CASE
+					WHEN KPI.ERAB_ATTEMPT = 0
+						THEN 100.00
+					WHEN KPI.ERAB_ATTEMPT IS NULL
+						THEN 100.00
+						ELSE FORMAT(ANSWER_RATE,2)
+				END 												AS ANSWER_RATE			-- 완료율
+			  , KPI.ANSWER_RATE_LEVEL								AS ANSWER_RATE_LEVEL	-- 완료율 알람 등급
+			  
+			  , KPI.CD												AS CD					-- 절단호
+			  , CASE
+					WHEN IFNULL(KPI.ANSWER, 0) + IFNULL(KPI.ERAB_ADD_SUCCESS, 0) = 0
+						THEN 0.00
+						ELSE FORMAT(CD_RATE,2)
+				END 												AS CD_RATE				-- 절단율					
+			  , KPI.CD_RATE_LEVEL									AS CD_RATE_LEVEL		-- 절단율 알람 등급
+			  , KPI.WEEKDAY
+			  , KPI.HOUR_SCOPE
+			  , CASE
+					WHEN KPI.ATTEMPT <![CDATA[<]]> THD.ATTEMPT
+						THEN 0
+						ELSE 1
+				END AS ATT_FLAG
+			  , LINE_ID
+			  , LINE_NAME
+			FROM
+				TB_PM_ACCESS_KPI KPI
+				LEFT OUTER JOIN
+					TB_CO_RU RU
+					ON REPLACE(KPI.RU_CUID, 'cNum', '') = RU.CELL_NUM
+					AND KPI.DU_ID                    = RU.DU_ID
+				LEFT OUTER JOIN TB_PM_THD_DU THD
+					ON KPI.WEEKDAY        = KPI.WEEKDAY
+					AND KPI.HOUR_SCOPE  = THD.HOUR_SCOPE
+				LEFT OUTER JOIN
+					TB_CO_DU DU
+					ON RU.DU_ID = DU.DU_ID
+				LEFT OUTER JOIN
+					(
+						SELECT
+							GROUP_CONCAT(TCL.LINE_NAME ORDER BY TCL.LINE_NAME) LINE_NAME
+						  , STATION_NAME
+						  , STATION_ID
+						  , GROUP_CONCAT(STATION.LINE_ID ORDER BY STATION.LINE_ID) LINE_ID
+						FROM
+							(
+								SELECT
+									STATION_NAME
+								  , STATION_ID
+								  , SUBSTRING_INDEX (SUBSTRING_INDEX(TB_CO_STATION.LINE_ID,',',NUMBERS.N),',',-1) LINE_ID
+								FROM
+									(
+										SELECT
+											1 N
+										UNION ALL
+										SELECT
+											2
+									)
+									NUMBERS
+									INNER JOIN
+										TB_CO_STATION
+										ON
+											CHAR_LENGTH ( TB_CO_STATION.LINE_ID ) - CHAR_LENGTH ( REPLACE ( TB_CO_STATION.LINE_ID , ',' , '' )) <![CDATA[>=]]> NUMBERS.N-1
+							)
+							STATION
+							LEFT OUTER JOIN
+								TB_CO_LINE TCL
+								ON
+									STATION.LINE_ID = TCL.LINE_ID
+						GROUP BY
+							STATION.STATION_NAME
+					)
+					TCS
+					ON
+						DU.STATION_ID = TCS.STATION_ID
+			) AS KPI_DATA 
+		WHERE
+			(ATT_RATE_5M_LEVEL <![CDATA[<=]]> #{al_lv} OR RRC_RATE_LEVEL <![CDATA[<=]]> #{al_lv} OR CD_RATE_LEVEL <![CDATA[<=]]> #{al_lv} OR ANSWER_RATE_LEVEL <![CDATA[<=]]> #{al_lv})
+			AND EVENT_TIME = STR_TO_DATE(#{updateTime},'%Y%m%d%H%i%s')
+			<if test='select_equip != "0"'>
+				AND DU_ID IN(${select_equip})
+			</if>
+			<if test='exceptSelect_equip != "0"'>
+				AND DU_ID NOT IN(${exceptSelect_equip})
+			</if>
+			<if test="lineId != '' and lineId != null ">
+				AND LINE_ID LIKE  (CONCAT('%', #{lineId}, '%'))
+			</if> 
+		ORDER BY
+			<if test = 'sortOption.size() > 0'>
+				<foreach collection="sortOption" item="option" separator=",">
+					${option.colName} ${option.order}
+				</foreach> 
+			</if>
+			<if test = 'sortOption.size() == 0'>
+				ATT_RATE_5M_LEVEL,RRC_RATE_LEVEL,ANSWER_RATE_LEVEL,CD_RATE_LEVEL, DU_NAME
+			</if>
+	</select>
+	
+	<select id="getDuKpiData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		
+		SELECT
+			ATT_RATE_5M_LEVEL
+			, ATT_RATE
+			, ERAB_ATT_RATE_LEVEL
+			, ERAB_ATT_RATE
+			, RRC_RATE_LEVEL
+			, RRC_RATE
+			, ANSWER_RATE_LEVEL
+			, ANSWER_RATE
+			, CD_RATE_LEVEL
+			, CD_RATE
+			, DU_NAME
+			, EVENT_TIME
+			, C_UID
+			, ATTEMPT
+			, STD_ATT_5M
+			, ERAB_ATTEMPT
+			, STD_ERAB_5M
+			, RRC
+			, ANSWER
+			, ERAB_ADD_SUCCESS
+			, CD
+			, DU_ID
+			, LINE_ID
+			, LINE_NAME
+		FROM(
+			SELECT 
+					KPI.ATTEMPT             -- RRC 시도호
+				  , KPI.ATT_RATE			-- RRC 시도호 증감율(%)
+				  , KPI.ATT_RATE_5M_LEVEL	--
+				  , KPI.STD_ATT_5M       	-- 전주 동시간 RRC 시도호
+				  , KPI.RRC                 -- 소통호 (RRC 성공호)
+				  , KPI.RRC_RATE			-- 소통율(RRC 성공율)(%)
+				  , KPI.RRC_RATE_LEVEL		--
+				  , KPI.ANSWER              -- 완료호 (ERAB Setup 성공호)
+				  , KPI.ANSWER_RATE			-- 완료율(ERAB Setup 성공율)(%)
+				  , KPI.ANSWER_RATE_LEVEL	--
+				  , KPI.CD                  -- 절단호
+				  , KPI.CD_RATE				-- 절단율 (%)
+				  , KPI.CD_RATE_LEVEL		--
+				  , KPI.ERAB_ATTEMPT        -- ERAB Setup 시도호
+				  , KPI.ERAB_ATT_RATE		-- ERAB SEtup 시도호 증감율(%)
+				  , KPI.ERAB_ATT_RATE_LEVEL	--
+				  , KPI.STD_ERAB_5M      	-- 전주 동시간 ERAB Setup 시도호
+				  , KPI.ERAB_ADD_SUCCESS 	-- ERAB Add 성공호
+				  , KPI.DU_NAME				
+				  , KPI.EVENT_TIME
+				  , KPI.C_UID
+				  , KPI.DU_ID
+				
+				  , TCS.LINE_ID
+				  , TCS.LINE_NAME
+			FROM
+				TB_PM_ACCESS_KPI AS KPI
+				LEFT OUTER JOIN
+					TB_PM_THD_DU AS THD
+					ON KPI.WEEKDAY = THD.WEEKDAY 
+					AND KPI.HOUR_SCOPE = THD.HOUR_SCOPE
+				LEFT OUTER JOIN
+					TB_CO_DU AS TCD
+					ON
+						KPI.DU_ID = TCD.DU_ID
+				LEFT OUTER JOIN  
+				  (
+					SELECT
+						GROUP_CONCAT(TCL.LINE_NAME ORDER BY TCL.LINE_NAME) LINE_NAME
+					  , STATION_NAME
+					  , STATION_ID
+					  , GROUP_CONCAT(STATION.LINE_ID ORDER BY STATION.LINE_ID) LINE_ID
+					FROM
+						(
+							SELECT
+								STATION_NAME
+							  , STATION_ID
+							  , SUBSTRING_INDEX (SUBSTRING_INDEX(TB_CO_STATION.LINE_ID,',',NUMBERS.N),',',-1) LINE_ID
+							FROM
+								(
+									SELECT
+										1 N
+									UNION ALL
+									SELECT
+										2
+								)
+								NUMBERS
+								INNER JOIN
+									TB_CO_STATION
+									ON
+										CHAR_LENGTH ( TB_CO_STATION.LINE_ID ) - CHAR_LENGTH ( REPLACE ( TB_CO_STATION.LINE_ID , ',' , '' )) <![CDATA[>=]]> NUMBERS.N-1
+						)
+						STATION
+						LEFT OUTER JOIN
+							TB_CO_LINE TCL
+							ON
+								STATION.LINE_ID = TCL.LINE_ID
+						GROUP BY
+							STATION.STATION_NAME
+					) TCS
+				  ON TCD.STATION_ID = TCS.STATION_ID
+			WHERE
+				KPI.EVENT_TIME = STR_TO_DATE(#{updateTime},'%Y%m%d%H%i%s')
+				<!-- 오류로인한 select_equip, exceptSelect_equip 자료형 변경(String -> List<String> -->
+				<!-- <if test='select_equip != "0"'>
+					AND KPI.DU_ID IN('${select_equip}') 
+				</if> 
+				<if test='exceptSelect_equip != "0"'>
+					AND KPI.DU_ID NOT IN('${exceptSelect_equip}')
+				</if> -->
+				<if test='select_equip != null and select_equip.size != 0'>  
+					AND KPI.DU_ID IN
+					<foreach collection="select_equip" item="select_equip" open="(" close=")" separator="," >
+						#{select_equip}
+					</foreach>
+				</if> 
+				<if test='exceptSelect_equip != null and exceptSelect_equip.size != 0'>   
+					AND KPI.DU_ID NOT IN
+					<foreach collection="exceptSelect_equip" item="exceptSelect_equip" open="(" close=")" separator="," >
+						#{exceptSelect_equip}
+					</foreach>
+				</if>
+				<if test="lineId != '' and lineId != null ">
+					AND LINE_ID LIKE  (CONCAT('%', #{lineId}, '%'))
+				</if>
+			GROUP BY
+				KPI.DU_ID
+		) AS GETDATA
+		WHERE
+			ATT_RATE_5M_LEVEL <![CDATA[<=]]> #{al_lv} OR RRC_RATE_LEVEL <![CDATA[<=]]> #{al_lv} OR CD_RATE_LEVEL <![CDATA[<=]]> #{al_lv} OR ANSWER_RATE_LEVEL <![CDATA[<=]]> #{al_lv}
+		ORDER BY
+		<if test = 'sortOption.size() > 0'>
+			<foreach collection="sortOption" item="option" separator=",">
+				${option.colName} ${option.order}
+			</foreach>
+		</if>
+		<if test = 'sortOption.size() == 0'>
+			ATT_RATE_5M_LEVEL,RRC_RATE_LEVEL,ANSWER_RATE_LEVEL,CD_RATE_LEVEL, DU_NAME
+		</if>
+	</select>
+	
+	<select id="getAccessDTPData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			EVENT_TIME
+		  , C_UID
+		  , DU_ID
+		  , DU_NAME
+		  , UP_VOLUMN		AS UP_VOLUMN
+		  , UP_VOLUMN_STD	AS UP_VOLUMN_STD
+		  , UP_VOLUMN_RATE	AS UP_VOLUMN_RATE
+		  
+		  , UP_DTP			AS UP_DTP
+		  , UP_DTP_STD		AS UP_DTP_STD
+		  , UP_DTP_RATE		AS UP_DTP_RATE
+		  
+		  , DW_VOLUMN		AS DW_VOLUMN
+		  , DW_VOLUMN_STD	AS DW_VOLUMN_STD
+		  , DW_VOLUMN_RATE 	AS DW_VOLUMN_RATE
+		  
+		  , DW_DTP			AS DW_DTP
+		  , DW_DTP_STD		AS DW_DTP_STD
+		  , DW_DTP_RATE		AS DW_DTP_RATE
+		  
+		  , TOTAL_VOLUMN	AS TOTAL_VOLUMN
+		  , TOTAL_DTP		AS TOTAL_DTP
+		  , UP_DTP_LEVEL
+		  , DW_DTP_LEVEL
+		  , WEEKDAY
+		  , HOUR_SCOPE
+		  , LINE_ID
+		  , LINE_NAME
+		FROM 
+		(
+			SELECT 
+				  EVENT_TIME
+				, TPAAD.C_UID
+				, TPAAD.DU_ID
+				, TPAAD.DU_NAME
+				
+				, IFNULL(TPAAD.UP_VOLUMN,0)               			AS UP_VOLUMN
+				, IFNULL(TPAAD.STD_UP_VOLUMN_5M,0)             		AS UP_VOLUMN_STD
+				, CAST(UP_VOLUME_RATE AS DECIMAL(12,2)) AS UP_VOLUMN_RATE
+				
+				, CAST(IFNULL(TPAAD.UP_DTP,0)AS DECIMAL(12,2))			AS UP_DTP
+				, CAST(IFNULL(TPAAD.STD_UP_DTP_5M,0)AS DECIMAL(12,2))	AS UP_DTP_STD
+				, CAST(TPAAD.UP_DTP_RATE AS DECIMAL(12,2)) 					AS UP_DTP_RATE
+				
+				, IFNULL(TPAAD.DW_VOLUMN,0)             			AS DW_VOLUMN
+				, IFNULL(TPAAD.STD_DW_VOLUMN_5M,0)             		AS DW_VOLUMN_STD
+				, CAST(DW_VOLUME_RATE AS DECIMAL(12,2)) 			AS DW_VOLUMN_RATE
+				
+				, CAST(IFNULL(TPAAD.DW_DTP,0) AS DECIMAL(12,2))			AS DW_DTP
+				, CAST(IFNULL(TPAAD.STD_DW_DTP_5M,0) AS DECIMAL(12,2))	AS DW_DTP_STD 
+				, CAST(DW_DTP_RATE AS DECIMAL(12,2)) 					AS DW_DTP_RATE
+
+				, IFNULL((TPAAD.UP_VOLUMN+TPAAD.DW_VOLUMN),0) 		AS TOTAL_VOLUMN
+				, IFNULL((TPAAD.UP_DTP   +TPAAD.DW_DTP),0)    		AS TOTAL_DTP
+				
+				, TPAAD.UP_DTP_LEVEL
+				, TPAAD.DW_DTP_LEVEL
+				, WEEKDAY
+				, HOUR_SCOPE
+				, TCS.LINE_ID
+				, TCS.LINE_NAME
+			FROM
+				TB_PM_ALM_ACCESS_DTP AS TPAAD
+				LEFT OUTER JOIN 
+				  TB_CO_DU AS TCD
+				  ON TPAAD.DU_ID = TCD.DU_ID
+				LEFT OUTER JOIN 
+				  (
+						SELECT GROUP_CONCAT(TCL.LINE_NAME ORDER BY TCL.LINE_NAME) LINE_NAME
+								, STATION_NAME
+								, STATION_ID 
+								, GROUP_CONCAT(STATION.LINE_ID ORDER BY STATION.LINE_ID)  LINE_ID
+								FROM
+						    (SELECT
+								  STATION_NAME
+								  , STATION_ID 
+								  , SUBSTRING_INDEX (SUBSTRING_INDEX(TB_CO_STATION.LINE_ID,',',NUMBERS.N),',',-1) LINE_ID
+								   
+								FROM 
+									
+								   (SELECT  1 N UNION  ALL  SELECT 2  
+								) NUMBERS INNER  JOIN TB_CO_STATION
+								    ON CHAR_LENGTH ( TB_CO_STATION.LINE_ID ) 
+								     - CHAR_LENGTH ( REPLACE ( TB_CO_STATION.LINE_ID ,  ',' ,  '' )) >= NUMBERS.N-1
+								      ) STATION
+								LEFT OUTER JOIN TB_CO_LINE TCL
+								  ON STATION.LINE_ID = TCL.LINE_ID
+						      GROUP BY STATION.STATION_NAME 
+						) TCS
+					  ON TCD.STATION_ID = TCS.STATION_ID
+				
+			WHERE
+				(TPAAD.UP_DTP_LEVEL <![CDATA[<=]]> #{al_lv} OR TPAAD.DW_DTP_LEVEL <![CDATA[<=]]> #{al_lv} )
+				AND TPAAD.EVENT_TIME = STR_TO_DATE(#{updateTime},'%Y%m%d%H%i%s')
+				<if test='select_equip != "0"'>
+					AND TPAAD.DU_ID IN(${select_equip})
+				</if>
+				<if test='exceptSelect_equip != "0"'>
+					AND TPAAD.DU_ID NOT IN(${exceptSelect_equip})
+				</if>
+				<if test="lineId != '' and lineId != null ">
+					AND LINE_ID LIKE  (CONCAT('%', #{lineId}, '%'))
+				</if>
+			) q1 
+		ORDER BY 
+			<if test = 'dtpSortOption.size() > 0'>
+				<foreach collection="dtpSortOption" item="option" separator=",">
+					${option.colName} ${option.order}
+				</foreach>
+			</if>
+			<if test = 'dtpSortOption.size() == 0'>
+				UP_DTP_LEVEL,DW_DTP_LEVEL,DU_NAME
+			</if>
+			
+	</select>
+	
+	<select id="getAccessHANDData" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+			EVENT_TIME,
+			C_UID,
+			DU_ID,
+			DU_NAME,
+			STATISTICS_TYPE,
+			STD_ATT_5M, 
+			ATTEMPT,
+			SUCCESS,
+			ATT_RATE,
+			SUCC_RATE,
+			ATT_RATE_LEVEL,
+			SUCC_RATE_LEVEL,
+			WEEKDAY,
+			LINE_ID,
+			LINE_NAME
+		FROM
+		(
+			SELECT
+				TPAAD.EVENT_TIME,
+				TPAAD.C_UID,
+				TPAAD.DU_ID,
+				TPAAD.DU_NAME,
+				STATISTICS_TYPE,
+				STD_ATT_5M,
+				ATTEMPT,
+				SUCCESS,
+				ATT_RATE,
+				SUCC_RATE,
+				ATT_RATE_LEVEL,
+				SUCC_RATE_LEVEL,
+				WEEKDAY,
+				TCS.LINE_ID,
+				TCS.LINE_NAME
+			FROM
+				TB_PM_ACCESS_HANDOVER AS TPAAD
+				LEFT OUTER JOIN 
+				  TB_CO_DU AS TCD
+				  ON TPAAD.DU_ID = TCD.DU_ID
+				LEFT OUTER JOIN 
+				  (
+						SELECT GROUP_CONCAT(TCL.LINE_NAME ORDER BY TCL.LINE_NAME) LINE_NAME
+								, STATION_NAME
+								, STATION_ID 
+								, GROUP_CONCAT(STATION.LINE_ID ORDER BY STATION.LINE_ID)  LINE_ID
+								FROM
+						    (SELECT
+								  STATION_NAME
+								  , STATION_ID 
+								  , SUBSTRING_INDEX (SUBSTRING_INDEX(TB_CO_STATION.LINE_ID,',',NUMBERS.N),',',-1) LINE_ID
+								   
+								FROM 
+									
+								   (SELECT  1 N UNION  ALL  SELECT 2  
+								) NUMBERS INNER  JOIN TB_CO_STATION
+								    ON CHAR_LENGTH ( TB_CO_STATION.LINE_ID ) 
+								     - CHAR_LENGTH ( REPLACE ( TB_CO_STATION.LINE_ID ,  ',' ,  '' )) >= NUMBERS.N-1
+								      ) STATION
+								LEFT OUTER JOIN TB_CO_LINE TCL
+								  ON STATION.LINE_ID = TCL.LINE_ID
+						      GROUP BY STATION.STATION_NAME 
+						) TCS
+					  ON TCD.STATION_ID = TCS.STATION_ID
+			WHERE
+				(TPAAD.ATT_RATE_LEVEL <![CDATA[<=]]> #{al_lv} OR TPAAD.SUCC_RATE_LEVEL <![CDATA[<=]]> #{al_lv} )
+				AND TPAAD.EVENT_TIME = STR_TO_DATE(#{updateTime},'%Y%m%d%H%i%s')
+				<if test='select_equip != "0"'>
+					AND TPAAD.DU_ID IN(${select_equip})
+				</if>
+				<if test='exceptSelect_equip != "0"'>
+					AND TPAAD.DU_ID NOT IN(${exceptSelect_equip})
+				</if>
+				<if test="lineId != '' and lineId != null ">
+					AND LINE_ID LIKE  (CONCAT('%', #{lineId}, '%'))
+				</if>
+		) q1
+		ORDER BY
+			<if test = 'handSortOption.size() > 0'>
+				<foreach collection="handSortOption" item="option" separator=",">
+					${option.colName} ${option.order}
+				</foreach>
+			</if>
+			<if test = 'handSortOption.size() == 0'>
+				ATT_RATE_LEVEL,SUCC_RATE_LEVEL,DU_NAME
+			</if>
+			
+	</select>
+	
+	<select id="getAlarmInfo" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+			FILE_PATH, VOLUME
+		FROM
+			TB_CO_ALARM_SOUND
+		WHERE
+			SEVERITY = #{SEVERITY}
+			AND MONITOR_TYPE = #{MONITOR_TYPE}
+	</select>
+	
+	<select id="getPopTrendData" parameterType="java.util.HashMap" resultType = "java.util.HashMap">
+		<if test='flag == "1"'>
+			<if test='equipType == 3'>
+				SELECT
+					*
+				FROM(
+					SELECT
+						DATE_FORMAT(TB_PM_ACCESS_KPI.EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME,
+						DATE_FORMAT(TB_PM_ACCESS_KPI.EVENT_TIME,'%Y%m%d%H%i') AS COMP_TIME,
+						CASE
+							WHEN TB_PM_ACCESS_KPI.ATTEMPT = 0 THEN 100.00
+							WHEN TB_PM_ACCESS_KPI.ATTEMPT IS NULL THEN 100.00
+							ELSE FORMAT(RRC_RATE,2)
+						END AS RRC_RATE,
+						CASE
+							WHEN TB_PM_ACCESS_KPI.ERAB_ATTEMPT = 0 THEN 100.00
+							WHEN TB_PM_ACCESS_KPI.ERAB_ATTEMPT IS NULL THEN 100.00
+							ELSE FORMAT(ANSWER_RATE,2)
+						END AS ANSWER_RATE,
+						CASE
+							WHEN IFNULL(TB_PM_ACCESS_KPI.ANSWER, 0) + IFNULL(TB_PM_ACCESS_KPI.ERAB_ADD_SUCCESS, 0) = 0 THEN 0.00
+							ELSE FORMAT(CD_RATE,2)
+						END AS CD_RATE,
+					<if test='STD_ATT == "0"'>
+						IFNULL(FORMAT(ATT_RATE,2),0.00) AS ATT_RATE,
+						IFNULL(TB_PM_ACCESS_KPI.STD_ATT_5M,0) AS STD_ATT,
+					</if>
+					<if test='STD_ATT == "1"'>
+						CASE
+							WHEN BASIC_DATA.ATTEMPT IS NULL OR TB_PM_ACCESS_KPI.ATTEMPT <![CDATA[<]]> BASIC_DATA.ATTEMPT THEN 0.00
+							ELSE FORMAT(IFNULL(((TB_PM_ACCESS_KPI.ATTEMPT - BASIC_DATA.ATTEMPT)/BASIC_DATA.ATTEMPT)*100,0),2)
+						END AS ATT_RATE,
+						IFNULL(BASIC_DATA.ATTEMPT,0) AS STD_ATT,
+					</if>
+						IFNULL(TB_PM_ACCESS_KPI.ATTEMPT,0) AS ATTEMPT
+					FROM
+						TB_PM_ACCESS_KPI
+					<if test='STD_ATT == "1"'>
+						LEFT OUTER JOIN
+						(
+							SELECT
+								ATTEMPT,DU_ID,EVENT_TIME,RU_CUID,C_TIME
+							FROM
+								TB_PM_ACCESS_KPI
+							WHERE
+								DU_ID = #{equip_id}
+								AND RU_CUID = #{ru_cuid}
+								AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{START_STD_DATE},'%Y%m%d%H%i')
+								AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{END_STD_DATE},'%Y%m%d%H%i')
+						) AS BASIC_DATA
+						ON TB_PM_ACCESS_KPI.DU_ID = BASIC_DATA.DU_ID AND TB_PM_ACCESS_KPI.C_TIME = BASIC_DATA.C_TIME
+						AND TB_PM_ACCESS_KPI.RU_CUID = BASIC_DATA.RU_CUID
+					</if>
+					WHERE
+						TB_PM_ACCESS_KPI.DU_ID = #{equip_id}
+						AND TB_PM_ACCESS_KPI.RU_CUID = #{ru_cuid}
+						AND TB_PM_ACCESS_KPI.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+						AND TB_PM_ACCESS_KPI.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+					) AS KPI_DATA
+				ORDER BY
+					EVENT_TIME DESC
+			</if>
+			<if test='equipType != 3'>
+				SELECT
+					FORMAT(IFNULL(((KPI_ATTEMPT-KPI_STD_ATT)/KPI_STD_ATT)*100,0),2) AS ATT_RATE
+					, FORMAT(IFNULL(((KPI_ERAB_ATTEMPT-KPI_STD_ERAB)/KPI_STD_ERAB)*100,0),2) AS ERAB_RATE
+					,CASE
+						WHEN KPI_ATTEMPT = 0 THEN 100.00
+						WHEN KPI_ATTEMPT IS NULL THEN 100.00
+						ELSE FORMAT(IFNULL((KPI_RRC/KPI_ATTEMPT)*100,0),2)
+					END AS RRC_RATE
+					,CASE
+						WHEN KPI_ERAB_ATTEMPT = 0 THEN 100.00
+						WHEN KPI_ERAB_ATTEMPT IS NULL THEN 100.00
+						ELSE FORMAT(IFNULL((KPI_ANSWER/KPI_ERAB_ATTEMPT)*100,0),2)
+					END AS ANSWER_RATE
+				    ,CASE
+						WHEN (IFNULL(KPI_ANSWER, 0) + IFNULL(KPI_ERAB_ADD_SUCC, 0)) = 0 THEN 0.00
+						ELSE FORMAT(IFNULL((KPI_CD/(KPI_ANSWER+KPI_ERAB_ADD_SUCC))*100,0),2)
+					END AS CD_RATE
+					,DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME
+					,DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') AS COMP_TIME
+					,KPI_ATTEMPT AS ATTEMPT
+					,KPI_STD_ATT AS STD_ATT
+					,KPI_ERAB_ATTEMPT AS ERAB_ATTEMPT
+					,KPI_STD_ERAB AS STD_ERAB
+				FROM(	
+					SELECT 
+						SUM(KPI.ATTEMPT) AS KPI_ATTEMPT
+						<if test='STD_ATT == "0"'>
+				        	,SUM(KPI.STD_ATT_5M) AS KPI_STD_ATT
+				        	,SUM(KPI.STD_ERAB_5M) AS KPI_STD_ERAB
+				        </if>
+				        <if test='STD_ATT == "1"'>
+				        	,SUM(BASIC_DATA.ATTEMPT) AS KPI_STD_ATT
+				        	,SUM(KPI.ERAB_ATTEMPT) AS KPI_STD_ERAB
+				        </if>
+				        ,SUM(KPI.RRC) AS KPI_RRC
+				        ,SUM(KPI.ANSWER) AS KPI_ANSWER
+				        ,SUM(KPI.CD) AS KPI_CD
+						,SUM(KPI.ERAB_ATTEMPT) AS KPI_ERAB_ATTEMPT
+				        ,SUM(KPI.ERAB_ADD_SUCCESS) AS KPI_ERAB_ADD_SUCC
+						,DU_NAME
+						,KPI.EVENT_TIME
+						,C_UID
+						,KPI.DU_ID
+					FROM 
+						TB_PM_ACCESS_KPI AS KPI
+						<if test='STD_ATT == "1"'>
+							LEFT OUTER JOIN
+							(
+								SELECT
+									ATTEMPT,DU_ID,EVENT_TIME,C_TIME,RU_CUID
+								FROM
+									TB_PM_ACCESS_KPI
+								WHERE
+									DU_ID = #{equip_id}
+									AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{START_STD_DATE},'%Y%m%d%H%i')
+									AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{END_STD_DATE},'%Y%m%d%H%i')
+							) AS BASIC_DATA
+							ON KPI.DU_ID = BASIC_DATA.DU_ID AND KPI.C_TIME = BASIC_DATA.C_TIME
+							AND KPI.RU_CUID = BASIC_DATA.RU_CUID
+						</if>
+					WHERE
+						KPI.DU_ID = #{equip_id}
+						AND KPI.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+						AND KPI.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+					GROUP BY
+						KPI.DU_ID, KPI.EVENT_TIME
+				) AS KPI_DATA
+			</if>
+		</if>
+		
+		
+		<if test='flag == "2"'>
+			SELECT
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME,
+				DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') AS COMP_TIME,
+				IFNULL(FORMAT(UP_VOLUMN,2),0) AS UP_VOLUMN,
+				IFNULL(FORMAT(UP_DTP,2),0) AS UP_DTP,
+				IFNULL(FORMAT(DW_VOLUMN,2),0) AS DW_VOLUMN,
+				IFNULL(FORMAT(DW_DTP,2),0) AS DW_DTP
+			FROM
+				TB_PM_ALM_ACCESS_DTP
+			WHERE
+				EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				AND DU_ID = #{equip_id}
+			ORDER BY 
+				EVENT_TIME DESC
+		</if>
+		
+		<if test='flag == "3"'>
+			SELECT
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME,
+				DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') AS COMP_TIME,
+				IFNULL(FORMAT(ATTEMPT,2),0) AS ATTEMPT,
+				IFNULL(FORMAT(ATT_RATE,2),0) AS ATT_RATE,
+				IFNULL(FORMAT(SUCC_RATE,2),0) AS SUCC_RATE
+			FROM
+				TB_PM_ACCESS_HANDOVER
+			WHERE
+				EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				AND DU_ID = #{equip_id}
+				AND STATISTICS_TYPE = #{kpi}
+			ORDER BY 
+				EVENT_TIME DESC
+		</if>
+	</select>
+	
+	<select id="getPopDetailData" parameterType="java.util.HashMap" resultType = "java.util.HashMap">
+		<if test='flag == "1"'>
+			<if test='equipType == 3'>
+				SELECT
+					*
+				FROM(
+					SELECT
+						DATE_FORMAT(TB_PM_ACCESS_KPI.EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME,
+						TB_PM_ACCESS_KPI.C_UID,
+						TB_PM_ACCESS_KPI.DU_ID,
+						TB_PM_ACCESS_KPI.RU_CUID,
+						RU_NAME,
+						DU_NAME,
+						IFNULL(TB_PM_ACCESS_KPI.ATTEMPT,0) AS ATTEMPT,
+					<if test='STD_ATT == "0"'>
+						IFNULL(FORMAT(ATT_RATE,2),0.00) AS ATT_RATE,
+						ATT_RATE_5M_LEVEL,
+						IFNULL(TB_PM_ACCESS_KPI.STD_ATT_5M,0) AS STD_ATT,
+					</if>
+					<if test='STD_ATT == "1"'>
+						CASE
+							WHEN BASIC_DATA.ATTEMPT IS NULL OR TB_PM_ACCESS_KPI.ATTEMPT <![CDATA[<]]> BASIC_DATA.ATTEMPT THEN 0.00
+							ELSE FORMAT(IFNULL(((TB_PM_ACCESS_KPI.ATTEMPT - BASIC_DATA.ATTEMPT)/BASIC_DATA.ATTEMPT)*100,0),2)
+						END AS ATT_RATE,
+						CASE
+							WHEN
+								(CASE
+									WHEN BASIC_DATA.ATTEMPT IS NULL OR TB_PM_ACCESS_KPI.ATTEMPT <![CDATA[<]]> BASIC_DATA.ATTEMPT THEN 0
+									ELSE ROUND(IFNULL(((TB_PM_ACCESS_KPI.ATTEMPT - BASIC_DATA.ATTEMPT)/BASIC_DATA.ATTEMPT)*100,0))
+								END) <![CDATA[>=]]> ATT_RATE_CRI_INCR THEN 1
+							WHEN
+								(CASE
+									WHEN BASIC_DATA.ATTEMPT IS NULL OR TB_PM_ACCESS_KPI.ATTEMPT <![CDATA[<]]> BASIC_DATA.ATTEMPT THEN 0
+									ELSE ROUND(IFNULL(((TB_PM_ACCESS_KPI.ATTEMPT - BASIC_DATA.ATTEMPT)/BASIC_DATA.ATTEMPT)*100,0))
+								END) <![CDATA[>=]]> ATT_RATE_MAJ_INCR THEN 2
+							WHEN
+								(CASE
+									WHEN BASIC_DATA.ATTEMPT IS NULL OR TB_PM_ACCESS_KPI.ATTEMPT <![CDATA[<]]> BASIC_DATA.ATTEMPT THEN 0
+									ELSE ROUND(IFNULL(((TB_PM_ACCESS_KPI.ATTEMPT - BASIC_DATA.ATTEMPT)/BASIC_DATA.ATTEMPT)*100,0))
+								END) <![CDATA[>=]]> ATT_RATE_MIN_INCR THEN 3
+							ELSE 4
+						END AS ATT_RATE_5M_LEVEL,
+						IFNULL(BASIC_DATA.ATTEMPT,0) AS STD_ATT,
+					</if>
+						RRC,
+						ANSWER,
+						CD,
+						CASE
+							WHEN TB_PM_ACCESS_KPI.ATTEMPT = 0 THEN 100.00
+							WHEN TB_PM_ACCESS_KPI.ATTEMPT IS NULL THEN 100
+							ELSE FORMAT(RRC_RATE,2)
+						END AS RRC_RATE,
+						RRC_RATE_LEVEL,
+						CASE
+							WHEN TB_PM_ACCESS_KPI.ERAB_ATTEMPT = 0 THEN 100.00
+							WHEN TB_PM_ACCESS_KPI.ERAB_ATTEMPT IS NULL THEN 100.00
+							ELSE FORMAT(ANSWER_RATE,2)
+						END AS ANSWER_RATE,
+						ANSWER_RATE_LEVEL,
+						CASE
+							WHEN IFNULL(TB_PM_ACCESS_KPI.ANSWER, 0) + IFNULL(TB_PM_ACCESS_KPI.ERAB_ADD_SUCCESS, 0) = 0 THEN 0.00
+							ELSE FORMAT(CD_RATE,2)
+						END AS CD_RATE,
+						ERAB_ADD_SUCCESS,
+						ERAB_ATTEMPT,
+						CD_RATE_LEVEL,
+						TB_PM_ACCESS_KPI.WEEKDAY,
+						TB_PM_ACCESS_KPI.HOUR_SCOPE,
+						CASE WHEN TB_PM_ACCESS_KPI.ATTEMPT <![CDATA[<]]> TB_PM_THD_DU.ATTEMPT THEN 0 ELSE 1 END AS ATT_FLAG
+					FROM
+						TB_PM_ACCESS_KPI
+						LEFT OUTER JOIN
+						TB_PM_THD_DU
+						ON TB_PM_ACCESS_KPI.WEEKDAY = TB_PM_THD_DU.WEEKDAY 
+						AND TB_PM_ACCESS_KPI.HOUR_SCOPE = TB_PM_THD_DU.HOUR_SCOPE
+					<if test='STD_ATT == "1"'>
+						LEFT OUTER JOIN
+						(
+							SELECT
+								ATTEMPT,DU_ID,EVENT_TIME,RU_CUID,C_TIME
+							FROM
+								TB_PM_ACCESS_KPI
+							WHERE
+								DU_ID = #{equip_id}
+								AND RU_CUID = #{ru_cuid}
+								AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{START_STD_DATE},'%Y%m%d%H%i')
+								AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{END_STD_DATE},'%Y%m%d%H%i')
+						) AS BASIC_DATA
+						ON TB_PM_ACCESS_KPI.DU_ID = BASIC_DATA.DU_ID AND TB_PM_ACCESS_KPI.C_TIME = BASIC_DATA.C_TIME
+							AND TB_PM_ACCESS_KPI.RU_CUID = BASIC_DATA.RU_CUID
+					</if>
+					WHERE
+						TB_PM_ACCESS_KPI.DU_ID = #{equip_id}
+						AND TB_PM_ACCESS_KPI.RU_CUID = #{ru_cuid}
+						AND TB_PM_ACCESS_KPI.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+						AND TB_PM_ACCESS_KPI.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+					) AS KPI_DATA
+					ORDER BY
+					<if test = 'sortOption.size() > 0'>
+						<foreach collection="sortOption" item="option" separator=",">
+							${option.colName} ${option.order}
+						</foreach>
+					</if>
+					<if test = 'sortOption.size() == 0'>
+						EVENT_TIME DESC
+					</if>
+				</if>
+				<if test='equipType != 3'>
+					SELECT
+						FORMAT(IFNULL(((KPI_ATTEMPT-KPI_STD_ATT)/KPI_STD_ATT)*100,0),2) AS ATT_RATE
+						,FORMAT(IFNULL(((KPI_ERAB_ATTEMPT-KPI_STD_ERAB)/KPI_STD_ERAB)*100,0),2) AS ERAB_RATE
+						,CASE
+							WHEN KPI_ATTEMPT = 0 THEN 100.00
+							WHEN KPI_ATTEMPT IS NULL THEN 100.00
+							ELSE FORMAT(IFNULL((KPI_RRC/KPI_ATTEMPT)*100,0),2)
+						END AS RRC_RATE
+						,CASE
+							WHEN KPI_ERAB_ATTEMPT = 0 THEN 100.00
+							WHEN KPI_ERAB_ATTEMPT IS NULL THEN 100.00
+							ELSE FORMAT(IFNULL((KPI_ANSWER/KPI_ERAB_ATTEMPT)*100,0),2)
+						END AS ANSWER_RATE
+					    ,CASE
+							WHEN (IFNULL(KPI_ANSWER, 0) + IFNULL(KPI_ERAB_ADD_SUCC, 0)) = 0 THEN 0.00
+							ELSE FORMAT(IFNULL((KPI_CD/(KPI_ANSWER+KPI_ERAB_ADD_SUCC))*100,0),2)
+						END AS CD_RATE
+						,DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME
+						,DATE_FORMAT(EVENT_TIME,'%Y%m%d%H%i') AS COMP_TIME
+						,KPI_ATTEMPT AS ATTEMPT
+						,KPI_STD_ATT AS STD_ATT
+						,KPI_STD_ERAB AS STD_ERAB
+						,KPI_RRC AS RRC
+						,KPI_ERAB_ADD_SUCC AS ERAB_ADD_SUCCESS
+						,KPI_ERAB_ATTEMPT AS ERAB_ATTEMPT
+						,KPI_ANSWER AS ANSWER
+						,KPI_CD AS CD
+						,DU_ID
+						,DU_NAME
+						,C_UID
+						,WEEKDAY
+						,HOUR_SCOPE
+					FROM(	
+						SELECT 
+							SUM(KPI.ATTEMPT) AS KPI_ATTEMPT
+							,SUM(KPI.ERAB_ATTEMPT) AS KPI_ERAB_ATTEMPT
+							<if test='STD_ATT == "0"'>
+					        	,SUM(KPI.STD_ATT_5M) AS KPI_STD_ATT
+					        	,SUM(KPI.STD_ERAB_5M) AS KPI_STD_ERAB
+					        </if>
+					        <if test='STD_ATT == "1"'>
+					        	,SUM(BASIC_DATA.ATTEMPT) AS KPI_STD_ATT
+					        	,SUM(BASIC_DATA.STD_ERAB_5M) AS KPI_STD_ERAB
+					        </if>
+					        ,SUM(KPI.RRC) AS KPI_RRC
+					        ,SUM(KPI.ANSWER) AS KPI_ANSWER
+					        ,SUM(KPI.CD) AS KPI_CD
+					        ,SUM(KPI.ERAB_ADD_SUCCESS) AS KPI_ERAB_ADD_SUCC
+							,KPI.DU_NAME
+							,KPI.EVENT_TIME
+							,KPI.DU_ID
+							,KPI.C_UID
+							,KPI.WEEKDAY
+							,KPI.HOUR_SCOPE
+						FROM 
+							TB_PM_ACCESS_KPI AS KPI
+							<if test='STD_ATT == "1"'>
+								LEFT OUTER JOIN
+								(
+									SELECT
+										ATTEMPT,DU_ID,EVENT_TIME,C_TIME,RU_CUID
+									FROM
+										TB_PM_ACCESS_KPI
+									WHERE
+										DU_ID = #{equip_id}
+										AND EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{START_STD_DATE},'%Y%m%d%H%i')
+										AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{END_STD_DATE},'%Y%m%d%H%i')
+								) AS BASIC_DATA
+								ON KPI.DU_ID = BASIC_DATA.DU_ID AND KPI.C_TIME = BASIC_DATA.C_TIME
+								AND KPI.RU_CUID = BASIC_DATA.RU_CUID
+							</if>
+						WHERE
+							KPI.DU_ID = #{equip_id}
+							AND KPI.EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+							AND KPI.EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+						GROUP BY
+							KPI.DU_ID, KPI.EVENT_TIME
+					) AS KPI_DATA
+					ORDER BY
+					<if test = 'sortOption.size() > 0'>
+						<foreach collection="sortOption" item="option" separator=",">
+							${option.colName} ${option.order}
+						</foreach>
+					</if>
+					<if test = 'sortOption.size() == 0'>
+						EVENT_TIME DESC
+					</if>
+				</if>
+		</if>
+		<if test='flag == "2"'>
+			SELECT
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME,
+				C_UID,
+				DU_ID,
+				DU_NAME,
+				IFNULL(FORMAT((UP_VOLUMN+DW_VOLUMN),2),0) AS TOTAL_VOLUMN,
+				IFNULL(FORMAT((UP_DTP+DW_DTP),2),0) AS TOTAL_DTP,
+				IFNULL(FORMAT(UP_VOLUMN,2),0) AS UP_VOLUMN,
+				IFNULL(FORMAT(DW_VOLUMN,2),0) AS DW_VOLUMN,
+				IFNULL(FORMAT(UP_DTP,2),0) AS UP_DTP,
+				IFNULL(FORMAT(DW_DTP,2),0) AS DW_DTP,
+				UP_DTP_LEVEL,
+				DW_DTP_LEVEL,
+				WEEKDAY,
+				HOUR_SCOPE
+			FROM
+				TB_PM_ALM_ACCESS_DTP
+			WHERE
+				EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				AND DU_ID = #{equip_id}
+			ORDER BY
+			<if test = 'sortOption.size() > 0'>
+				<foreach collection="sortOption" item="option" separator=",">
+					${option.colName} ${option.order}
+				</foreach>
+			</if>
+			<if test = 'sortOption.size() == 0'>
+				EVENT_TIME DESC
+			</if>
+		</if>
+		<if test='flag == "3"'>
+			SELECT
+				DATE_FORMAT(EVENT_TIME,'%Y-%m-%d %H:%i') AS EVENT_TIME,
+				DU_ID,
+				DU_NAME,
+				STATISTICS_TYPE,
+				IFNULL(FORMAT((ATTEMPT),2),0) AS ATTEMPT,
+				IFNULL(FORMAT((STD_ATT_5M),2),0) AS STD_ATT_5M,
+				IFNULL(FORMAT(ATT_RATE,2),0) AS ATT_RATE,
+				IFNULL(FORMAT(SUCCESS,2),0) AS SUCCESS,
+				IFNULL(FORMAT(SUCC_RATE,2),0) AS SUCC_RATE
+			FROM
+				TB_PM_ACCESS_HANDOVER
+			WHERE
+				EVENT_TIME <![CDATA[>=]]> STR_TO_DATE(#{startDateTime},'%Y%m%d%H%i')
+				AND EVENT_TIME <![CDATA[<=]]> STR_TO_DATE(#{endDateTime},'%Y%m%d%H%i')
+				AND DU_ID = #{equip_id}
+				AND STATISTICS_TYPE = #{kpi}
+			ORDER BY
+			<if test = 'sortOption.size() > 0'>
+				<foreach collection="sortOption" item="option" separator=",">
+					${option.colName} ${option.order}
+				</foreach>
+			</if>
+			<if test = 'sortOption.size() == 0'>
+				EVENT_TIME DESC
+			</if>
+		</if>
+	</select>
+	
+	<select id = "getAlarmVolume" resultType="java.util.HashMap">
+		SELECT 
+			MAX(CASE WHEN MONITOR_TYPE = 1 AND SEVERITY = 1 THEN VOLUME END) AS P_CRITICAL_VOLUME,
+			MAX(CASE WHEN MONITOR_TYPE = 1 AND SEVERITY = 2 THEN VOLUME END) AS P_MAJOR_VOLUME,
+		    MAX(CASE WHEN MONITOR_TYPE = 1 AND SEVERITY = 3 THEN VOLUME END) AS P_MINOR_VOLUME,
+		    MAX(CASE WHEN MONITOR_TYPE = 2 AND SEVERITY = 1 THEN VOLUME END) AS F_CRITICAL_VOLUME,
+		    MAX(CASE WHEN MONITOR_TYPE = 2 AND SEVERITY = 2 THEN VOLUME END) AS F_MAJOR_VOLUME,
+		    MAX(CASE WHEN MONITOR_TYPE = 2 AND SEVERITY = 3 THEN VOLUME END) AS F_MINOR_VOLUME
+		FROM 
+			TB_CO_ALARM_SOUND
+	</select>
+	
+</mapper>
